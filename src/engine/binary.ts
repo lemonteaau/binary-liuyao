@@ -18,19 +18,14 @@ export function lineIsMutating(value: LineValue): boolean {
  * 三枚铜钱模拟：每枚正面记 3、反面记 2，合计 6..9。
  * 使用 crypto.getRandomValues，概率天然为 1/8, 3/8, 3/8, 1/8。
  */
-function randomBit(): 0 | 1 {
-  const buf = new Uint8Array(1)
-  crypto.getRandomValues(buf)
-  // 避免模偏差：取一个字节的低 3 位做奇偶即可（单 bit 无偏）
-  return (buf[0]! & 1) as 0 | 1
-}
-
 /** 三枚铜钱，正面 3、反面 2。 */
 export function tossCoins(): CoinToss {
+  const bytes = new Uint8Array(3)
+  crypto.getRandomValues(bytes)
   return [
-    (2 + randomBit()) as CoinScore,
-    (2 + randomBit()) as CoinScore,
-    (2 + randomBit()) as CoinScore,
+    (2 + (bytes[0]! & 1)) as CoinScore,
+    (2 + (bytes[1]! & 1)) as CoinScore,
+    (2 + (bytes[2]! & 1)) as CoinScore,
   ]
 }
 

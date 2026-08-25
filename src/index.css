@@ -401,8 +401,6 @@ html[data-screen-fx="off"] .chroma {
 }
 
 .coin-console {
-  --coin-dark: #633819;
-  --coin-mid: #bd7437;
   --coin-light: #f0bd67;
   position: relative;
   isolation: isolate;
@@ -479,79 +477,89 @@ html[data-screen-fx="off"] .chroma {
   flex: 1;
   align-items: center;
   justify-content: center;
-  gap: clamp(8px, 3vw, 30px);
+  gap: clamp(8px, 2.6vw, 28px);
   padding: 2rem clamp(0.5rem, 2vw, 1rem);
-  perspective: 500px;
+  perspective: 720px;
 }
 
 .coin-unit {
+  --coin-drift: -7px;
+  --coin-return: 1px;
+  --coin-lean: -4deg;
+  --coin-lean-opposite: 5deg;
+  --coin-lean-bounce: 2deg;
   display: flex;
-  min-width: clamp(50px, 8vw, 96px);
+  min-width: clamp(58px, 9vw, 112px);
   flex-direction: column;
   align-items: center;
   gap: 12px;
 }
 
+.coin-unit:nth-child(2) {
+  --coin-drift: 5px;
+  --coin-return: -1px;
+  --coin-lean: 3deg;
+  --coin-lean-opposite: -4deg;
+  --coin-lean-bounce: -2deg;
+}
+
+.coin-unit:nth-child(3) {
+  --coin-drift: -3px;
+  --coin-return: 1px;
+  --coin-lean: -2deg;
+  --coin-lean-opposite: 3deg;
+  --coin-lean-bounce: 1deg;
+}
+
+.coin-flight,
 .pixel-coin {
   position: relative;
   display: block;
-  width: clamp(50px, 8vw, 96px);
+  width: clamp(58px, 9vw, 112px);
   aspect-ratio: 1;
-  transform-style: preserve-3d;
+}
+
+.coin-flight {
+  transform: translate3d(0, 0, 0);
   will-change: transform;
 }
 
-.coin-console:not([data-shaking="true"]) .pixel-coin {
-  transition: transform 180ms steps(3, end);
+.pixel-coin {
+  transform-style: preserve-3d;
+  will-change: transform;
 }
 
 .coin-unit[data-face="tails"] .pixel-coin {
   transform: rotateY(180deg);
 }
 
+.coin-unit:is([data-face="heads"], [data-face="tails"]) .coin-flight {
+  animation: coin-land 160ms cubic-bezier(0.16, 0.78, 0.22, 1) both;
+}
+
+.coin-unit[data-face="heads"] .pixel-coin {
+  animation: coin-settle-heads 160ms cubic-bezier(0.16, 0.78, 0.22, 1) both;
+}
+
+.coin-unit[data-face="tails"] .pixel-coin {
+  animation: coin-settle-tails 160ms cubic-bezier(0.16, 0.78, 0.22, 1) both;
+}
+
 .coin-side {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
-  clip-path: polygon(22% 0, 78% 0, 100% 22%, 100% 78%, 78% 100%, 22% 100%, 0 78%, 0 22%);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.42), transparent 34%),
-    repeating-linear-gradient(0deg, transparent 0 7px, rgba(89, 43, 16, 0.1) 7px 9px),
-    var(--coin-light);
-  box-shadow:
-    inset 0 0 0 4px var(--coin-dark),
-    inset 0 0 0 8px var(--coin-light),
-    inset 0 0 22px rgba(75, 35, 12, 0.55);
-}
-
-.coin-side::before {
-  position: absolute;
-  inset: 15%;
-  border: 2px dashed rgba(83, 39, 14, 0.72);
-  clip-path: inherit;
-  content: "";
+  background-position: left center;
+  background-repeat: no-repeat;
+  background-size: 200% 100%;
+  filter: drop-shadow(0 7px 5px rgba(0, 0, 0, 0.48));
+  image-rendering: pixelated;
 }
 
 .coin-side-tails {
   transform: rotateY(180deg);
-  background:
-    linear-gradient(315deg, rgba(255, 255, 255, 0.18), transparent 34%),
-    repeating-linear-gradient(90deg, transparent 0 7px, rgba(89, 43, 16, 0.18) 7px 9px),
-    #9d592c;
-}
-
-.coin-hole {
-  z-index: 1;
-  width: 27%;
-  aspect-ratio: 1;
-  border: 3px solid var(--coin-dark);
-  background: var(--color-void);
-  box-shadow:
-    3px 3px 0 rgba(255, 223, 145, 0.28),
-    inset 2px 2px 0 rgba(0, 0, 0, 0.75);
+  background-position: right center;
 }
 
 .coin-face-caption {
@@ -561,33 +569,88 @@ html[data-screen-fx="off"] .chroma {
   letter-spacing: 0.12em;
 }
 
+.coin-console[data-shaking="true"] .coin-flight {
+  animation: coin-flight 1080ms linear infinite;
+}
+
 .coin-console[data-shaking="true"] .pixel-coin {
-  animation: coin-toss 720ms steps(8, end) infinite;
+  animation: coin-spin 1080ms linear infinite;
 }
 
-.coin-console[data-shaking="true"] .coin-unit:nth-child(2) .pixel-coin {
-  animation-delay: -180ms;
+.coin-console[data-shaking="true"] .coin-unit:nth-child(2) :is(.coin-flight, .pixel-coin) {
+  animation-delay: -410ms;
+  animation-duration: 980ms;
 }
 
-.coin-console[data-shaking="true"] .coin-unit:nth-child(3) .pixel-coin {
-  animation-delay: -360ms;
+.coin-console[data-shaking="true"] .coin-unit:nth-child(3) :is(.coin-flight, .pixel-coin) {
+  animation-delay: -730ms;
+  animation-duration: 1140ms;
 }
 
-@keyframes coin-toss {
+@keyframes coin-flight {
   0% {
-    transform: translate3d(0, 0, 0) rotateY(0deg) rotateZ(-2deg);
+    transform: translate3d(0, 3px, 0) rotateZ(var(--coin-lean));
+    animation-timing-function: cubic-bezier(0.18, 0.72, 0.3, 1);
   }
-  25% {
-    transform: translate3d(-5px, -22px, 0) rotateY(180deg) rotateZ(7deg);
+  44% {
+    transform: translate3d(var(--coin-drift), -38px, 28px) rotateZ(var(--coin-lean-opposite));
+    animation-timing-function: cubic-bezier(0.58, 0, 0.86, 0.38);
   }
-  50% {
-    transform: translate3d(5px, -5px, 0) rotateY(360deg) rotateZ(-5deg);
+  78% {
+    transform: translate3d(0, 2px, 0) rotateZ(var(--coin-lean));
+    animation-timing-function: cubic-bezier(0.18, 0.72, 0.28, 1);
   }
-  75% {
-    transform: translate3d(-3px, -16px, 0) rotateY(540deg) rotateZ(4deg);
+  88% {
+    transform: translate3d(var(--coin-return), -7px, 8px) rotateZ(var(--coin-lean-bounce));
+    animation-timing-function: cubic-bezier(0.55, 0, 0.82, 0.42);
   }
   100% {
-    transform: translate3d(0, 0, 0) rotateY(720deg) rotateZ(-2deg);
+    transform: translate3d(0, 3px, 0) rotateZ(var(--coin-lean));
+  }
+}
+
+@keyframes coin-spin {
+  0% {
+    transform: rotateX(8deg) rotateY(0deg);
+  }
+  35% {
+    transform: rotateX(-7deg) rotateY(252deg);
+  }
+  70% {
+    transform: rotateX(10deg) rotateY(504deg);
+  }
+  100% {
+    transform: rotateX(8deg) rotateY(720deg);
+  }
+}
+
+@keyframes coin-land {
+  0% {
+    transform: translate3d(0, -5px, 6px) scale(0.97);
+  }
+  62% {
+    transform: translate3d(0, 2px, 0) scale(1.015);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes coin-settle-heads {
+  from {
+    transform: rotateX(4deg) rotateY(-16deg);
+  }
+  to {
+    transform: rotateX(0) rotateY(0);
+  }
+}
+
+@keyframes coin-settle-tails {
+  from {
+    transform: rotateX(4deg) rotateY(164deg);
+  }
+  to {
+    transform: rotateX(0) rotateY(180deg);
   }
 }
 

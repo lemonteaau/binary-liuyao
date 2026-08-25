@@ -1,6 +1,7 @@
 import { useMemo, useReducer, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import coinFacesUrl from '@/assets/coin-faces.webp'
 import { HexLines } from '@/components/HexLines'
 import { LiveTimestamp } from '@/components/LiveClock'
 import { generateChart } from '@/engine'
@@ -307,12 +308,16 @@ function PixelCoin({ score, shaking }: { score?: CoinScore; shaking: boolean }) 
 
   return (
     <span className="coin-unit" data-face={face}>
-      <span className="pixel-coin">
-        <span className="coin-side coin-side-heads">
-          <span className="coin-hole" />
-        </span>
-        <span className="coin-side coin-side-tails">
-          <span className="coin-hole" />
+      <span className="coin-flight">
+        <span className="pixel-coin">
+          <span
+            className="coin-side coin-side-heads"
+            style={{ backgroundImage: `url("${coinFacesUrl}")` }}
+          />
+          <span
+            className="coin-side coin-side-tails"
+            style={{ backgroundImage: `url("${coinFacesUrl}")` }}
+          />
         </span>
       </span>
       <span className="coin-face-caption">{caption}</span>
