@@ -22,12 +22,12 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex cursor-pointer flex-col justify-end bg-void p-6"
+      className="crt-power-on absolute inset-0 z-10 flex cursor-pointer flex-col justify-end bg-void p-6"
       onClick={onDone}
       role="status"
       aria-label="系统正在启动"
     >
-      <div className="text-xs leading-6 text-fog">
+      <div className="text-base leading-6 text-fog">
         {BOOT_LINES.slice(0, lineCount).map((line, i) => (
           <p key={i} className={i === BOOT_LINES.length - 1 ? 'caret text-signal' : ''}>
             {line}
@@ -35,7 +35,7 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
         ))}
       </div>
       <div className="pointer-events-none absolute inset-x-0 top-1/2 text-center">
-        <span className="flicker-in text-2xl font-bold tracking-[0.3em] text-signal">HEX//64</span>
+        <span className="flicker-in text-4xl font-bold tracking-[0.3em] text-signal">HEX//64</span>
       </div>
     </div>
   )

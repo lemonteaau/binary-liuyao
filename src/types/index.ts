@@ -7,7 +7,7 @@ export const RULE_VERSION = 'LY-1.0'
 /** Traditional raw line value from the three-coin method. */
 export type LineValue = 6 | 7 | 8 | 9
 
-export type InputMethod = 'entropy' | 'manual' | 'hexagram' | 'number' | 'time' | 'link'
+export type InputMethod = 'entropy' | 'coin' | 'manual' | 'hexagram' | 'number' | 'time' | 'link'
 
 export interface TrigramInfo {
   key: string

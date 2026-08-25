@@ -4,10 +4,13 @@ import {
   rawLinesToMutationMask,
   rawLinesToPrimaryBits,
   resultBitsOf,
+  scoreCoinToss,
   stringToBits,
+  tossCoins,
   tossLineValue,
   tossRawLines,
 } from '@/engine/binary'
+import type { CoinToss } from '@/engine/binary'
 import type { LineValue } from '@/types'
 
 describe('二进制模型', () => {
@@ -45,6 +48,26 @@ describe('二进制模型', () => {
 })
 
 describe('加密熵源', () => {
+  it('三枚铜钱的八种组合精确映射为 1 : 3 : 3 : 1', () => {
+    const tosses: CoinToss[] = [
+      [2, 2, 2],
+      [3, 2, 2], [2, 3, 2], [2, 2, 3],
+      [3, 3, 2], [3, 2, 3], [2, 3, 3],
+      [3, 3, 3],
+    ]
+    const values = tosses.map(scoreCoinToss)
+    expect(values).toEqual([6, 7, 7, 7, 8, 8, 8, 9])
+  })
+
+  it('摇币指定每次返回三枚合法铜钱', () => {
+    for (let i = 0; i < 100; i++) {
+      const coins = tossCoins()
+      expect(coins).toHaveLength(3)
+      for (const score of coins) expect([2, 3]).toContain(score)
+      expect([6, 7, 8, 9]).toContain(scoreCoinToss(coins))
+    }
+  })
+
   it('单爻值域 ∈ {6,7,8,9}', () => {
     for (let i = 0; i < 200; i++) {
       expect([6, 7, 8, 9]).toContain(tossLineValue())

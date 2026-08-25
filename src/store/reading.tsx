@@ -98,6 +98,7 @@ export function useReading(): ReadingContextValue {
 
 export const INPUT_METHOD_LABELS_UI: Record<InputMethod, string> = {
   entropy: '电脑模拟',
+  coin: '摇币指定',
   manual: '手动指定',
   hexagram: '卦名检索',
   number: '数字起卦',

@@ -1,10 +1,8 @@
 import { TRIGRAMS, TRIGRAM_KEYS } from '@/data/trigrams'
 import type { LineValue } from '@/types'
 
-export const NUMBER_METHOD_VERSION = 'NUM-1'
-
 /**
- * NUM-1 数字起卦规则（固定版本，About 页公开）：
+ * 数字起卦规则（About 页公开）：
  * - 三个数 A B C：上卦 = A mod 8，下卦 = B mod 8，动爻 = C mod 6
  * - 两个数 A B：上卦 = A mod 8，下卦 = B mod 8，动爻 = (A+B) mod 6
  * - 一个数 N：按位自左向右切成三组（余数从左到右依次多一位）后同三数规则
@@ -84,7 +82,7 @@ export function rawLinesFromTrigrams(
   }) as [LineValue, LineValue, LineValue, LineValue, LineValue, LineValue]
 }
 
-/** NUM-1 入口：数字输入 → 六爻 */
+/** 数字输入 → 六爻 */
 export function rawLinesFromNumbers(input: string):
   | { ok: true; seed: ParsedNumberSeed; rawLines: [LineValue, LineValue, LineValue, LineValue, LineValue, LineValue] }
   | { ok: false; error: 'INVALID_SEED' } {

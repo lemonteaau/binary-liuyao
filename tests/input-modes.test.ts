@@ -7,8 +7,23 @@ import {
 import { deriveTimeSeed } from '@/features/time/derive'
 import { generateChart } from '@/engine'
 import { searchHexagrams } from '@/features/hexagram-search/search'
+import { formatRawText } from '@/formatters/rawText'
 
-describe('NUM-1 数字起卦', () => {
+describe('摇币指定', () => {
+  it('六轮铜钱结果可完整排盘并标记输入方式', () => {
+    const chart = generateChart({
+      inputMethod: 'coin',
+      rawLines: [6, 7, 8, 9, 7, 8],
+      when: new Date('2026-08-24T06:42:37Z'),
+      timezone: 'UTC',
+    })
+    expect(chart.inputMethod).toBe('coin')
+    expect(chart.lines.map((line) => line.value)).toEqual([6, 7, 8, 9, 7, 8])
+    expect(formatRawText(chart, { includeAiInstruction: false })).toContain('起卦方式：摇币指定')
+  })
+})
+
+describe('数字起卦', () => {
   it('三数规则：8 8 8 → 坤坤、二爻动', () => {
     const r = rawLinesFromNumbers('8 8 8')
     expect(r.ok).toBe(true)
@@ -59,7 +74,7 @@ describe('NUM-1 数字起卦', () => {
   })
 })
 
-describe('T1 时间起卦', () => {
+describe('时间起卦', () => {
   it('黄金样本时刻可推导且能完整排盘', () => {
     const date = new Date('2026-08-24T14:42:37+08:00')
     const { seed, rawLines } = deriveTimeSeed(date, 'Asia/Shanghai')

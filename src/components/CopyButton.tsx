@@ -44,7 +44,7 @@ export function CopyButton({ label, getText, variant = 'default', className, onC
       </button>
       {state === 'fail' && fallbackText !== null && (
         <div className="panel p-3" role="alert">
-          <p className="mb-2 text-[11px] tracking-widest text-flux">
+          <p className="mb-2 text-[15px] tracking-widest text-flux">
             复制失败 // 请手动选择文本
           </p>
           <textarea
@@ -52,7 +52,7 @@ export function CopyButton({ label, getText, variant = 'default', className, onC
             value={fallbackText}
             onFocus={(e) => e.currentTarget.select()}
             rows={8}
-            className="w-full resize-y border border-edge bg-void p-2 font-mono text-[11px] leading-relaxed text-ink"
+            className="w-full resize-y border border-edge bg-void p-2 font-mono text-[15px] leading-relaxed text-ink"
           />
         </div>
       )}

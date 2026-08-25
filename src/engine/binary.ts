@@ -2,6 +2,9 @@ import type { LineValue } from '@/types'
 
 export const BIT_COUNT = 6
 
+export type CoinScore = 2 | 3
+export type CoinToss = readonly [CoinScore, CoinScore, CoinScore]
+
 /** 老阴6 少阳7 少阴8 老阳9 */
 export function lineIsYang(value: LineValue): boolean {
   return value === 7 || value === 9
@@ -22,10 +25,23 @@ function randomBit(): 0 | 1 {
   return (buf[0]! & 1) as 0 | 1
 }
 
+/** 三枚铜钱，正面 3、反面 2。 */
+export function tossCoins(): CoinToss {
+  return [
+    (2 + randomBit()) as CoinScore,
+    (2 + randomBit()) as CoinScore,
+    (2 + randomBit()) as CoinScore,
+  ]
+}
+
+/** 三枚铜钱计分为传统爻值 6/7/8/9。 */
+export function scoreCoinToss(coins: CoinToss): LineValue {
+  return (coins[0] + coins[1] + coins[2]) as LineValue
+}
+
 /** 单爻三掷，返回传统爻值 6/7/8/9 */
 export function tossLineValue(): LineValue {
-  const heads = randomBit() + randomBit() + randomBit()
-  return (6 + heads) as LineValue
+  return scoreCoinToss(tossCoins())
 }
 
 /** 完整六爻三掷 */

@@ -7,6 +7,7 @@ export interface Settings {
   timezone: string
   aiInstruction: boolean
   animation: boolean
+  screenFx: boolean
 }
 
 const STORAGE_KEY = 'hex64.settings.v1'
@@ -16,6 +17,7 @@ function loadSettings(): Settings {
     timezone: 'auto',
     aiInstruction: false,
     animation: true,
+    screenFx: true,
   }
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -32,6 +34,7 @@ interface SettingsContextValue {
   setTimezone: (tz: string) => void
   setAiInstruction: (on: boolean) => void
   setAnimation: (on: boolean) => void
+  setScreenFx: (on: boolean) => void
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null)
@@ -50,7 +53,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.dataset.motion = settings.animation ? 'on' : 'off'
-  }, [settings.animation])
+    document.documentElement.dataset.screenFx = settings.screenFx ? 'on' : 'off'
+  }, [settings.animation, settings.screenFx])
 
   const update = useCallback((patch: Partial<Settings>) => {
     setSettings((prev) => ({ ...prev, ...patch }))
@@ -63,6 +67,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setTimezone: (timezone) => update({ timezone }),
       setAiInstruction: (aiInstruction) => update({ aiInstruction }),
       setAnimation: (animation) => update({ animation }),
+      setScreenFx: (screenFx) => update({ screenFx }),
     }),
     [settings, detected, update],
   )

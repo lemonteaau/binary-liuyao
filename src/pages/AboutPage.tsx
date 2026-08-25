@@ -1,12 +1,10 @@
 import { RULE_VERSION } from '@/types'
-import { NUMBER_METHOD_VERSION } from '@/features/number/derive'
-import { TIME_METHOD_VERSION } from '@/features/time/derive'
 
 export function AboutPage() {
   return (
-    <div className="max-w-3xl pt-6 text-[12px] leading-relaxed">
-      <p className="mb-1 text-[10px] tracking-[0.24em] text-fog">协议 / 方法</p>
-      <h1 className="mb-6 text-lg font-bold tracking-[0.2em]">关于 HEX//64</h1>
+    <div className="max-w-3xl pt-6 text-base leading-relaxed">
+      <p className="mb-1 text-[14px] tracking-[0.24em] text-fog">协议 / 方法</p>
+      <h1 className="mb-6 text-2xl font-bold tracking-[0.2em]">关于 HEX//64</h1>
 
       <Section tag="产品说明">
         <p>
@@ -20,7 +18,7 @@ export function AboutPage() {
       </Section>
 
       <Section tag="二进制模型">
-        <pre className="overflow-x-auto border border-edge bg-void p-3 text-[11px] leading-relaxed">{`初始状态：6 bit，1 = 阳，0 = 阴    例如 010010（坎为水）
+        <pre className="overflow-x-auto border border-edge bg-void p-3 text-[15px] leading-relaxed">{`初始状态：6 bit，1 = 阳，0 = 阴    例如 010010（坎为水）
 翻转掩码：1 = 动爻                  例如 000011
 转换结果 = 初始状态 XOR 翻转掩码    →   010001（水雷屯）
 
@@ -38,14 +36,21 @@ export function AboutPage() {
             </dd>
           </div>
           <div>
-            <dt className="text-signal">数字起卦（{NUMBER_METHOD_VERSION}）</dt>
+            <dt className="text-signal">摇币指定</dt>
+            <dd className="text-fog">
+              用户逐轮开始并停止三枚铜钱，从初爻到上爻累计六次。停止瞬间使用 Web Crypto
+              采样；正面记 3、反面记 2，合计 6 / 7 / 8 / 9。动画只表现摇动过程，不参与随机计算。
+            </dd>
+          </div>
+          <div>
+            <dt className="text-signal">数字起卦</dt>
             <dd className="text-fog">
               上卦 = A mod 8 · 下卦 = B mod 8 · 动爻 = C mod 6。余数 0 取坤卦 / 上爻。
               两数时动爻 = (A+B) mod 6；单数按位自左向右切成三组（余数从左到右依次多一位）。
             </dd>
           </div>
           <div>
-            <dt className="text-signal">时间起卦（{TIME_METHOD_VERSION}）</dt>
+            <dt className="text-signal">时间起卦</dt>
             <dd className="text-fog">
               梅花式：上卦 = (农历年支数 + 月 + 日) mod 8；下卦 = (上式和 + 时支数) mod 8；
               动爻 = 总和 mod 6。年支数 子=1…亥=12，时支数同。闰月按本月数。

@@ -10,8 +10,14 @@ interface HexLinesProps {
   compact?: boolean
 }
 
-export function HexLines({ bits, mask = 0, showLabels = true, compact = false }: HexLinesProps) {
+export function HexLines({
+  bits,
+  mask = 0,
+  showLabels = true,
+  compact = false,
+}: HexLinesProps) {
   const rows = [5, 4, 3, 2, 1, 0]
+
   return (
     <div
       className={cn('flex flex-col', compact ? 'gap-[6px]' : 'gap-[10px]')}
@@ -21,19 +27,20 @@ export function HexLines({ bits, mask = 0, showLabels = true, compact = false }:
       {rows.map((i) => {
         const yang = (bits >> i) & 1
         const mutating = (mask >> i) & 1
+
         return (
-            <div
-              key={i}
-              className={cn(
-                'hex-line flex items-center',
-                compact ? 'gap-2' : 'gap-3',
-                mutating ? 'mutating' : null,
-              )}
-            >
-              {showLabels && (
-                <span className="w-6 shrink-0 text-right text-[10px] text-fog">L{i + 1}</span>
-              )}
-              <div className={cn('flex flex-1 gap-[14%]', mutating ? 'flux-pulse' : null)}>
+          <div
+            key={i}
+            className={cn(
+              'hex-line flex items-center',
+              compact ? 'gap-2' : 'gap-3',
+              mutating ? 'mutating' : null,
+            )}
+          >
+            {showLabels && (
+              <span className="w-10 shrink-0 text-right text-[14px] text-fog sm:w-16">L{i + 1}</span>
+            )}
+            <div className={cn('flex flex-1 gap-[14%]', mutating ? 'flux-pulse' : null)}>
               {yang ? (
                 <div className="hex-bar w-full" />
               ) : (
@@ -44,11 +51,12 @@ export function HexLines({ bits, mask = 0, showLabels = true, compact = false }:
               )}
             </div>
             {mutating ? (
-              <span className="shrink-0 text-[10px] font-bold tracking-widest text-flux">
-                ◉ 翻转
+              <span className="w-10 shrink-0 text-[14px] font-bold text-flux sm:w-16">
+                <span className="sm:hidden">◉ 动</span>
+                <span className="hidden tracking-widest sm:inline">◉ 翻转</span>
               </span>
             ) : showLabels ? (
-              <span className="w-10 shrink-0" />
+              <span className="w-10 shrink-0 sm:w-16" />
             ) : null}
           </div>
         )

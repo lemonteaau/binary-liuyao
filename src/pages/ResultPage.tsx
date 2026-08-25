@@ -37,10 +37,10 @@ export function ResultPage() {
 
   if (!current || !currentMatchesLink) {
     if (linkParams) {
-      return <p className="pt-10 text-[11px] tracking-widest text-fog">正在重建状态…</p>
+      return <p className="pt-10 text-[15px] tracking-widest text-fog">正在重建状态…</p>
     }
     return (
-      <div className="pt-10 text-[12px] leading-loose text-fog">
+      <div className="pt-10 text-base leading-loose text-fog">
         <p>内存中没有状态。</p>
         <Link to="/" className="text-signal">
           → 返回生成器
@@ -52,6 +52,7 @@ export function ResultPage() {
   const chart = current.chart
   const rawText = () => formatRawText(chart, { includeAiInstruction: settings.aiInstruction })
   const isLinkMode = chart.inputMethod === 'link' || linkParams !== null
+  const hasMutation = chart.mutationMask !== 0
 
   const shareUrl = () => {
     const s = bitsToString(chart.primary.bits)
@@ -62,12 +63,12 @@ export function ResultPage() {
   return (
     <div className="pt-5">
       {isLinkMode && (
-        <p className="mb-4 border border-edge bg-surface px-3 py-2 text-[10px] tracking-[0.16em] text-fog" role="note">
+        <p className="mb-4 border border-edge bg-surface px-3 py-2 text-[14px] tracking-[0.16em] text-fog" role="note">
           共享状态 // 历法按查看时刻重新采样 · 链接不包含时间戳
         </p>
       )}
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border border-edge bg-surface px-3 py-2 text-[10px] tracking-[0.18em] text-fog">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border border-edge bg-surface px-3 py-2 text-[14px] tracking-[0.18em] text-fog">
         <span className="flex items-center gap-3">
           <span className="text-signal">会话 {current.id}</span>
           <span aria-hidden="true">//</span>
@@ -92,9 +93,11 @@ export function ResultPage() {
         <div className="flex items-center justify-center lg:flex-col" aria-label={`XOR ${bitsToString(chart.mutationMask)}`}>
           <div className="hidden h-full w-px bg-edge lg:block" />
           <div className="my-2 px-3 text-center lg:my-0">
-            <p className="text-[9px] tracking-[0.22em] text-flux">翻转掩码</p>
-            <p className="text-sm font-bold tabular-nums tracking-[0.3em] text-flux">{bitsToString(chart.mutationMask)}</p>
-            <p className="mt-1 text-[10px] tracking-widest text-fog">▼ XOR ▼</p>
+            <p className={`text-[14px] tracking-[0.22em] ${hasMutation ? 'text-flux' : 'text-fog'}`}>翻转掩码</p>
+            <p className={`text-lg font-bold tabular-nums tracking-[0.3em] ${hasMutation ? 'text-flux' : 'text-ink'}`}>
+              {bitsToString(chart.mutationMask)}
+            </p>
+            <p className="mt-1 text-[14px] tracking-widest text-fog">▼ XOR ▼</p>
           </div>
           <div className="hidden h-full w-px bg-edge lg:block" />
         </div>
@@ -112,7 +115,7 @@ export function ResultPage() {
 
       <section className="panel mt-4 p-4 sm:p-5">
         <span className="panel-tag">元数据</span>
-        <dl className="grid grid-cols-1 gap-x-8 gap-y-2 text-[11px] sm:grid-cols-2 lg:grid-cols-3">
+        <dl className="grid grid-cols-1 gap-x-8 gap-y-2 text-[15px] sm:grid-cols-2 lg:grid-cols-3">
           <Meta label="时间戳" value={chart.calendar.gregorian} />
           <Meta label="时区" value={`${chart.calendar.timezone} ${chart.calendar.utcOffset}`} />
           <Meta label="农历时钟" value={chart.calendar.lunarText} />
@@ -124,8 +127,8 @@ export function ResultPage() {
           <Meta label="卦身节点" value={`${chart.guaShen.branch}${chart.guaShen.onHexagram ? '' : ' // 未上卦'}`} />
         </dl>
         {chart.shensha.some((s) => s.branches.length > 0) && (
-          <details className="mt-3">
-            <summary className="cursor-pointer text-[10px] tracking-[0.2em] text-fog hover:text-signal">
+          <details open className="mt-3">
+            <summary className="cursor-pointer text-[14px] tracking-[0.2em] text-fog hover:text-signal">
               辅助信号 [{chart.shensha.filter((s) => s.branches.length > 0).length}]
             </summary>
             <p className="mt-2 leading-relaxed text-fog">
@@ -137,8 +140,8 @@ export function ResultPage() {
           </details>
         )}
         {chart.fuShen.length > 0 && (
-          <details className="mt-2">
-            <summary className="cursor-pointer text-[10px] tracking-[0.2em] text-fog hover:text-signal">
+          <details open className="mt-2">
+            <summary className="cursor-pointer text-[14px] tracking-[0.2em] text-fog hover:text-signal">
               伏藏节点 [{chart.fuShen.length}]
             </summary>
             <p className="mt-2 leading-relaxed text-fog">
@@ -166,7 +169,7 @@ export function ResultPage() {
             [ 新建状态 ]
           </button>
         </div>
-        <p className="mt-3 text-[10px] leading-relaxed text-fog">
+        <p className="mt-3 text-[14px] leading-relaxed text-fog">
           完整排盘适用于 AI 或六爻使用者。
           {settings.aiInstruction ? ' AI 指令附加：已开启。' : ' AI 指令附加：已关闭（可在设置中开启）。'}
           {' '}分享链接仅包含初始状态与翻转掩码，不包含时间戳。
@@ -188,15 +191,15 @@ function StatePanel(props: {
   return (
     <section className="panel p-4 sm:p-6">
       <span className="panel-tag">{props.tag}</span>
-      <p className="mb-1 text-center text-xl font-bold tabular-nums tracking-[0.35em] text-signal sm:text-2xl">
+      <p className="chroma mb-1 text-center text-3xl font-bold tabular-nums tracking-[0.35em] text-signal sm:text-4xl">
         {props.binary}
       </p>
-      <div className="mx-auto mt-4 max-w-xs">
+      <div className="mx-auto mt-4 max-w-sm">
         <HexLines bits={props.bits} mask={props.mask} />
       </div>
       <div className="mt-5 text-center">
-        <p className="text-lg font-bold tracking-[0.3em]">{props.name}</p>
-        <p className="mt-1 text-[10px] tracking-[0.22em] text-fog">
+        <p className="text-2xl font-bold tracking-[0.3em]">{props.name}</p>
+        <p className="mt-1 text-[14px] tracking-[0.22em] text-fog">
           HEX {String(props.hexNumber).padStart(2, '0')} · {props.palace}
         </p>
       </div>
@@ -206,9 +209,9 @@ function StatePanel(props: {
 
 function Meta({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex gap-2">
+    <div className="flex min-w-0 gap-2">
       <dt className="shrink-0 text-fog">{label}</dt>
-      <dd className="tabular-nums">{value}</dd>
+      <dd className="min-w-0 break-all tabular-nums">{value}</dd>
     </div>
   )
 }

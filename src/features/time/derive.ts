@@ -4,8 +4,6 @@ import { zonedParts } from '@/calendar/solar-lunar'
 import { rawLinesFromTrigrams, trigramKeyByRemainder } from '@/features/number/derive'
 import type { Branch, LineValue } from '@/types'
 
-export const TIME_METHOD_VERSION = 'T1'
-
 export interface TimeSeedInfo {
   yearBranchNumber: number // 1..12（子1）
   lunarMonth: number
@@ -16,7 +14,7 @@ export interface TimeSeedInfo {
 }
 
 /**
- * T1 时间起卦（梅花式，固定版本，About 页公开）：
+ * 时间起卦（梅花式，About 页公开）：
  * 上卦 = (年支数 + 农历月 + 农历日) mod 8
  * 下卦 = (上卦和 + 时支数) mod 8
  * 动爻 = (上卦和 + 时支数) mod 6
