@@ -129,9 +129,13 @@ describe('RAW TEXT 格式（黄金快照）', () => {
     expect(text).toContain('卦身：亥')
     expect(text).toContain('本卦：坎为水（坎宫六冲）')
     expect(text).toContain('变卦：水雷屯（坎宫）')
-    expect(text).toContain('Primary: 010010')
-    expect(text).toContain('Mutation: 000011')
-    expect(text).toContain('Result: 010001')
+    expect(text).toContain('上爻：腾蛇 兄弟戊子水 世')
+    expect(text).toContain('三爻：青龙 妻财戊午火 应')
+    expect(text).toContain('二爻：玄武 官鬼戊辰土 老阳动 变 子孙庚寅木')
+    expect(text).toContain('初爻：白虎 子孙戊寅木 老阴动 变 兄弟庚子水')
+    // 复制文本面向 AI/人类阅读，不应出现二进制
+    expect(text).not.toContain('Binary')
+    expect(text).not.toMatch(/^[01]{6}$/m)
     expect(text).not.toContain('请根据以上六爻排盘进行分析。')
   })
 
