@@ -4,7 +4,6 @@ import { TRIGRAMS } from '@/data/trigrams'
 import type {
   Branch, ChartData, ChartLine, InputMethod, LineValue, Stem,
 } from '@/types'
-import { RULE_VERSION } from '@/types'
 import {
   bitsToString, lineIsMutating, lineIsYang,
   rawLinesToMutationMask, rawLinesToPrimaryBits, resultBitsOf,
@@ -99,7 +98,6 @@ export function generateChart(params: GenerateChartParams): ChartData {
   })
 
   return {
-    ruleVersion: RULE_VERSION,
     inputMethod: params.inputMethod,
     createdAt: calendar.gregorian,
     calendar,

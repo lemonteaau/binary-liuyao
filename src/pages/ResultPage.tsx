@@ -1,6 +1,7 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { CopyButton } from '@/components/CopyButton'
+import { FullReading } from '@/components/FullReading'
 import { HexLines } from '@/components/HexLines'
 import { generateChart } from '@/engine'
 import { bitsToString, stringToBits } from '@/engine/binary'
@@ -16,6 +17,7 @@ export function ResultPage() {
   const navigate = useNavigate()
   const { current, commitReading } = useReading()
   const { resolvedTimezone, settings } = useSettings()
+  const [showFullReading, setShowFullReading] = useState(false)
 
   const linkParams = useMemo(() => parseLinkParams(new URLSearchParams(location.search)), [location.search])
   const currentMatchesLink = !linkParams || (
@@ -127,7 +129,7 @@ export function ResultPage() {
           <Meta label="卦身节点" value={`${chart.guaShen.branch}${chart.guaShen.onHexagram ? '' : ' // 未上卦'}`} />
         </dl>
         {chart.shensha.some((s) => s.branches.length > 0) && (
-          <details open className="mt-3">
+          <details className="mt-3">
             <summary className="cursor-pointer text-[14px] tracking-[0.2em] text-fog hover:text-signal">
               辅助信号 [{chart.shensha.filter((s) => s.branches.length > 0).length}]
             </summary>
@@ -140,7 +142,7 @@ export function ResultPage() {
           </details>
         )}
         {chart.fuShen.length > 0 && (
-          <details open className="mt-2">
+          <details className="mt-2">
             <summary className="cursor-pointer text-[14px] tracking-[0.2em] text-fog hover:text-signal">
               伏藏节点 [{chart.fuShen.length}]
             </summary>
@@ -156,6 +158,15 @@ export function ResultPage() {
       <section className="panel mt-4 p-4 sm:p-5">
         <span className="panel-tag">操作</span>
         <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="btn btn-primary"
+            aria-expanded={showFullReading}
+            aria-controls="full-reading"
+            onClick={() => setShowFullReading((visible) => !visible)}
+          >
+            [ {showFullReading ? '收起完整排盘 ↑' : '展开完整排盘 ↓'} ]
+          </button>
           <CopyButton label="[ 复制完整排盘 ]" getText={rawText} variant="primary" />
           <CopyButton label="[ 复制链接 ]" getText={shareUrl} />
           <button
@@ -175,6 +186,8 @@ export function ResultPage() {
           {' '}分享链接仅包含初始状态与翻转掩码，不包含时间戳。
         </p>
       </section>
+
+      {showFullReading && <FullReading chart={chart} />}
     </div>
   )
 }

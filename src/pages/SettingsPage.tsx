@@ -1,5 +1,4 @@
 import { useSettings } from '@/store/settings'
-import { RULE_VERSION } from '@/types'
 
 function detectTz(): string {
   try {
@@ -129,7 +128,6 @@ export function SettingsPage() {
         <span className="panel-tag">协议参数</span>
         <dl className="grid grid-cols-1 gap-y-2 text-[15px] sm:grid-cols-2">
           <Info label="位序" value="初爻 = BIT 0（固定）" />
-          <Info label="引擎" value={RULE_VERSION} />
           <Info label="熵源" value="WEB CRYPTO API" />
           <Info label="存储" value="仅本地 / 最近 20 条" />
         </dl>

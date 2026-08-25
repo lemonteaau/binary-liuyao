@@ -1,5 +1,3 @@
-import { RULE_VERSION } from '@/types'
-
 export function AboutPage() {
   return (
     <div className="max-w-3xl pt-6 text-base leading-relaxed">
@@ -8,8 +6,8 @@ export function AboutPage() {
 
       <Section tag="产品说明">
         <p>
-          HEX//64 将六个二进制爻位映射到传统易经六十四卦结构。Cyber 界面之下运行一套完整、
-          带规则版本的六爻排盘引擎；主界面只隐藏了大部分传统术语，并未删减底层数据。
+          HEX//64 将六个二进制爻位映射到传统易经六十四卦结构。Cyber 界面之下运行一套完整的
+          六爻排盘引擎；主界面只隐藏了大部分传统术语，并未删减底层数据。
         </p>
         <p className="mt-2">
           所有排盘计算均在浏览器本地完成。本应用不会将起卦内容、输入数字或卦象上传至任何服务器；
@@ -59,7 +57,7 @@ export function AboutPage() {
         </dl>
       </Section>
 
-      <Section tag={`排盘引擎 ${RULE_VERSION}`}>
+      <Section tag="排盘引擎">
         <p className="text-fog">
           排盘引擎完整计算并输出：公历 / 农历 / 四柱干支（节气为界，晚子时日柱按次日）/
           旬空 / 纳甲 / 六亲（以本宫五行为准）/ 六神（按日干）/ 世应（京房八宫）/ 伏神 /
@@ -70,7 +68,7 @@ export function AboutPage() {
       <Section tag="六神与神煞流派">
         <p className="text-fog">
           六神起法：甲乙青龙、丙丁朱雀、戊勾陈、己腾蛇、庚辛白虎、壬癸玄武，自初爻向上排。
-          神煞为可插拔规则表（{RULE_VERSION} 锁定流派）：贵人用「庚辛逢虎马」歌；天喜按日支季节；
+          神煞为可插拔规则表：贵人用「庚辛逢虎马」歌；天喜按日支季节；
           天医取日支退一位；羊刃仅阳干。其余按日支三合组推导。流派差异在传统实践中真实存在，
           如需其他流派可在规则表中增删。
         </p>

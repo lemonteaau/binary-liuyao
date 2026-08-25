@@ -45,7 +45,7 @@ const DAY_BRANCH_INDEX: Record<Branch, number> = Object.fromEntries(
 ) as Record<Branch, number>
 
 /**
- * 规则版本 LY-1.0，流派以 PRD §14 样本排盘锁定：
+ * 流派以 PRD §14 样本排盘锁定：
  * - 贵人用「庚辛逢虎马」歌（庚辛 → 寅午）
  * - 天喜按日支季节
  * - 天医按日支退一位

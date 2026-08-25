@@ -2,8 +2,6 @@
 // Bit convention (fixed): bit i = line i+1 (i.e. 初爻 = bit 0 / LSB).
 // Display strings are MSB-first: "L6 L5 L4 L3 L2 L1".
 
-export const RULE_VERSION = 'LY-1.0'
-
 /** Traditional raw line value from the three-coin method. */
 export type LineValue = 6 | 7 | 8 | 9
 
@@ -109,7 +107,6 @@ export interface HexStateInfo {
 }
 
 export interface ChartData {
-  ruleVersion: typeof RULE_VERSION
   inputMethod: InputMethod
   createdAt: string
   calendar: CalendarData

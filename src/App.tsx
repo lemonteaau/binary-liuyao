@@ -7,7 +7,6 @@ import { SettingsPage } from '@/pages/SettingsPage'
 import { AboutPage } from '@/pages/AboutPage'
 import { ReadingProvider } from '@/store/reading'
 import { SettingsProvider, useSettings } from '@/store/settings'
-import { RULE_VERSION } from '@/types'
 
 export function App() {
   return (
@@ -75,8 +74,6 @@ function Shell() {
             <span>本地计算</span>
             <span aria-hidden="true">//</span>
             <span>无数据传输</span>
-            <span aria-hidden="true">//</span>
-            <span>引擎 {RULE_VERSION}</span>
           </footer>
         </div>
       </div>
