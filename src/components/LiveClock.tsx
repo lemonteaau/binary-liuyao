@@ -1,0 +1,61 @@
+import { useEffect, useState } from 'react'
+
+interface LiveClockProps {
+  timezone: string
+  className?: string
+}
+
+function formatIn(tz: string): string {
+  try {
+    return new Intl.DateTimeFormat('en-GB', {
+      timeZone: tz,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hourCycle: 'h23',
+    }).format(new Date())
+  } catch {
+    return new Date().toLocaleTimeString()
+  }
+}
+
+function formatTimestampIn(tz: string): string {
+  try {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: tz,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hourCycle: 'h23',
+    }).formatToParts(new Date())
+    const values = Object.fromEntries(parts.map((part) => [part.type, part.value]))
+    return `${values.year}-${values.month}-${values.day} ${values.hour}:${values.minute}:${values.second}`
+  } catch {
+    return new Date().toISOString().replace('T', ' ').slice(0, 19)
+  }
+}
+
+export function LiveClock({ timezone, className }: LiveClockProps) {
+  const [now, setNow] = useState(() => formatIn(timezone))
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(formatIn(timezone)), 1000)
+    return () => clearInterval(t)
+  }, [timezone])
+
+  return <span className={className}>{now}</span>
+}
+
+export function LiveTimestamp({ timezone, className }: LiveClockProps) {
+  const [now, setNow] = useState(() => formatTimestampIn(timezone))
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(formatTimestampIn(timezone)), 1000)
+    return () => clearInterval(timer)
+  }, [timezone])
+
+  return <span className={className}>{now}</span>
+}
