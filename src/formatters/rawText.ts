@@ -34,8 +34,8 @@ export function formatRawText(chart: ChartData, options: RawTextOptions): string
       parts.push(`伏神${fu.relation}${fu.najia.stem}${fu.najia.branch}${fu.najia.element}`)
     }
     if (p.shiYing) parts.push(p.shiYing)
+    parts.push(line.yang ? (line.mutating ? '老阳动' : '少阳') : (line.mutating ? '老阴动' : '少阴'))
     if (line.mutating) {
-      parts.push(line.yang ? '老阳动' : '老阴动')
       const r = line.result
       parts.push('变')
       parts.push(`${r.relation}${r.najia.stem}${r.najia.branch}${r.najia.element}`)
