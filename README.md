@@ -15,6 +15,7 @@
 - Cyber 风格本卦、翻转掩码和变卦展示
 - 完整纯文本传统排盘复制
 - 最近 20 次结果本地存储
+- 从历史基数 166 开始的全局起卦计数
 - 不含时间戳的 URL 状态分享
 - Mobile-first、键盘可操作、Reduced Motion 支持
 
@@ -94,6 +95,7 @@ src/
 ├── engine/        与 UI 无关的完整排盘引擎
 ├── features/      数字、时间、卦名等输入算法
 ├── formatters/    RAW DATA 文本输出
+├── functions/     Cloudflare Pages 计数接口
 ├── pages/         Generator / Result / Settings / About
 ├── store/         设置、当前结果和本地历史
 └── types/         领域模型
@@ -113,7 +115,8 @@ const chart = generateChart({
 ## 隐私与分享
 
 - 所有计算均在浏览器本地完成
-- 不包含后端 API、账号或数据库；使用自托管 Umami 进行匿名访问统计
+- 新生成的卦仅向 Cloudflare D1 发送一个随机事件 ID，用于领取全局序号；不发送起卦输入或排盘内容
+- 不包含账号系统；除匿名计数外，使用自托管 Umami 进行匿名访问统计
 - Umami 仅统计页面访问，并排除分享链接的 Hash 参数；不收集输入数字、卦象、排盘或剪贴板内容
 - 输入数字、卦象、排盘和剪贴板内容不会上传
 - 历史记录仅保存于 `localStorage`

@@ -81,6 +81,25 @@ export function ResultPage() {
         <span className="tabular-nums">{chart.createdAt}</span>
       </div>
 
+      {current.ordinal !== undefined && (
+        <p
+          className="mb-4 border border-edge bg-panel px-4 py-3 text-center text-[15px] tracking-[0.16em] text-fog"
+          aria-live="polite"
+        >
+          {current.ordinal === null ? (
+            <span>正在登记全局序号…</span>
+          ) : (
+            <span>
+              这是 HEX//64 自上线以来生成的第{' '}
+              <strong className="text-lg font-bold tabular-nums text-signal">
+                {current.ordinal.toLocaleString('zh-CN')}
+              </strong>{' '}
+              个卦
+            </span>
+          )}
+        </p>
+      )}
+
       <div className="grid gap-4 lg:grid-cols-[1fr_auto_1fr]">
         <StatePanel
           tag="初始状态"

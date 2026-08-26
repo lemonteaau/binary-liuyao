@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "binary-liuyao",
+  "pages_build_output_dir": "./dist",
+  "compatibility_date": "2026-08-25",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "hex64-counter",
+      "database_id": "01e38e84-0157-4518-a324-f9b1950b2faa"
+    }
+  ]
+}
