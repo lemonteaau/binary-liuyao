@@ -73,7 +73,7 @@ function Shell() {
           <footer className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-edge py-3 text-[14px] tracking-[0.18em] text-fog">
             <span>本地计算</span>
             <span aria-hidden="true">//</span>
-            <span>无数据传输</span>
+            <span>匿名访问统计</span>
           </footer>
         </div>
       </div>
