@@ -198,11 +198,12 @@ export function ResultPage() {
             <span>正在登记全局序号…</span>
           ) : (
             <span>
-              这是 HEX//64 自上线以来生成的第{' '}
-              <strong className="text-lg font-bold tabular-nums text-signal">
-                {current.ordinal.toLocaleString('zh-CN')}
-              </strong>{' '}
-              个卦
+              这是 HEX//64 自上线以来生成的{' '}
+              <span className="inline-block whitespace-nowrap">
+                第<strong className="text-lg font-bold tabular-nums text-signal">
+                  {current.ordinal.toLocaleString('zh-CN')}
+                </strong>个卦
+              </span>
             </span>
           )}
         </p>
