@@ -69,7 +69,7 @@ export function formatRawText(chart: ChartData, options: RawTextOptions): string
   out.push(`本卦：${chart.primary.record.chineseName}（${attrOf(chart.primary)}）`)
   out.push(`变卦：${chart.result.record.chineseName}（${attrOf(chart.result)}）`)
   out.push('')
-  out.push('卦爻（自上爻至初爻）：')
+  out.push('卦爻：')
   out.push(...lineLines)
 
   if (options.includeAiInstruction) {
