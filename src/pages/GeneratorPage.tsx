@@ -138,12 +138,10 @@ function HomepageCounter() {
       className="flex flex-wrap items-center justify-center gap-x-2 border border-edge bg-panel px-3 py-2 text-center text-[14px] tracking-[0.14em] text-fog sm:justify-end sm:text-right"
       aria-live="polite"
     >
-      <span>HEX//64 自上线以来生成</span>
-      <span className="text-edge-bright" aria-hidden="true">//</span>
       <span className="inline-flex items-center align-middle whitespace-nowrap">
-        第<strong className="text-lg font-bold tabular-nums text-signal">
+        自上线以来共生成<strong className="text-lg font-bold tabular-nums text-signal">
           {ordinal.toLocaleString('zh-CN')}
-        </strong>个卦
+        </strong>次结果
       </span>
     </p>
   )
