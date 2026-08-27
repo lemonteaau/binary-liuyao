@@ -1,4 +1,4 @@
-import { useMemo, useReducer, useState } from 'react'
+import { useEffect, useMemo, useReducer, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import coinFacesUrl from '@/assets/coin-faces.webp'
@@ -27,6 +27,7 @@ import {
 } from '@/features/coin-shake/model'
 import type { CoinShakeAction, CoinShakeState } from '@/features/coin-shake/model'
 import { cn } from '@/lib/cn'
+import { getCurrentHexagramOrdinal } from '@/lib/hexagram-counter'
 import { useReading } from '@/store/reading'
 import { useSettings } from '@/store/settings'
 import { TRIGRAMS } from '@/data/trigrams'
@@ -61,8 +62,13 @@ export function GeneratorPage() {
 
   return (
     <div className="pt-6">
-      <p className="mb-1 text-[14px] tracking-[0.24em] text-fog">六位二进制状态生成器</p>
-      <h1 className="mb-6 text-2xl font-bold tracking-[0.2em]">选择输入来源</h1>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="mb-1 text-[14px] tracking-[0.24em] text-fog">六位二进制状态生成器</p>
+          <h1 className="text-2xl font-bold tracking-[0.2em]">选择输入来源</h1>
+        </div>
+        <HomepageCounter />
+      </div>
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6" role="group" aria-label="起卦方式">
         {MODES.map((m) => (
@@ -100,6 +106,46 @@ export function GeneratorPage() {
 
       {(mode === 'manual') && <GenerateBar rawLines={draft} method="manual" />}
     </div>
+  )
+}
+
+function HomepageCounter() {
+  const [ordinal, setOrdinal] = useState<number | null>(null)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), 5_000)
+    let active = true
+
+    getCurrentHexagramOrdinal(controller.signal)
+      .then((currentOrdinal) => {
+        if (active) setOrdinal(currentOrdinal)
+      })
+      .catch(() => undefined)
+      .finally(() => window.clearTimeout(timeout))
+
+    return () => {
+      active = false
+      controller.abort()
+      window.clearTimeout(timeout)
+    }
+  }, [])
+
+  if (ordinal === null) return null
+
+  return (
+    <p
+      className="flex flex-wrap items-center justify-center gap-x-2 border border-edge bg-panel px-3 py-2 text-center text-[14px] tracking-[0.14em] text-fog sm:justify-end sm:text-right"
+      aria-live="polite"
+    >
+      <span>HEX//64 自上线以来生成</span>
+      <span className="text-edge-bright" aria-hidden="true">//</span>
+      <span className="inline-flex items-center align-middle whitespace-nowrap">
+        第<strong className="text-lg font-bold tabular-nums text-signal">
+          {ordinal.toLocaleString('zh-CN')}
+        </strong>个卦
+      </span>
+    </p>
   )
 }
 
