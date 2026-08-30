@@ -767,6 +767,16 @@ html[data-screen-fx="off"] .chroma {
   margin-top: 1rem;
 }
 
+@media (min-width: 768px) {
+  .state-lines {
+    width: min(100%, 18rem);
+  }
+
+  .state-lines > div {
+    gap: 0.75rem;
+  }
+}
+
 .state-name-block {
   margin-top: 1.25rem;
 }
