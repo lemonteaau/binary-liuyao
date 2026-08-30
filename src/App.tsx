@@ -1,4 +1,5 @@
-import { HashRouter, Link, NavLink, Route, Routes } from 'react-router-dom'
+import { useLayoutEffect, useRef } from 'react'
+import { HashRouter, Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { BootSequence, useBootOnce } from '@/components/BootSequence'
 import { LiveClock } from '@/components/LiveClock'
 import { GeneratorPage } from '@/pages/GeneratorPage'
@@ -46,6 +47,15 @@ function CrtFx() {
 function Shell() {
   const { settings, resolvedTimezone } = useSettings()
   const { booting, finish } = useBootOnce(settings.animation)
+  const location = useLocation()
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+    container.scrollTop = 0
+    container.scrollLeft = 0
+  }, [booting, location.key])
 
   if (booting) {
     return (
@@ -58,7 +68,7 @@ function Shell() {
 
   return (
     <CrtFrame>
-      <div className="crt-content">
+      <div ref={scrollContainerRef} className="crt-content">
         <div className="mx-auto flex min-h-full max-w-5xl flex-col px-4 sm:px-6">
           <Header timezone={resolvedTimezone} />
           <main className="flex-1 pb-10">

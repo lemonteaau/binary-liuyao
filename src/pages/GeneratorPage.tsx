@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useState } from 'react'
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import coinFacesUrl from '@/assets/coin-faces.webp'
@@ -28,6 +28,7 @@ import {
 import type { CoinShakeAction, CoinShakeState } from '@/features/coin-shake/model'
 import { cn } from '@/lib/cn'
 import { getCurrentHexagramOrdinal } from '@/lib/hexagram-counter'
+import { scrollIntoViewOnMobile } from '@/lib/mobile-scroll'
 import { useReading } from '@/store/reading'
 import { useSettings } from '@/store/settings'
 import { TRIGRAMS } from '@/data/trigrams'
@@ -59,6 +60,15 @@ export function GeneratorPage() {
     createCoinShakeState,
   )
   const [coinError, setCoinError] = useState<string | null>(null)
+  const activePanelRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!mode) return
+    const frame = window.requestAnimationFrame(() => {
+      scrollIntoViewOnMobile(activePanelRef.current)
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [mode])
 
   return (
     <div className="pt-6">
@@ -78,6 +88,7 @@ export function GeneratorPage() {
             className="tile"
             data-active={mode === m.id}
             aria-pressed={mode === m.id}
+            aria-controls="generator-active-panel"
             onClick={() => setMode(m.id)}
           >
             <span className="text-[1.0625rem] font-bold tracking-[0.18em]">{m.title}</span>
@@ -86,25 +97,27 @@ export function GeneratorPage() {
         ))}
       </div>
 
-      {mode === 'entropy' && <EntropyPanel />}
-      {mode === 'coin' && (
-        <CoinShakePanel
-          state={coinState}
-          dispatch={dispatchCoin}
-          error={coinError}
-          setError={setCoinError}
-        />
-      )}
-      {mode === 'manual' && (
-        <ManualPanel draft={draft} setDraft={setDraft} />
-      )}
-      {mode === 'hexagram' && (
-        <HexNamePanel draft={draft} setDraft={setDraft} />
-      )}
-      {mode === 'number' && <NumberPanel />}
-      {mode === 'time' && <TimePanel />}
+      <div id="generator-active-panel" ref={activePanelRef} className="generator-scroll-target">
+        {mode === 'entropy' && <EntropyPanel />}
+        {mode === 'coin' && (
+          <CoinShakePanel
+            state={coinState}
+            dispatch={dispatchCoin}
+            error={coinError}
+            setError={setCoinError}
+          />
+        )}
+        {mode === 'manual' && (
+          <ManualPanel draft={draft} setDraft={setDraft} />
+        )}
+        {mode === 'hexagram' && (
+          <HexNamePanel draft={draft} setDraft={setDraft} />
+        )}
+        {mode === 'number' && <NumberPanel />}
+        {mode === 'time' && <TimePanel />}
 
-      {(mode === 'manual') && <GenerateBar rawLines={draft} method="manual" />}
+        {mode === 'manual' && <GenerateBar rawLines={draft} method="manual" />}
+      </div>
     </div>
   )
 }
@@ -550,6 +563,14 @@ function HexNamePanel({ draft, setDraft }: LineEditorProps) {
   const [query, setQuery] = useState('')
   const results = useMemo(() => searchHexagrams(query).slice(0, 12), [query])
   const selected = hexagramByBits(bitsOf(draft))
+  const followupRef = useRef<HTMLDivElement>(null)
+
+  function selectHexagram(record: (typeof results)[number]) {
+    setDraft(rawLinesFromRecord(record))
+    window.requestAnimationFrame(() => {
+      scrollIntoViewOnMobile(followupRef.current)
+    })
+  }
 
   return (
     <>
@@ -568,7 +589,7 @@ function HexNamePanel({ draft, setDraft }: LineEditorProps) {
                 type="button"
                 role="option"
                 aria-selected={selected?.kingWenNumber === h.kingWenNumber}
-                onClick={() => setDraft(rawLinesFromRecord(h))}
+                onClick={() => selectHexagram(h)}
                 className="flex w-full items-center justify-between border border-edge bg-surface px-3 py-2 text-left text-base hover:border-signal data-[active=true]:border-signal"
                 data-active={selected?.kingWenNumber === h.kingWenNumber}
               >
@@ -583,13 +604,15 @@ function HexNamePanel({ draft, setDraft }: LineEditorProps) {
         </ul>
       </Panel>
       {selected && (
-        <Panel tag="翻转掩码 // 可选">
-          <p className="mb-3 text-[0.9375rem] text-fog">
-            基础状态：<span className="text-signal">{selected.chineseName}</span> · 点击爻线设置翻转
-          </p>
-          <LineEditor draft={draft} setDraft={setDraft} />
-          <GenerateBar rawLines={draft} method="hexagram" />
-        </Panel>
+        <div ref={followupRef} className="generator-scroll-target">
+          <Panel tag="翻转掩码 // 可选">
+            <p className="mb-3 text-[0.9375rem] text-fog">
+              基础状态：<span className="text-signal">{selected.chineseName}</span> · 点击爻线设置翻转
+            </p>
+            <LineEditor draft={draft} setDraft={setDraft} />
+            <GenerateBar rawLines={draft} method="hexagram" />
+          </Panel>
+        </div>
       )}
     </>
   )
