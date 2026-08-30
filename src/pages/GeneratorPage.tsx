@@ -307,7 +307,11 @@ function CoinShakePanel({
                 <span>ROUND {Math.min(state.lines.length + 1, 6)} / 6</span>
                 <span>{shaking ? 'IN MOTION' : state.phase === 'complete' ? 'COMPLETE' : 'STANDBY'}</span>
               </span>
-              <span className="coin-stage" aria-hidden="true">
+              <span
+                className="coin-stage"
+                data-pristine={state.phase === 'ready' && state.lines.length === 0 && !state.coins}
+                aria-hidden="true"
+              >
                 {[0, 1, 2].map((index) => (
                   <PixelCoin
                     key={index}

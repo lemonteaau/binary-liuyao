@@ -505,11 +505,13 @@ html[data-screen-fx="off"] .chroma {
 }
 
 .coin-stage {
+  --coin-gap: clamp(8px, 2.6vw, 28px);
+  --coin-size: clamp(58px, 9vw, 112px);
   display: flex;
   flex: 1;
   align-items: center;
   justify-content: center;
-  gap: clamp(8px, 2.6vw, 28px);
+  gap: var(--coin-gap);
   padding: 2rem clamp(0.5rem, 2vw, 1rem);
   perspective: 720px;
 }
@@ -520,8 +522,12 @@ html[data-screen-fx="off"] .chroma {
   --coin-lean: -4deg;
   --coin-lean-opposite: 5deg;
   --coin-lean-bounce: 2deg;
+  --coin-entry-x: calc(var(--coin-size) + var(--coin-gap));
+  --coin-entry-rotate: -10deg;
+  --coin-entry-overshoot: -5px;
+  --coin-exit-rotate: 0.8deg;
   display: flex;
-  min-width: clamp(58px, 9vw, 112px);
+  min-width: var(--coin-size);
   flex-direction: column;
   align-items: center;
   gap: 12px;
@@ -533,6 +539,10 @@ html[data-screen-fx="off"] .chroma {
   --coin-lean: 3deg;
   --coin-lean-opposite: -4deg;
   --coin-lean-bounce: -2deg;
+  --coin-entry-x: 0px;
+  --coin-entry-rotate: 4deg;
+  --coin-entry-overshoot: 0px;
+  --coin-exit-rotate: -0.3deg;
 }
 
 .coin-unit:nth-child(3) {
@@ -541,6 +551,26 @@ html[data-screen-fx="off"] .chroma {
   --coin-lean: -2deg;
   --coin-lean-opposite: 3deg;
   --coin-lean-bounce: 1deg;
+  --coin-entry-x: calc((var(--coin-size) + var(--coin-gap)) * -1);
+  --coin-entry-rotate: 12deg;
+  --coin-entry-overshoot: 5px;
+  --coin-exit-rotate: -1deg;
+}
+
+.coin-stage[data-pristine="true"] .coin-unit {
+  animation: coin-spread-in 1700ms cubic-bezier(0.2, 0.76, 0.24, 1) both;
+}
+
+.coin-stage[data-pristine="true"] .coin-unit:nth-child(1) {
+  z-index: 1;
+}
+
+.coin-stage[data-pristine="true"] .coin-unit:nth-child(2) {
+  z-index: 3;
+}
+
+.coin-stage[data-pristine="true"] .coin-unit:nth-child(3) {
+  z-index: 2;
 }
 
 .coin-flight,
@@ -617,6 +647,26 @@ html[data-screen-fx="off"] .chroma {
 .coin-console[data-shaking="true"] .coin-unit:nth-child(3) :is(.coin-flight, .pixel-coin) {
   animation-delay: -730ms;
   animation-duration: 1140ms;
+}
+
+@keyframes coin-spread-in {
+  0%,
+  24% {
+    transform: translate3d(var(--coin-entry-x), 8px, 0)
+      rotate(var(--coin-entry-rotate))
+      scale(0.92);
+    filter: brightness(0.82);
+  }
+  72% {
+    transform: translate3d(var(--coin-entry-overshoot), -2px, 0)
+      rotate(var(--coin-exit-rotate))
+      scale(1.025);
+    filter: brightness(1.12);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0) scale(1);
+    filter: brightness(1);
+  }
 }
 
 @keyframes coin-flight {
