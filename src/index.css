@@ -30,6 +30,30 @@ body,
 
 html {
   background: #0a0d0e;
+  font-size: 16px;
+}
+
+html[data-font-size="small"] {
+  font-size: 15px;
+}
+
+html[data-font-size="large"] {
+  font-size: 18px;
+}
+
+@media (max-width: 767px) {
+  html,
+  html[data-font-size="standard"] {
+    font-size: 15px;
+  }
+
+  html[data-font-size="small"] {
+    font-size: 14px;
+  }
+
+  html[data-font-size="large"] {
+    font-size: 17px;
+  }
 }
 
 body {
@@ -318,7 +342,7 @@ html[data-screen-fx="off"] .chroma {
   left: 12px;
   transform: translateY(-50%);
   padding: 0 6px;
-  font-size: 14px;
+  font-size: 0.875rem;
   letter-spacing: 0.18em;
   color: var(--color-fog);
   background: var(--color-void);
@@ -335,7 +359,7 @@ html[data-screen-fx="off"] .chroma {
   background: var(--color-surface);
   color: var(--color-ink);
   font-family: inherit;
-  font-size: 17px;
+  font-size: 1.0625rem;
   letter-spacing: 0.14em;
   cursor: pointer;
   transition:
@@ -446,7 +470,7 @@ html[data-screen-fx="off"] .chroma {
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1rem;
-  font-size: 14px;
+  font-size: 0.875rem;
   letter-spacing: 0.16em;
 }
 
@@ -459,7 +483,7 @@ html[data-screen-fx="off"] .chroma {
   justify-content: center;
   border-top: 1px solid var(--color-edge);
   color: var(--color-signal);
-  font-size: 17px;
+  font-size: 1.0625rem;
 }
 
 .coin-console[data-shaking="true"] .coin-console-action {
@@ -565,7 +589,7 @@ html[data-screen-fx="off"] .chroma {
 .coin-face-caption {
   min-height: 1.25rem;
   color: var(--coin-light);
-  font-size: 14px;
+  font-size: 0.875rem;
   letter-spacing: 0.12em;
 }
 
@@ -696,6 +720,106 @@ html[data-screen-fx="off"] .chroma {
 }
 
 /* ---------------------------------- */
+/* 结果页双卦摘要                      */
+/* ---------------------------------- */
+
+.result-state-grid {
+  display: grid;
+  grid-template-areas: "primary xor result";
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.result-state-primary {
+  grid-area: primary;
+}
+
+.result-state-xor {
+  grid-area: xor;
+}
+
+.result-state-result {
+  grid-area: result;
+}
+
+.result-state-primary,
+.result-state-result {
+  min-width: 0;
+}
+
+.result-state-primary > .panel,
+.result-state-result > .panel {
+  height: 100%;
+}
+
+.state-panel {
+  min-width: 0;
+  padding: 1.5rem;
+}
+
+.state-binary {
+  margin-bottom: 0.25rem;
+  font-size: 2.25rem;
+  letter-spacing: 0.35em;
+}
+
+.state-lines {
+  margin-top: 1rem;
+}
+
+.state-name-block {
+  margin-top: 1.25rem;
+}
+
+.state-name {
+  font-size: 1.5rem;
+  letter-spacing: 0.3em;
+  text-wrap: balance;
+}
+
+.state-meta {
+  margin-top: 0.25rem;
+  overflow-wrap: anywhere;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  letter-spacing: 0.18em;
+}
+
+.result-state-xor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.result-state-xor-copy {
+  margin-block: 0.5rem;
+  padding-inline: 0.75rem;
+  text-align: center;
+}
+
+.result-state-xor-label,
+.result-state-xor-direction {
+  font-size: 0.875rem;
+  letter-spacing: 0.18em;
+}
+
+.result-state-xor-mask {
+  font-size: 1.125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.3em;
+}
+
+.result-state-xor-direction {
+  margin-top: 0.25rem;
+}
+
+.result-state-xor-mobile {
+  display: none;
+}
+
+/* ---------------------------------- */
 /* 结构化完整排盘                      */
 /* ---------------------------------- */
 
@@ -721,15 +845,16 @@ html[data-screen-fx="off"] .chroma {
 
 .full-reading-kicker {
   color: var(--color-signal);
-  font-size: 13px;
+  font-size: 0.8125rem;
   letter-spacing: 0.24em;
 }
 
 .full-reading-status {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 0.4rem;
+  margin-top: 0.65rem;
 }
 
 .full-reading-status span,
@@ -739,9 +864,91 @@ html[data-screen-fx="off"] .chroma {
   padding: 0.2rem 0.45rem;
   background: color-mix(in srgb, var(--color-panel) 88%, transparent);
   color: var(--color-fog);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 400;
   letter-spacing: 0.1em;
+}
+
+.full-reading-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.full-reading-mode {
+  display: inline-flex;
+  border: 1px solid var(--color-edge-bright);
+  background: var(--color-void);
+}
+
+.full-reading-mode button {
+  min-height: 44px;
+  border: 0;
+  border-right: 1px solid var(--color-edge-bright);
+  padding: 0.6rem 0.8rem;
+  background: transparent;
+  color: var(--color-fog);
+  font: inherit;
+  font-size: 0.8125rem;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    background 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.full-reading-mode button:last-child {
+  border-right: 0;
+}
+
+.full-reading-mode button:hover,
+.full-reading-mode button[data-active="true"] {
+  background: color-mix(in srgb, var(--color-signal) 9%, var(--color-panel));
+  color: var(--color-signal);
+}
+
+.full-reading-mode button[data-active="true"] {
+  box-shadow: inset 0 -2px 0 var(--color-signal);
+}
+
+.full-reading-copy {
+  position: relative;
+}
+
+.full-reading-copy-button {
+  min-height: 44px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.875rem;
+  letter-spacing: 0.1em;
+}
+
+.full-reading-copy > .panel {
+  position: absolute;
+  z-index: 3;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: min(32rem, 82vw);
+}
+
+.reading-plain {
+  margin-top: 1rem;
+  border: 1px solid var(--color-edge-bright);
+  background: color-mix(in srgb, var(--color-void) 72%, transparent);
+}
+
+.reading-plain pre {
+  margin: 0;
+  padding: 1rem;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  tab-size: 2;
 }
 
 .reading-context {
@@ -767,7 +974,7 @@ html[data-screen-fx="off"] .chroma {
 .reading-datum dt {
   flex: none;
   color: var(--color-fog);
-  font-size: 13px;
+  font-size: 0.8125rem;
   letter-spacing: 0.12em;
 }
 
@@ -775,7 +982,7 @@ html[data-screen-fx="off"] .chroma {
   min-width: 0;
   overflow-wrap: anywhere;
   color: var(--color-ink);
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.55;
 }
 
@@ -800,13 +1007,13 @@ html[data-screen-fx="off"] .chroma {
 
 .reading-pillar span {
   color: var(--color-fog);
-  font-size: 13px;
+  font-size: 0.8125rem;
   letter-spacing: 0.12em;
 }
 
 .reading-pillar strong {
   color: var(--color-signal);
-  font-size: 17px;
+  font-size: 1.0625rem;
   letter-spacing: 0.15em;
 }
 
@@ -834,7 +1041,7 @@ html[data-screen-fx="off"] .chroma {
   place-items: center;
   padding: 0.8rem 0.5rem;
   color: var(--color-fog);
-  font-size: 12px;
+  font-size: 0.75rem;
   letter-spacing: 0.14em;
   text-align: center;
 }
@@ -852,21 +1059,21 @@ html[data-screen-fx="off"] .chroma {
 
 .reading-hex-head > span {
   color: var(--color-signal);
-  font-size: 12px;
+  font-size: 0.75rem;
   letter-spacing: 0.18em;
 }
 
 .reading-hex-head strong {
   display: block;
   margin-top: 0.2rem;
-  font-size: 19px;
+  font-size: 1.1875rem;
   letter-spacing: 0.16em;
 }
 
 .reading-hex-head p {
   margin-top: 0.25rem;
   color: var(--color-fog);
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 1.45;
   letter-spacing: 0.08em;
 }
@@ -888,20 +1095,20 @@ html[data-screen-fx="off"] .chroma {
   gap: 0.25rem;
   border-right: 1px solid var(--color-edge);
   color: var(--color-fog);
-  font-size: 13px;
+  font-size: 0.8125rem;
   letter-spacing: 0.1em;
 }
 
 .reading-line-rail strong {
   margin-top: 0.2rem;
   color: var(--color-ink);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 400;
 }
 
 .reading-line-code {
   color: var(--color-signal);
-  font-size: 14px;
+  font-size: 0.875rem;
   letter-spacing: 0.16em;
 }
 
@@ -959,13 +1166,13 @@ html[data-screen-fx="off"] .chroma {
 
 .reading-najia strong {
   color: var(--color-ink);
-  font-size: 17px;
+  font-size: 1.0625rem;
   letter-spacing: 0.12em;
 }
 
 .reading-najia span {
   color: var(--color-fog);
-  font-size: 15px;
+  font-size: 0.9375rem;
   letter-spacing: 0.12em;
 }
 
@@ -990,7 +1197,7 @@ html[data-screen-fx="off"] .chroma {
 .reading-fushen {
   margin-top: 0.55rem;
   color: var(--color-fog);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.5;
 }
 
@@ -1012,11 +1219,11 @@ html[data-screen-fx="off"] .chroma {
 }
 
 .reading-change-cell > span {
-  font-size: 18px;
+  font-size: 1.125rem;
 }
 
 .reading-change-cell small {
-  font-size: 11px;
+  font-size: 0.6875rem;
   letter-spacing: 0.12em;
 }
 
@@ -1044,7 +1251,7 @@ html[data-screen-fx="off"] .chroma {
   padding-bottom: 0.65rem;
   border-bottom: 1px solid var(--color-edge);
   color: var(--color-fog);
-  font-size: 13px;
+  font-size: 0.8125rem;
   letter-spacing: 0.14em;
 }
 
@@ -1062,12 +1269,12 @@ html[data-screen-fx="off"] .chroma {
   border: 1px solid var(--color-edge);
   padding: 0.35rem 0.55rem;
   color: var(--color-fog);
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .reading-shensha li strong {
   color: var(--color-ink);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 400;
 }
 
@@ -1083,13 +1290,78 @@ html[data-screen-fx="off"] .chroma {
 }
 
 @media (max-width: 767px) {
+  .result-state-grid {
+    grid-template-areas: "primary result";
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .result-state-xor {
+    display: none;
+  }
+
+  .state-panel {
+    padding: 0.8rem 0.55rem 0.9rem;
+  }
+
+  .state-panel .panel-tag {
+    left: 0.45rem;
+    max-width: calc(100% - 0.9rem);
+    overflow: hidden;
+    padding-inline: 0.3rem;
+    letter-spacing: 0.1em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .state-binary {
+    margin-bottom: 0;
+    font-size: 1.125rem;
+    letter-spacing: 0.18em;
+  }
+
+  .state-lines {
+    margin-top: 0.75rem;
+  }
+
+  .state-name-block {
+    margin-top: 0.8rem;
+  }
+
+  .state-name {
+    font-size: 1.125rem;
+    line-height: 1.35;
+    letter-spacing: 0.14em;
+  }
+
+  .state-meta {
+    font-size: 0.8rem;
+    line-height: 1.45;
+    letter-spacing: 0.06em;
+  }
+
+  .full-reading {
+    padding-inline: 0.75rem;
+  }
+
   .full-reading-header {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .full-reading-status {
-    justify-content: flex-start;
+  .full-reading-tools {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .full-reading-copy > .panel {
+    position: fixed;
+    z-index: 5;
+    top: 50%;
+    right: 1rem;
+    left: 1rem;
+    width: auto;
+    transform: translateY(-50%);
   }
 
   .reading-context-grid {
@@ -1115,11 +1387,12 @@ html[data-screen-fx="off"] .chroma {
   .reading-line-row {
     display: grid;
     min-height: 0;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) 1.65rem minmax(0, 1fr);
   }
 
   .reading-line-rail {
     display: grid;
+    grid-column: 1 / -1;
     grid-template-columns: auto auto 1fr;
     justify-content: initial;
     gap: 0.6rem;
@@ -1135,35 +1408,80 @@ html[data-screen-fx="off"] .chroma {
   }
 
   .reading-side-cell {
-    grid-template-columns: minmax(5.2rem, 0.65fr) minmax(0, 1fr);
-    gap: 0.8rem;
-    padding: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.55rem;
+    padding: 0.7rem 0.45rem;
   }
 
   .reading-primary-cell {
-    border-right: 0;
+    grid-column: 1;
+    border-right: 1px solid var(--color-edge);
+  }
+
+  .reading-result-cell {
+    grid-column: 3;
+  }
+
+  .reading-line-glyph {
+    max-width: none;
+  }
+
+  .reading-line-segment {
+    height: 8px;
   }
 
   .reading-mobile-side {
     display: block;
     margin-bottom: 0.35rem;
     color: var(--color-signal);
-    font-size: 11px;
+    font-size: 0.75rem;
     letter-spacing: 0.16em;
   }
 
+  .reading-najia {
+    gap: 0.2rem 0.35rem;
+  }
+
+  .reading-najia strong {
+    font-size: 0.875rem;
+  }
+
+  .reading-najia span {
+    font-size: 0.8125rem;
+  }
+
+  .reading-line-badges {
+    gap: 0.2rem;
+    margin-top: 0.4rem;
+  }
+
+  .reading-line-badges span,
+  .reading-line-badges strong {
+    padding: 0.15rem 0.3rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+  }
+
+  .reading-fushen {
+    overflow-wrap: anywhere;
+    font-size: 0.75rem;
+  }
+
   .reading-change-cell {
+    grid-column: 2;
     min-height: 2rem;
-    flex-direction: row;
-    border-top: 1px dashed var(--color-edge);
-    border-right: 0;
-    border-bottom: 1px dashed var(--color-edge);
+    border-right: 1px solid var(--color-edge);
   }
 
-  .reading-result-cell {
-    border-bottom: 0;
+  .reading-change-cell > span {
+    font-size: 0.875rem;
   }
 
+  .reading-change-cell small {
+    display: none;
+  }
 }
 
 /* ---------------------------------- */

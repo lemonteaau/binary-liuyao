@@ -1,7 +1,7 @@
 export function AboutPage() {
   return (
     <div className="max-w-3xl pt-6 text-base leading-relaxed">
-      <p className="mb-1 text-[14px] tracking-[0.24em] text-fog">协议 / 方法</p>
+      <p className="mb-1 text-[0.875rem] tracking-[0.24em] text-fog">协议 / 方法</p>
       <h1 className="mb-6 text-2xl font-bold tracking-[0.2em]">关于 HEX//64</h1>
 
       <Section tag="产品说明">
@@ -16,7 +16,7 @@ export function AboutPage() {
       </Section>
 
       <Section tag="二进制模型">
-        <pre className="overflow-x-auto border border-edge bg-void p-3 text-[15px] leading-relaxed">{`初始状态：6 bit，1 = 阳，0 = 阴    例如 010010（坎为水）
+        <pre className="overflow-x-auto border border-edge bg-void p-3 text-[0.9375rem] leading-relaxed">{`初始状态：6 bit，1 = 阳，0 = 阴    例如 010010（坎为水）
 翻转掩码：1 = 动爻                  例如 000011
 转换结果 = 初始状态 XOR 翻转掩码    →   010001（水雷屯）
 
@@ -61,7 +61,7 @@ export function AboutPage() {
         <p className="text-fog">
           排盘引擎完整计算并输出：公历 / 农历 / 四柱干支（节气为界，晚子时日柱按次日）/
           旬空 / 纳甲 / 六亲（以本宫五行为准）/ 六神（按日干）/ 世应（京房八宫）/ 伏神 /
-          卦身 / 神煞。全部结果包含在「复制完整排盘」文本中，可直接交给 AI 或六爻使用者解读。
+          卦身 / 神煞。全部结果包含在「复制排盘」文本中，可直接交给 AI 或六爻使用者解读。
         </p>
       </Section>
 
@@ -77,7 +77,7 @@ export function AboutPage() {
       <Section tag="分享链接">
         <p className="text-fog">
           「复制链接」仅编码初始状态与翻转掩码（#/result?s=&m=），不携带时间戳。
-          打开链接时的历法信息按查看者本地时刻重新采样。若需分享精确起卦时间，请使用「复制完整排盘」。
+          打开链接时的历法信息按查看者本地时刻重新采样。若需分享精确起卦时间，请使用「复制排盘」。
         </p>
       </Section>
     </div>

@@ -70,7 +70,7 @@ function Shell() {
               <Route path="*" element={<GeneratorPage />} />
             </Routes>
           </main>
-          <footer className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-edge py-3 text-[14px] tracking-[0.18em] text-fog">
+          <footer className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-edge py-3 text-[0.875rem] tracking-[0.18em] text-fog">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
               <span>本地计算</span>
               <span aria-hidden="true">//</span>
@@ -112,12 +112,12 @@ function Header({ timezone }: { timezone: string }) {
       >
         HEX//64
       </Link>
-      <nav className="flex items-center gap-1 text-[15px] tracking-[0.16em]">
+      <nav className="flex items-center gap-1 text-[0.9375rem] tracking-[0.16em]">
         <HeaderNavLink to="/">生成器</HeaderNavLink>
         <HeaderNavLink to="/settings">设置</HeaderNavLink>
         <HeaderNavLink to="/about">协议</HeaderNavLink>
       </nav>
-      <LiveClock key={timezone} timezone={timezone} className="text-[15px] tabular-nums tracking-[0.14em] text-fog" />
+      <LiveClock key={timezone} timezone={timezone} className="text-[0.9375rem] tabular-nums tracking-[0.14em] text-fog" />
     </header>
   )
 }

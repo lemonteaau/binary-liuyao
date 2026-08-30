@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { CopyButton } from '@/components/CopyButton'
 import { FullReading } from '@/components/FullReading'
@@ -17,7 +17,6 @@ export function ResultPage() {
   const navigate = useNavigate()
   const { current, commitReading } = useReading()
   const { resolvedTimezone, settings } = useSettings()
-  const [showFullReading, setShowFullReading] = useState(false)
 
   const linkParams = useMemo(() => parseLinkParams(new URLSearchParams(location.search)), [location.search])
   const currentMatchesLink = !linkParams || (
@@ -39,7 +38,7 @@ export function ResultPage() {
 
   if (!current || !currentMatchesLink) {
     if (linkParams) {
-      return <p className="pt-10 text-[15px] tracking-widest text-fog">正在重建状态…</p>
+      return <p className="pt-10 text-[0.9375rem] tracking-widest text-fog">正在重建状态…</p>
     }
     return (
       <div className="pt-10 text-base leading-loose text-fog">
@@ -52,7 +51,7 @@ export function ResultPage() {
   }
 
   const chart = current.chart
-  const rawText = () => formatRawText(chart, { includeAiInstruction: settings.aiInstruction })
+  const rawText = formatRawText(chart, { includeAiInstruction: settings.aiInstruction })
   const isLinkMode = chart.inputMethod === 'link' || linkParams !== null
   const hasMutation = chart.mutationMask !== 0
 
@@ -65,12 +64,12 @@ export function ResultPage() {
   return (
     <div className="pt-5">
       {isLinkMode && (
-        <p className="mb-4 border border-edge bg-surface px-3 py-2 text-[14px] tracking-[0.16em] text-fog" role="note">
+        <p className="mb-4 border border-edge bg-surface px-3 py-2 text-[0.875rem] tracking-[0.16em] text-fog" role="note">
           共享状态 // 历法按查看时刻重新采样 · 链接不包含时间戳
         </p>
       )}
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border border-edge bg-surface px-3 py-2 text-[14px] tracking-[0.18em] text-fog">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border border-edge bg-surface px-3 py-2 text-[0.875rem] tracking-[0.18em] text-fog">
         <span className="flex items-center gap-3">
           <span className="text-signal">会话 {current.id}</span>
           <span aria-hidden="true">//</span>
@@ -81,43 +80,50 @@ export function ResultPage() {
         <span className="tabular-nums">{chart.createdAt}</span>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_auto_1fr]">
-        <StatePanel
-          tag="初始状态"
-          binary={chart.primary.binary}
-          bits={chart.primary.bits}
-          mask={chart.mutationMask}
-          name={chart.primary.record.chineseName}
-          hexNumber={chart.primary.record.kingWenNumber}
-          palace={`${chart.primary.palace} · ${chart.primary.palaceRank}${chart.primary.attribute ? ` · ${chart.primary.attribute}` : ''}`}
-        />
+      <div className="result-state-grid">
+        <div className="result-state-primary">
+          <StatePanel
+            tag="初始状态"
+            binary={chart.primary.binary}
+            bits={chart.primary.bits}
+            mask={chart.mutationMask}
+            name={chart.primary.record.chineseName}
+            hexNumber={chart.primary.record.kingWenNumber}
+            palace={`${chart.primary.palace} · ${chart.primary.palaceRank}${chart.primary.attribute ? ` · ${chart.primary.attribute}` : ''}`}
+          />
+        </div>
 
-        <div className="flex items-center justify-center lg:flex-col" aria-label={`XOR ${bitsToString(chart.mutationMask)}`}>
+        <div className="result-state-xor" aria-label={`XOR ${bitsToString(chart.mutationMask)}`}>
           <div className="hidden h-full w-px bg-edge lg:block" />
-          <div className="my-2 px-3 text-center lg:my-0">
-            <p className={`text-[14px] tracking-[0.22em] ${hasMutation ? 'text-flux' : 'text-fog'}`}>翻转掩码</p>
-            <p className={`text-lg font-bold tabular-nums tracking-[0.3em] ${hasMutation ? 'text-flux' : 'text-ink'}`}>
+          <div className="result-state-xor-copy">
+            <p className={`result-state-xor-label ${hasMutation ? 'text-flux' : 'text-fog'}`}>翻转掩码</p>
+            <p className={`result-state-xor-mask ${hasMutation ? 'text-flux' : 'text-ink'}`}>
               {bitsToString(chart.mutationMask)}
             </p>
-            <p className="mt-1 text-[14px] tracking-widest text-fog">▼ XOR ▼</p>
+            <p className="result-state-xor-direction text-fog">
+              <span className="result-state-xor-mobile">→ XOR →</span>
+              <span className="result-state-xor-desktop">▼ XOR ▼</span>
+            </p>
           </div>
           <div className="hidden h-full w-px bg-edge lg:block" />
         </div>
 
-        <StatePanel
-          tag="转换状态"
-          binary={chart.result.binary}
-          bits={chart.result.bits}
-          mask={0}
-          name={chart.result.record.chineseName}
-          hexNumber={chart.result.record.kingWenNumber}
-          palace={`${chart.result.palace} · ${chart.result.palaceRank}${chart.result.attribute ? ` · ${chart.result.attribute}` : ''}`}
-        />
+        <div className="result-state-result">
+          <StatePanel
+            tag="转换状态"
+            binary={chart.result.binary}
+            bits={chart.result.bits}
+            mask={0}
+            name={chart.result.record.chineseName}
+            hexNumber={chart.result.record.kingWenNumber}
+            palace={`${chart.result.palace} · ${chart.result.palaceRank}${chart.result.attribute ? ` · ${chart.result.attribute}` : ''}`}
+          />
+        </div>
       </div>
 
       <section className="panel mt-4 p-4 sm:p-5">
         <span className="panel-tag">元数据</span>
-        <dl className="grid grid-cols-1 gap-x-8 gap-y-2 text-[15px] sm:grid-cols-2 lg:grid-cols-3">
+        <dl className="grid grid-cols-1 gap-x-8 gap-y-2 text-[0.9375rem] sm:grid-cols-2 lg:grid-cols-3">
           <Meta label="时间戳" value={chart.calendar.gregorian} />
           <Meta label="时区" value={`${chart.calendar.timezone} ${chart.calendar.utcOffset}`} />
           <Meta label="农历时钟" value={chart.calendar.lunarText} />
@@ -130,7 +136,7 @@ export function ResultPage() {
         </dl>
         {chart.shensha.some((s) => s.branches.length > 0) && (
           <details className="mt-3">
-            <summary className="cursor-pointer text-[14px] tracking-[0.2em] text-fog hover:text-signal">
+            <summary className="cursor-pointer text-[0.875rem] tracking-[0.2em] text-fog hover:text-signal">
               辅助信号 [{chart.shensha.filter((s) => s.branches.length > 0).length}]
             </summary>
             <p className="mt-2 leading-relaxed text-fog">
@@ -143,7 +149,7 @@ export function ResultPage() {
         )}
         {chart.fuShen.length > 0 && (
           <details className="mt-2">
-            <summary className="cursor-pointer text-[14px] tracking-[0.2em] text-fog hover:text-signal">
+            <summary className="cursor-pointer text-[0.875rem] tracking-[0.2em] text-fog hover:text-signal">
               伏藏节点 [{chart.fuShen.length}]
             </summary>
             <p className="mt-2 leading-relaxed text-fog">
@@ -155,19 +161,11 @@ export function ResultPage() {
         )}
       </section>
 
+      <FullReading chart={chart} rawText={rawText} />
+
       <section className="panel mt-4 p-4 sm:p-5">
         <span className="panel-tag">操作</span>
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            className="btn btn-primary"
-            aria-expanded={showFullReading}
-            aria-controls="full-reading"
-            onClick={() => setShowFullReading((visible) => !visible)}
-          >
-            [ {showFullReading ? '收起完整排盘 ↑' : '展开完整排盘 ↓'} ]
-          </button>
-          <CopyButton label="[ 复制完整排盘 ]" getText={rawText} variant="primary" />
           <CopyButton label="[ 复制链接 ]" getText={shareUrl} />
           <button
             type="button"
@@ -180,18 +178,16 @@ export function ResultPage() {
             [ 新建状态 ]
           </button>
         </div>
-        <p className="mt-3 text-[14px] leading-relaxed text-fog">
-          完整排盘适用于 AI 或六爻使用者。
+        <p className="mt-3 text-[0.875rem] leading-relaxed text-fog">
+          上方「复制排盘」输出适用于 AI 或六爻使用者。
           {settings.aiInstruction ? ' AI 指令附加：已开启。' : ' AI 指令附加：已关闭（可在设置中开启）。'}
           {' '}分享链接仅包含初始状态与翻转掩码，不包含时间戳。
         </p>
       </section>
 
-      {showFullReading && <FullReading chart={chart} />}
-
       {current.ordinal !== undefined && (
         <p
-          className="mt-4 border border-edge bg-panel px-4 py-3 text-center text-[15px] tracking-[0.16em] text-fog"
+          className="mt-4 border border-edge bg-panel px-4 py-3 text-center text-[0.9375rem] tracking-[0.16em] text-fog"
           aria-live="polite"
         >
           {current.ordinal === null ? (
@@ -222,17 +218,23 @@ function StatePanel(props: {
   palace: string
 }) {
   return (
-    <section className="panel p-4 sm:p-6">
+    <section className="state-panel panel">
       <span className="panel-tag">{props.tag}</span>
-      <p className="chroma mb-1 text-center text-3xl font-bold tabular-nums tracking-[0.35em] text-signal sm:text-4xl">
+      <p className="state-binary chroma text-center font-bold tabular-nums text-signal">
         {props.binary}
       </p>
-      <div className="mx-auto mt-4 max-w-sm">
-        <HexLines bits={props.bits} mask={props.mask} />
+      <div className="state-lines mx-auto max-w-sm">
+        <HexLines
+          bits={props.bits}
+          mask={props.mask}
+          compact
+          showLabels={false}
+          showMutationLabels={false}
+        />
       </div>
-      <div className="mt-5 text-center">
-        <p className="text-2xl font-bold tracking-[0.3em]">{props.name}</p>
-        <p className="mt-1 text-[14px] tracking-[0.22em] text-fog">
+      <div className="state-name-block text-center">
+        <p className="state-name font-bold">{props.name}</p>
+        <p className="state-meta text-fog">
           HEX {String(props.hexNumber).padStart(2, '0')} · {props.palace}
         </p>
       </div>

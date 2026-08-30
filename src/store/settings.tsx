@@ -1,10 +1,13 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { detectTimezone } from '@/calendar/solar-lunar'
+
+export type FontSize = 'small' | 'standard' | 'large'
 
 export interface Settings {
   /** 'auto' 或 IANA 时区名 */
   timezone: string
+  fontSize: FontSize
   aiInstruction: boolean
   animation: boolean
   screenFx: boolean
@@ -15,6 +18,7 @@ const STORAGE_KEY = 'hex64.settings.v1'
 function loadSettings(): Settings {
   const defaults: Settings = {
     timezone: 'auto',
+    fontSize: 'standard',
     aiInstruction: false,
     animation: true,
     screenFx: true,
@@ -22,16 +26,23 @@ function loadSettings(): Settings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return defaults
-    return { ...defaults, ...(JSON.parse(raw) as Partial<Settings>) }
+    const stored = JSON.parse(raw) as Partial<Settings>
+    const fontSize = isFontSize(stored.fontSize) ? stored.fontSize : defaults.fontSize
+    return { ...defaults, ...stored, fontSize }
   } catch {
     return defaults
   }
+}
+
+function isFontSize(value: unknown): value is FontSize {
+  return value === 'small' || value === 'standard' || value === 'large'
 }
 
 interface SettingsContextValue {
   settings: Settings
   resolvedTimezone: string
   setTimezone: (tz: string) => void
+  setFontSize: (fontSize: FontSize) => void
   setAiInstruction: (on: boolean) => void
   setAnimation: (on: boolean) => void
   setScreenFx: (on: boolean) => void
@@ -51,10 +62,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     }
   }, [settings])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    document.documentElement.dataset.fontSize = settings.fontSize
     document.documentElement.dataset.motion = settings.animation ? 'on' : 'off'
     document.documentElement.dataset.screenFx = settings.screenFx ? 'on' : 'off'
-  }, [settings.animation, settings.screenFx])
+  }, [settings.animation, settings.fontSize, settings.screenFx])
 
   const update = useCallback((patch: Partial<Settings>) => {
     setSettings((prev) => ({ ...prev, ...patch }))
@@ -65,6 +77,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       settings,
       resolvedTimezone: settings.timezone === 'auto' ? detected : settings.timezone,
       setTimezone: (timezone) => update({ timezone }),
+      setFontSize: (fontSize) => update({ fontSize }),
       setAiInstruction: (aiInstruction) => update({ aiInstruction }),
       setAnimation: (animation) => update({ animation }),
       setScreenFx: (screenFx) => update({ screenFx }),

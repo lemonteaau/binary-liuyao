@@ -64,7 +64,7 @@ export function GeneratorPage() {
     <div className="pt-6">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="mb-1 text-[14px] tracking-[0.24em] text-fog">六位二进制状态生成器</p>
+          <p className="mb-1 text-[0.875rem] tracking-[0.24em] text-fog">六位二进制状态生成器</p>
           <h1 className="text-2xl font-bold tracking-[0.2em]">选择输入来源</h1>
         </div>
         <HomepageCounter />
@@ -80,8 +80,8 @@ export function GeneratorPage() {
             aria-pressed={mode === m.id}
             onClick={() => setMode(m.id)}
           >
-            <span className="text-[17px] font-bold tracking-[0.18em]">{m.title}</span>
-            <span className="text-[14px] tracking-[0.12em] text-fog">{m.sub}</span>
+            <span className="text-[1.0625rem] font-bold tracking-[0.18em]">{m.title}</span>
+            <span className="text-[0.875rem] tracking-[0.12em] text-fog">{m.sub}</span>
           </button>
         ))}
       </div>
@@ -135,7 +135,7 @@ function HomepageCounter() {
 
   return (
     <p
-      className="flex flex-wrap items-center justify-center gap-x-2 border border-edge bg-panel px-3 py-2 text-center text-[14px] tracking-[0.14em] text-fog sm:justify-end sm:text-right"
+      className="flex flex-wrap items-center justify-center gap-x-2 border border-edge bg-panel px-3 py-2 text-center text-[0.875rem] tracking-[0.14em] text-fog sm:justify-end sm:text-right"
       aria-live="polite"
     >
       <span className="inline-flex items-center align-middle whitespace-nowrap">
@@ -192,7 +192,7 @@ function EntropyPanel() {
   return (
     <Panel tag="随机 / 熵源">
       <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-[15px] leading-relaxed text-fog">
+        <div className="text-[0.9375rem] leading-relaxed text-fog">
           <p>六爻 × 三枚铜钱</p>
           <p>
             熵源：<span className="text-signal">WEB CRYPTO API</span>
@@ -204,7 +204,7 @@ function EntropyPanel() {
         </button>
       </div>
       {rolling && (
-        <p className="mt-3 text-[15px] tracking-[0.2em] text-flux caret" aria-live="polite">
+        <p className="mt-3 text-[0.9375rem] tracking-[0.2em] text-flux caret" aria-live="polite">
           正在采样熵源
         </p>
       )}
@@ -319,7 +319,7 @@ function CoinShakePanel({
             </button>
 
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-[15px] leading-relaxed text-fog" aria-live="polite">
+              <p className="text-[0.9375rem] leading-relaxed text-fog" aria-live="polite">
                 {statusText}
               </p>
               <button
@@ -332,7 +332,7 @@ function CoinShakePanel({
               </button>
             </div>
             {error && (
-              <p className="mt-2 text-[15px] tracking-widest text-flux" role="alert">
+              <p className="mt-2 text-[0.9375rem] tracking-widest text-flux" role="alert">
                 {error}
               </p>
             )}
@@ -372,7 +372,7 @@ function PixelCoin({ score, shaking }: { score?: CoinScore; shaking: boolean }) 
 function CoinLineRecord({ lines, shaking }: { lines: readonly LineValue[]; shaking: boolean }) {
   return (
     <section className="coin-record" aria-label="六次摇币记录">
-      <div className="flex items-center justify-between border-b border-edge px-3 py-2 text-[14px] tracking-[0.16em] text-fog">
+      <div className="flex items-center justify-between border-b border-edge px-3 py-2 text-[0.875rem] tracking-[0.16em] text-fog">
         <span>爻序记录</span>
         <span>自下而上</span>
       </div>
@@ -395,7 +395,7 @@ function CoinLineRecord({ lines, shaking }: { lines: readonly LineValue[]; shaki
               data-current={current}
               data-mutating={mutating}
             >
-              <span className="w-7 shrink-0 text-[14px] text-fog">L{index + 1}</span>
+              <span className="w-7 shrink-0 text-[0.875rem] text-fog">L{index + 1}</span>
               <span className="flex flex-1 items-center gap-[14%]">
                 {value ? (
                   yang ? (
@@ -411,7 +411,7 @@ function CoinLineRecord({ lines, shaking }: { lines: readonly LineValue[]; shaki
                 )}
               </span>
               <span className={cn(
-                'w-28 shrink-0 text-right text-[14px]',
+                'w-28 shrink-0 text-right text-[0.875rem]',
                 value ? mutating ? 'text-flux' : 'text-ink' : current ? 'text-signal' : 'text-fog',
               )}>
                 {slotText}
@@ -459,7 +459,7 @@ export function LineEditor({ draft, setDraft }: LineEditorProps) {
         const mutating = draft[i]! >= 9 || draft[i] === 6
         return (
           <div key={i} className="flex items-center gap-2 sm:gap-3">
-            <span className="w-6 text-right text-[14px] text-fog">L{i + 1}</span>
+            <span className="w-6 text-right text-[0.875rem] text-fog">L{i + 1}</span>
             <button
               type="button"
               onClick={() => toggleYang(i)}
@@ -481,13 +481,13 @@ export function LineEditor({ draft, setDraft }: LineEditorProps) {
               aria-pressed={mutating}
               aria-label={`第 ${i + 1} 爻翻转${mutating ? '已开启' : '已关闭'}`}
               className={cn(
-                'w-16 border px-0 py-2 text-[14px] tracking-[0.14em]',
+                'w-16 border px-0 py-2 text-[0.875rem] tracking-[0.14em]',
                 mutating ? 'border-flux text-flux' : 'border-edge text-fog',
               )}
             >
               {mutating ? '◉ 翻转' : '翻转'}
             </button>
-            <span className="w-4 text-[15px] tabular-nums text-fog" aria-hidden="true">
+            <span className="w-4 text-[0.9375rem] tabular-nums text-fog" aria-hidden="true">
               {yang ? 1 : 0}
             </span>
           </div>
@@ -573,18 +573,18 @@ function HexNamePanel({ draft, setDraft }: LineEditorProps) {
                 data-active={selected?.kingWenNumber === h.kingWenNumber}
               >
                 <span>{h.chineseName}</span>
-                <span className="text-[14px] tabular-nums text-fog">HEX {h.kingWenNumber}</span>
+                <span className="text-[0.875rem] tabular-nums text-fog">HEX {h.kingWenNumber}</span>
               </button>
             </li>
           ))}
           {results.length === 0 && (
-            <li className="px-3 py-2 text-[15px] tracking-widest text-flux">未找到匹配状态</li>
+            <li className="px-3 py-2 text-[0.9375rem] tracking-widest text-flux">未找到匹配状态</li>
           )}
         </ul>
       </Panel>
       {selected && (
         <Panel tag="翻转掩码 // 可选">
-          <p className="mb-3 text-[15px] text-fog">
+          <p className="mb-3 text-[0.9375rem] text-fog">
             基础状态：<span className="text-signal">{selected.chineseName}</span> · 点击爻线设置翻转
           </p>
           <LineEditor draft={draft} setDraft={setDraft} />
@@ -620,17 +620,17 @@ function NumberPanel() {
           aria-label="数字种子"
           className="w-full border border-edge bg-void px-3 py-2 text-lg tracking-[0.2em] text-ink placeholder:tracking-normal placeholder:text-fog/60 focus:border-signal focus:outline-none"
         />
-        <p className="mt-2 text-[14px] leading-relaxed text-fog">
+        <p className="mt-2 text-[0.875rem] leading-relaxed text-fog">
           规则：上卦 = A MOD 8 · 下卦 = B MOD 8 · 动爻 = C MOD 6 ·
           余数 0 → 坤 / 上爻
         </p>
         {input.trim() !== '' && !valid && (
-          <p className="mt-2 text-[15px] tracking-widest text-flux" role="alert">
+          <p className="mt-2 text-[0.9375rem] tracking-widest text-flux" role="alert">
             种子无效 — 请输入数字
           </p>
         )}
         {parsed.ok && (
-          <div className="mt-3 space-y-1 text-[15px] text-fog">
+          <div className="mt-3 space-y-1 text-[0.9375rem] text-fog">
             <p>
               种子 A/B/C：{' '}
               <span className="text-ink">
@@ -680,7 +680,7 @@ function TimePanel() {
   return (
     <Panel tag="使用当前时间戳">
       <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-[15px] leading-relaxed text-fog">
+        <div className="text-[0.9375rem] leading-relaxed text-fog">
           <p>
             种子来源：<span className="text-signal">本地时间</span>
           </p>
@@ -692,7 +692,7 @@ function TimePanel() {
             <HexLines bits={previewBits} compact showLabels={false} />
             <span className="tabular-nums">{previewBits.toString(2).padStart(6, '0')}</span>
           </div>
-          <p className="mt-1 text-[14px] opacity-70">
+          <p className="mt-1 text-[0.875rem] opacity-70">
             仅为预览 · 最终状态以点击时刻为准
           </p>
         </div>

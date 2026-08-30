@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { CopyButton } from '@/components/CopyButton'
 import { TRIGRAMS } from '@/data/trigrams'
 import { INPUT_METHOD_LABELS } from '@/engine'
 import { cn } from '@/lib/cn'
@@ -5,7 +7,10 @@ import type { ChartData, ChartLine, HexStateInfo, NajiaLine } from '@/types'
 
 const LINE_NAMES = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'] as const
 
-export function FullReading({ chart }: { chart: ChartData }) {
+type ReadingMode = 'structured' | 'plain'
+
+export function FullReading({ chart, rawText }: { chart: ChartData; rawText: string }) {
+  const [mode, setMode] = useState<ReadingMode>('structured')
   const rows = [...chart.lines].sort((a, b) => b.index - a.index)
   const visibleShensha = chart.shensha.filter((entry) => entry.branches.length > 0)
   const mutatingCount = chart.lines.filter((line) => line.mutating).length
@@ -21,75 +26,128 @@ export function FullReading({ chart }: { chart: ChartData }) {
       <header className="full-reading-header">
         <div>
           <p className="full-reading-kicker">COMPLETE LIUYAO MATRIX</p>
-          <h2 id="full-reading-title">结构化六爻排盘</h2>
+          <h2 id="full-reading-title">{mode === 'structured' ? '结构化六爻排盘' : '纯文字排盘'}</h2>
+          <div className="full-reading-status" aria-label="排盘状态">
+            <span>{INPUT_METHOD_LABELS[chart.inputMethod]}</span>
+            <span>{mutatingCount > 0 ? `${mutatingCount} 个动爻` : '无动爻'}</span>
+          </div>
         </div>
-        <div className="full-reading-status" aria-label="排盘状态">
-          <span>{INPUT_METHOD_LABELS[chart.inputMethod]}</span>
-          <span>{mutatingCount > 0 ? `${mutatingCount} 个动爻` : '无动爻'}</span>
+        <div className="full-reading-tools">
+          <div className="full-reading-mode" role="group" aria-label="排盘显示模式">
+            <ModeButton active={mode === 'structured'} onClick={() => setMode('structured')}>
+              结构化
+            </ModeButton>
+            <ModeButton active={mode === 'plain'} onClick={() => setMode('plain')}>
+              纯文字
+            </ModeButton>
+          </div>
+          <div className="full-reading-copy">
+            <CopyButton
+              label="复制排盘"
+              getText={() => rawText}
+              className="full-reading-copy-button"
+            >
+              <CopyIcon />
+              <span>复制排盘</span>
+            </CopyButton>
+          </div>
         </div>
       </header>
 
-      <section className="reading-context" aria-label="排盘时间与历法">
-        <dl className="reading-context-grid">
-          <ReadingDatum label="公历" value={chart.calendar.gregorian} />
-          <ReadingDatum
-            label="农历"
-            value={`${chart.calendar.lunarText}日 · ${chart.calendar.hourZhi}时`}
-          />
-          <ReadingDatum
-            label="时区"
-            value={`${chart.calendar.timezone} ${chart.calendar.utcOffset}`}
-          />
-          <ReadingDatum label="旬空" value={chart.calendar.xunKong.join('')} />
-          <ReadingDatum
-            label="卦身"
-            value={`${chart.guaShen.branch} · ${chart.guaShen.onHexagram ? '已上卦' : '未上卦'}`}
-          />
-        </dl>
-        <div className="reading-pillars" aria-label="四柱干支">
-          <Pillar label="年柱" value={chart.calendar.ganzhi.year} />
-          <Pillar label="月柱" value={chart.calendar.ganzhi.month} />
-          <Pillar label="日柱" value={chart.calendar.ganzhi.day} />
-          <Pillar label="时柱" value={chart.calendar.ganzhi.hour} />
-        </div>
-      </section>
+      {mode === 'structured' ? (
+        <>
+          <section className="reading-context" aria-label="排盘时间与历法">
+            <dl className="reading-context-grid">
+              <ReadingDatum label="公历" value={chart.calendar.gregorian} />
+              <ReadingDatum
+                label="农历"
+                value={`${chart.calendar.lunarText}日 · ${chart.calendar.hourZhi}时`}
+              />
+              <ReadingDatum
+                label="时区"
+                value={`${chart.calendar.timezone} ${chart.calendar.utcOffset}`}
+              />
+              <ReadingDatum label="旬空" value={chart.calendar.xunKong.join('')} />
+              <ReadingDatum
+                label="卦身"
+                value={`${chart.guaShen.branch} · ${chart.guaShen.onHexagram ? '已上卦' : '未上卦'}`}
+              />
+            </dl>
+            <div className="reading-pillars" aria-label="四柱干支">
+              <Pillar label="年柱" value={chart.calendar.ganzhi.year} />
+              <Pillar label="月柱" value={chart.calendar.ganzhi.month} />
+              <Pillar label="日柱" value={chart.calendar.ganzhi.day} />
+              <Pillar label="时柱" value={chart.calendar.ganzhi.hour} />
+            </div>
+          </section>
 
-      <section className="reading-matrix" aria-label="本卦与变卦逐爻排盘">
-        <div className="reading-matrix-head">
-          <span className="reading-axis-head">爻位 / 六神</span>
-          <HexReadingHead label="本卦" state={chart.primary} />
-          <span className="reading-change-head">变化</span>
-          <HexReadingHead label="变卦" state={chart.result} />
-        </div>
+          <section className="reading-matrix" aria-label="本卦与变卦逐爻排盘">
+            <div className="reading-matrix-head">
+              <span className="reading-axis-head">爻位 / 六神</span>
+              <HexReadingHead label="本卦" state={chart.primary} />
+              <span className="reading-change-head">变化</span>
+              <HexReadingHead label="变卦" state={chart.result} />
+            </div>
 
-        <div className="reading-line-list">
-          {rows.map((line) => (
-            <ReadingLineRow key={line.index} chart={chart} line={line} />
-          ))}
-        </div>
-      </section>
-
-      <section className="reading-supplement" aria-label="神煞与附加信息">
-        <div className="reading-shensha">
-          <div className="reading-section-title">
-            <span>神煞</span>
-            <span>{visibleShensha.length} 项</span>
-          </div>
-          {visibleShensha.length > 0 ? (
-            <ul>
-              {visibleShensha.map((entry) => (
-                <li key={entry.id}>
-                  <span>{entry.name}</span>
-                  <strong>{entry.branches.join('')}</strong>
-                </li>
+            <div className="reading-line-list">
+              {rows.map((line) => (
+                <ReadingLineRow key={line.index} chart={chart} line={line} />
               ))}
-            </ul>
-          ) : (
-            <p className="text-fog">本次无神煞命中。</p>
-          )}
-        </div>
-      </section>
+            </div>
+          </section>
+
+          <section className="reading-supplement" aria-label="神煞与附加信息">
+            <div className="reading-shensha">
+              <div className="reading-section-title">
+                <span>神煞</span>
+                <span>{visibleShensha.length} 项</span>
+              </div>
+              {visibleShensha.length > 0 ? (
+                <ul>
+                  {visibleShensha.map((entry) => (
+                    <li key={entry.id}>
+                      <span>{entry.name}</span>
+                      <strong>{entry.branches.join('')}</strong>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-fog">本次无神煞命中。</p>
+              )}
+            </div>
+          </section>
+        </>
+      ) : (
+        <section className="reading-plain" aria-label="纯文字排盘">
+          <pre>{rawText}</pre>
+        </section>
+      )}
     </section>
+  )
+}
+
+function ModeButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  children: string
+}) {
+  return (
+    <button type="button" aria-pressed={active} data-active={active} onClick={onClick}>
+      {children}
+    </button>
+  )
+}
+
+function CopyIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="size-[1em] fill-none stroke-current">
+      <rect x="8" y="8" width="11" height="11" rx="1" strokeWidth="1.8" />
+      <path d="M16 8V5H5v11h3" strokeWidth="1.8" />
+    </svg>
   )
 }
 

@@ -7,6 +7,8 @@ interface HexLinesProps {
   mask?: number
   /** 爻位标签 L1..L6 */
   showLabels?: boolean
+  /** 动爻右侧文字；紧凑双栏中可仅用红色爻线表达 */
+  showMutationLabels?: boolean
   compact?: boolean
 }
 
@@ -14,6 +16,7 @@ export function HexLines({
   bits,
   mask = 0,
   showLabels = true,
+  showMutationLabels = true,
   compact = false,
 }: HexLinesProps) {
   const rows = [5, 4, 3, 2, 1, 0]
@@ -38,7 +41,7 @@ export function HexLines({
             )}
           >
             {showLabels && (
-              <span className="w-10 shrink-0 text-right text-[14px] text-fog sm:w-16">L{i + 1}</span>
+              <span className="w-10 shrink-0 text-right text-[0.875rem] text-fog sm:w-16">L{i + 1}</span>
             )}
             <div className={cn('flex flex-1 gap-[14%]', mutating ? 'flux-pulse' : null)}>
               {yang ? (
@@ -50,8 +53,8 @@ export function HexLines({
                 </>
               )}
             </div>
-            {mutating ? (
-              <span className="w-10 shrink-0 text-[14px] font-bold text-flux sm:w-16">
+            {mutating && showMutationLabels ? (
+              <span className="w-10 shrink-0 text-[0.875rem] font-bold text-flux sm:w-16">
                 <span className="sm:hidden">◉ 动</span>
                 <span className="hidden tracking-widest sm:inline">◉ 翻转</span>
               </span>
