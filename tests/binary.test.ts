@@ -59,7 +59,7 @@ describe('加密熵源', () => {
     expect(values).toEqual([6, 7, 7, 7, 8, 8, 8, 9])
   })
 
-  it('摇币指定每次返回三枚合法铜钱', () => {
+  it('摇币起卦每次返回三枚合法铜钱', () => {
     for (let i = 0; i < 100; i++) {
       const coins = tossCoins()
       expect(coins).toHaveLength(3)

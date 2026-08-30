@@ -1,13 +1,13 @@
 export function AboutPage() {
   return (
     <div className="max-w-3xl pt-6 text-base leading-relaxed">
-      <p className="mb-1 text-[0.875rem] tracking-[0.24em] text-fog">协议 / 方法</p>
+      <p className="mb-1 text-[0.875rem] tracking-[0.24em] text-fog">产品 / 方法</p>
       <h1 className="mb-6 text-2xl font-bold tracking-[0.2em]">关于 HEX//64</h1>
 
       <Section tag="产品说明">
         <p>
-          HEX//64 将六个二进制爻位映射到传统易经六十四卦结构。Cyber 界面之下运行一套完整的
-          六爻排盘引擎；主界面只隐藏了大部分传统术语，并未删减底层数据。
+          HEX//64 将六个二进制爻位映射到传统易经六十四卦结构。界面保留了 Cyber
+          风格的编码展示，同时采用本卦、动爻、变卦等六爻常用名称；底层运行一套完整的六爻排盘引擎。
         </p>
         <p className="mt-2">
           所有排盘计算均在浏览器本地完成。本应用不会将起卦内容、输入数字或卦象上传至任何服务器；
@@ -16,9 +16,9 @@ export function AboutPage() {
       </Section>
 
       <Section tag="二进制模型">
-        <pre className="overflow-x-auto border border-edge bg-void p-3 text-[0.9375rem] leading-relaxed">{`初始状态：6 bit，1 = 阳，0 = 阴    例如 010010（坎为水）
-翻转掩码：1 = 动爻                  例如 000011
-转换结果 = 初始状态 XOR 翻转掩码    →   010001（水雷屯）
+        <pre className="overflow-x-auto border border-edge bg-void p-3 text-[0.9375rem] leading-relaxed">{`本卦编码：6 bit，1 = 阳，0 = 阴    例如 010010（坎为水）
+动爻标记：1 = 动爻                  例如 000011
+变卦编码 = 本卦编码 XOR 动爻标记    →   010001（水雷屯）
 
 位序（固定）：bit 0 = 初爻
 显示顺序：L6 L5 L4 L3 L2 L1（MSB 在前）。`}</pre>
@@ -27,14 +27,14 @@ export function AboutPage() {
       <Section tag="输入算法">
         <dl className="space-y-3">
           <div>
-            <dt className="text-signal">随机熵源</dt>
+            <dt className="text-signal">电脑起卦</dt>
             <dd className="text-fog">
               每爻通过 <code>crypto.getRandomValues()</code> 生成三枚虚拟铜钱，自然得到
               老阴 1/8 · 少阳 3/8 · 少阴 3/8 · 老阳 1/8 的概率。核心随机逻辑不使用 Math.random()。
             </dd>
           </div>
           <div>
-            <dt className="text-signal">摇币指定</dt>
+            <dt className="text-signal">摇币起卦</dt>
             <dd className="text-fog">
               用户逐轮开始并停止三枚铜钱，从初爻到上爻累计六次。停止瞬间使用 Web Crypto
               采样；正面记 3、反面记 2，合计 6 / 7 / 8 / 9。动画只表现摇动过程，不参与随机计算。
@@ -76,7 +76,7 @@ export function AboutPage() {
 
       <Section tag="分享链接">
         <p className="text-fog">
-          「复制链接」仅编码初始状态与翻转掩码（#/result?s=&m=），不携带时间戳。
+          「复制链接」仅编码本卦与动爻标记（#/result?s=&m=），不携带时间戳。
           打开链接时的历法信息按查看者本地时刻重新采样。若需分享精确起卦时间，请使用「复制排盘」。
         </p>
       </Section>

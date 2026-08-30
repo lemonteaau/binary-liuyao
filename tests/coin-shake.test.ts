@@ -21,7 +21,7 @@ function cast(state = createCoinShakeState(), coins: CoinToss = [2, 2, 2]) {
   return coinShakeReducer(shaking, { type: 'stop', coins, when: NOW })
 }
 
-describe('摇币指定状态机', () => {
+describe('摇币起卦状态机', () => {
   it('初始静止且停止操作不会写入爻', () => {
     const initial = createCoinShakeState()
     expect(initial.phase).toBe('ready')

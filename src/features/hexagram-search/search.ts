@@ -2,7 +2,7 @@ import { HEXAGRAMS } from '@/data/hexagrams'
 import type { HexagramRecord, LineValue } from '@/types'
 
 /**
- * 卦名检索（SELECT BASE STATE）：
+ * 按卦名选择本卦（SELECT PRIMARY HEXAGRAM）：
  * 支持中文名包含匹配、核心卦名匹配、文王序号精确匹配。
  */
 export function searchHexagrams(query: string): HexagramRecord[] {

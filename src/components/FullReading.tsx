@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { CopyButton } from '@/components/CopyButton'
+import { ShareImageButton } from '@/components/ShareImageButton'
 import { TRIGRAMS } from '@/data/trigrams'
-import { INPUT_METHOD_LABELS } from '@/engine'
 import { cn } from '@/lib/cn'
 import type { ChartData, ChartLine, HexStateInfo, NajiaLine } from '@/types'
 
@@ -9,11 +9,20 @@ const LINE_NAMES = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'] 
 
 type ReadingMode = 'structured' | 'plain'
 
-export function FullReading({ chart, rawText }: { chart: ChartData; rawText: string }) {
+export function FullReading({
+  chart,
+  rawText,
+  sessionId,
+  ordinal,
+}: {
+  chart: ChartData
+  rawText: string
+  sessionId?: string
+  ordinal?: number | null
+}) {
   const [mode, setMode] = useState<ReadingMode>('structured')
   const rows = [...chart.lines].sort((a, b) => b.index - a.index)
   const visibleShensha = chart.shensha.filter((entry) => entry.branches.length > 0)
-  const mutatingCount = chart.lines.filter((line) => line.mutating).length
 
   return (
     <section
@@ -27,10 +36,6 @@ export function FullReading({ chart, rawText }: { chart: ChartData; rawText: str
         <div>
           <p className="full-reading-kicker">COMPLETE LIUYAO MATRIX</p>
           <h2 id="full-reading-title">{mode === 'structured' ? '结构化六爻排盘' : '纯文字排盘'}</h2>
-          <div className="full-reading-status" aria-label="排盘状态">
-            <span>{INPUT_METHOD_LABELS[chart.inputMethod]}</span>
-            <span>{mutatingCount > 0 ? `${mutatingCount} 个动爻` : '无动爻'}</span>
-          </div>
         </div>
         <div className="full-reading-tools">
           <div className="full-reading-mode" role="group" aria-label="排盘显示模式">
@@ -41,15 +46,23 @@ export function FullReading({ chart, rawText }: { chart: ChartData; rawText: str
               纯文字
             </ModeButton>
           </div>
-          <div className="full-reading-copy">
-            <CopyButton
-              label="复制排盘"
-              getText={() => rawText}
-              className="full-reading-copy-button"
-            >
-              <CopyIcon />
-              <span>复制排盘</span>
-            </CopyButton>
+          <div className="full-reading-actions" aria-label="排盘分享操作">
+            <ShareImageButton
+              chart={chart}
+              sessionId={sessionId}
+              ordinal={ordinal}
+              className="full-reading-share-button"
+            />
+            <div className="full-reading-copy">
+              <CopyButton
+                label="复制排盘"
+                getText={() => rawText}
+                className="full-reading-copy-button"
+              >
+                <CopyIcon />
+                <span>复制排盘</span>
+              </CopyButton>
+            </div>
           </div>
         </div>
       </header>
@@ -188,7 +201,6 @@ function ReadingLineRow({ chart, line }: { chart: ChartData; line: ChartLine }) 
       <div className="reading-side-cell reading-primary-cell">
         <LineGlyph yang={line.yang} mutating={line.mutating} />
         <div className="reading-line-detail">
-          <span className="reading-mobile-side">本卦</span>
           <NajiaValue relation={line.primary.relation} najia={line.primary.najia} />
           <div className="reading-line-badges">
             <span>{primaryLineState(line)}</span>
@@ -205,13 +217,12 @@ function ReadingLineRow({ chart, line }: { chart: ChartData; line: ChartLine }) 
 
       <div className="reading-change-cell" data-mutating={line.mutating} aria-hidden="true">
         <span>{line.mutating ? '变' : '·'}</span>
-        <small>{line.mutating ? '翻转' : '同位'}</small>
+        <small>{line.mutating ? '动爻' : '不变'}</small>
       </div>
 
       <div className="reading-side-cell reading-result-cell">
         <LineGlyph yang={resultYang} />
         <div className="reading-line-detail">
-          <span className="reading-mobile-side">变卦</span>
           <NajiaValue relation={line.result.relation} najia={line.result.najia} />
           <div className="reading-line-badges">
             <span>{resultYang ? '阳爻' : '阴爻'}</span>

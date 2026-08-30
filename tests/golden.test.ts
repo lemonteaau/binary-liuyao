@@ -119,7 +119,7 @@ describe('RAW TEXT 格式（黄金快照）', () => {
     const text = formatRawText(goldenChart(), { includeAiInstruction: false })
     expect(text).toMatchSnapshot()
     // 关键行存在性断言（防快照失真）
-    expect(text).toContain('起卦方式：电脑模拟')
+    expect(text).toContain('起卦方式：电脑起卦')
     expect(text).toContain('公历时间：2026年08月24日 14时42分')
     expect(text).toContain('农历时间：二〇二六年 七月十二日 未时')
     expect(text).toContain('干支：丙午年 丙申月 庚午日 癸未时')

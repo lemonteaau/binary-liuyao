@@ -109,7 +109,7 @@ export function SettingsPage() {
           <p className="text-[0.9375rem] leading-relaxed text-fog">
             附加 AI 指令 — 复制内容末尾附加「请根据以上六爻排盘进行分析。」
             <br />
-            当前状态：
+            当前设置：
             <span className={settings.aiInstruction ? 'text-signal' : 'text-flux'}>
               {settings.aiInstruction ? '开' : '关'}
             </span>
@@ -160,10 +160,10 @@ export function SettingsPage() {
       </section>
 
       <section className="panel mt-4 p-4 sm:p-5">
-        <span className="panel-tag">协议参数</span>
+        <span className="panel-tag">排盘参数</span>
         <dl className="grid grid-cols-1 gap-y-2 text-[0.9375rem] sm:grid-cols-2">
           <Info label="位序" value="初爻 = BIT 0（固定）" />
-          <Info label="熵源" value="WEB CRYPTO API" />
+          <Info label="随机源" value="WEB CRYPTO API" />
           <Info label="存储" value="仅本地 / 最近 20 条" />
         </dl>
       </section>

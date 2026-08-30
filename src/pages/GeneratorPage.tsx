@@ -37,11 +37,11 @@ import type { InputMethod, LineValue } from '@/types'
 type RawLines = [LineValue, LineValue, LineValue, LineValue, LineValue, LineValue]
 
 const MODES: Array<{ id: InputMethod; title: string; sub: string }> = [
-  { id: 'coin', title: '摇币指定', sub: '逐爻启停 / 三枚铜钱' },
-  { id: 'entropy', title: '随机熵源', sub: '一键随机生成' },
-  { id: 'manual', title: '手动指定', sub: '逐爻设置阴阳' },
-  { id: 'hexagram', title: '卦名检索', sub: '选择基础状态' },
-  { id: 'number', title: '数字起卦', sub: '输入数字生成' },
+  { id: 'coin', title: '摇币起卦', sub: '逐爻启停 / 三枚铜钱' },
+  { id: 'entropy', title: '电脑起卦', sub: '加密随机 / 一键起卦' },
+  { id: 'manual', title: '手动排卦', sub: '逐爻设置阴阳动静' },
+  { id: 'hexagram', title: '卦名起卦', sub: '选择本卦与动爻' },
+  { id: 'number', title: '数字起卦', sub: '输入数字推演' },
   { id: 'time', title: '时间起卦', sub: '使用本地时间' },
 ]
 
@@ -74,8 +74,8 @@ export function GeneratorPage() {
     <div className="pt-6">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="mb-1 text-[0.875rem] tracking-[0.24em] text-fog">六位二进制状态生成器</p>
-          <h1 className="text-2xl font-bold tracking-[0.2em]">选择输入来源</h1>
+          <p className="mb-1 text-[0.875rem] tracking-[0.24em] text-fog">六爻起卦与排盘</p>
+          <h1 className="text-2xl font-bold tracking-[0.2em]">选择起卦方式</h1>
         </div>
         <HomepageCounter />
       </div>
@@ -124,6 +124,7 @@ export function GeneratorPage() {
 
 function HomepageCounter() {
   const [ordinal, setOrdinal] = useState<number | null>(null)
+  const [status, setStatus] = useState<'loading' | 'ready' | 'unavailable'>('loading')
 
   useEffect(() => {
     const controller = new AbortController()
@@ -132,9 +133,13 @@ function HomepageCounter() {
 
     getCurrentHexagramOrdinal(controller.signal)
       .then((currentOrdinal) => {
-        if (active) setOrdinal(currentOrdinal)
+        if (!active) return
+        setOrdinal(currentOrdinal)
+        setStatus('ready')
       })
-      .catch(() => undefined)
+      .catch(() => {
+        if (active) setStatus('unavailable')
+      })
       .finally(() => window.clearTimeout(timeout))
 
     return () => {
@@ -144,17 +149,24 @@ function HomepageCounter() {
     }
   }, [])
 
-  if (ordinal === null) return null
-
   return (
     <p
-      className="flex flex-wrap items-center justify-center gap-x-2 border border-edge bg-panel px-3 py-2 text-center text-[0.875rem] tracking-[0.14em] text-fog sm:justify-end sm:text-right"
+      className="homepage-counter flex flex-wrap items-center justify-center gap-x-2 border border-edge bg-panel px-3 py-2 text-center text-[0.875rem] tracking-[0.14em] text-fog sm:justify-end sm:text-right"
       aria-live="polite"
+      aria-busy={status === 'loading'}
     >
       <span className="inline-flex items-center align-middle whitespace-nowrap">
-        自上线以来共生成<strong className="text-lg font-bold tabular-nums text-signal">
-          {ordinal.toLocaleString('zh-CN')}
-        </strong>次结果
+        自上线以来共完成第<strong
+          className="homepage-counter-number text-lg font-bold tabular-nums text-signal"
+          data-loading={status === 'loading'}
+          title={status === 'unavailable' ? '暂时无法获取起卦总数' : undefined}
+        >
+          {status === 'ready' && ordinal !== null
+            ? ordinal.toLocaleString('zh-CN')
+            : status === 'loading'
+              ? '···'
+              : '—'}
+        </strong>次起卦
       </span>
     </p>
   )
@@ -203,22 +215,22 @@ function EntropyPanel() {
   }
 
   return (
-    <Panel tag="随机 / 熵源">
+    <Panel tag="电脑起卦 // 加密随机">
       <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-[0.9375rem] leading-relaxed text-fog">
           <p>六爻 × 三枚铜钱</p>
           <p>
-            熵源：<span className="text-signal">WEB CRYPTO API</span>
+            随机源：<span className="text-signal">WEB CRYPTO API</span>
           </p>
           <p>6 : 7 : 8 : 9 = 1/8 : 3/8 : 3/8 : 1/8</p>
         </div>
         <button type="button" className="btn btn-primary min-w-44" onClick={generate} disabled={rolling}>
-          {rolling ? '采样中…' : '生成状态'}
+          {rolling ? '正在起卦…' : '立即起卦'}
         </button>
       </div>
       {rolling && (
         <p className="mt-3 text-[0.9375rem] tracking-[0.2em] text-flux caret" aria-live="polite">
-          正在采样熵源
+          正在采样随机数
         </p>
       )}
     </Panel>
@@ -263,7 +275,7 @@ function CoinShakePanel({
       try {
         dispatch({ type: 'stop', coins: tossCoins(), when: new Date() })
       } catch {
-        setError('熵源不可用，未记录本轮结果。')
+        setError('随机数生成器不可用，未记录本轮结果。')
       }
       return
     }
@@ -276,7 +288,7 @@ function CoinShakePanel({
   }
 
   const actionLabel = state.phase === 'complete'
-    ? '六爻已完成，生成状态'
+    ? '六爻已完成，生成排盘'
     : shaking
       ? `点击停止并记录${nextLineName}`
       : `点击开始摇动${nextLineName}`
@@ -291,9 +303,9 @@ function CoinShakePanel({
 
   return (
     <>
-      <Panel tag="摇币指定 // 三枚铜钱">
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(20rem,0.85fr)]">
-          <div>
+      <Panel tag="摇币起卦 // 三枚铜钱">
+        <div className="coin-layout grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(20rem,0.85fr)]">
+          <div className="coin-operation">
             <button
               type="button"
               className="coin-console"
@@ -329,24 +341,16 @@ function CoinShakePanel({
                 {state.phase === 'complete' ? (
                   <>
                     <span>六爻已完成</span>
-                    <span>生成状态 →</span>
+                    <span>生成排盘 →</span>
                   </>
                 ) : actionLabel}
               </span>
             </button>
 
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-[0.9375rem] leading-relaxed text-fog" aria-live="polite">
+            <div className="coin-status-row mt-3">
+              <p className="coin-status-copy text-[0.9375rem] leading-relaxed text-fog" aria-live="polite">
                 {statusText}
               </p>
-              <button
-                type="button"
-                className="btn shrink-0"
-                onClick={reset}
-                disabled={state.phase === 'ready' && !error}
-              >
-                重置本次摇卦
-              </button>
             </div>
             {error && (
               <p className="mt-2 text-[0.9375rem] tracking-widest text-flux" role="alert">
@@ -356,6 +360,28 @@ function CoinShakePanel({
           </div>
 
           <CoinLineRecord lines={state.lines} shaking={shaking} />
+        </div>
+
+        <div className="coin-panel-footer mt-3 flex justify-end border-t border-edge pt-3">
+          <button
+            type="button"
+            className="coin-reset btn shrink-0"
+            onClick={reset}
+            disabled={state.phase === 'ready' && !error}
+          >
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              className="size-[1em] fill-none stroke-current"
+              strokeWidth="1.8"
+              strokeLinecap="square"
+              strokeLinejoin="miter"
+            >
+              <path d="M20 11a8 8 0 1 1-2.34-5.66L20 7.68" />
+              <path d="M20 3v4.68h-4.68" />
+            </svg>
+            <span>重置本次摇卦</span>
+          </button>
         </div>
       </Panel>
 
@@ -389,11 +415,11 @@ function PixelCoin({ score, shaking }: { score?: CoinScore; shaking: boolean }) 
 function CoinLineRecord({ lines, shaking }: { lines: readonly LineValue[]; shaking: boolean }) {
   return (
     <section className="coin-record" aria-label="六次摇币记录">
-      <div className="flex items-center justify-between border-b border-edge px-3 py-2 text-[0.875rem] tracking-[0.16em] text-fog">
+      <div className="coin-record-head flex items-center justify-between border-b border-edge px-3 py-2 text-[0.875rem] tracking-[0.16em] text-fog">
         <span>爻序记录</span>
         <span>自下而上</span>
       </div>
-      <div className="flex flex-col gap-1 p-3">
+      <div className="coin-record-list flex flex-col gap-1 p-3">
         {[5, 4, 3, 2, 1, 0].map((index) => {
           const value = lines[index]
           const current = index === lines.length && lines.length < 6
@@ -428,7 +454,7 @@ function CoinLineRecord({ lines, shaking }: { lines: readonly LineValue[]; shaki
                 )}
               </span>
               <span className={cn(
-                'w-28 shrink-0 text-right text-[0.875rem]',
+                'coin-record-value w-28 shrink-0 text-right text-[0.875rem]',
                 value ? mutating ? 'text-flux' : 'text-ink' : current ? 'text-signal' : 'text-fog',
               )}>
                 {slotText}
@@ -443,10 +469,10 @@ function CoinLineRecord({ lines, shaking }: { lines: readonly LineValue[]; shaki
 
 function lineValueText(value: LineValue): string {
   switch (value) {
-    case 6: return '老阴 · 翻转'
+    case 6: return '老阴 · 动爻'
     case 7: return '少阳 · 静爻'
     case 8: return '少阴 · 静爻'
-    case 9: return '老阳 · 翻转'
+    case 9: return '老阳 · 动爻'
   }
 }
 
@@ -496,13 +522,13 @@ export function LineEditor({ draft, setDraft }: LineEditorProps) {
               type="button"
               onClick={() => toggleMutation(i)}
               aria-pressed={mutating}
-              aria-label={`第 ${i + 1} 爻翻转${mutating ? '已开启' : '已关闭'}`}
+              aria-label={`第 ${i + 1} 爻为${mutating ? '动爻' : '静爻'}，点击切换`}
               className={cn(
                 'w-16 border px-0 py-2 text-[0.875rem] tracking-[0.14em]',
                 mutating ? 'border-flux text-flux' : 'border-edge text-fog',
               )}
             >
-              {mutating ? '◉ 翻转' : '翻转'}
+              {mutating ? '◉ 动爻' : '静爻'}
             </button>
             <span className="w-4 text-[0.9375rem] tabular-nums text-fog" aria-hidden="true">
               {yang ? 1 : 0}
@@ -516,7 +542,7 @@ export function LineEditor({ draft, setDraft }: LineEditorProps) {
 
 function ManualPanel({ draft, setDraft }: LineEditorProps) {
   return (
-    <Panel tag="手动状态">
+    <Panel tag="手动排卦">
       <LineEditor draft={draft} setDraft={setDraft} />
       <div className="mt-4 flex gap-2">
         <button type="button" className="btn" onClick={() => setDraft(tossRawLines())}>
@@ -557,7 +583,7 @@ function GenerateBar({
   return (
     <div className="mt-4">
       <button type="button" className="btn btn-primary w-full sm:w-auto" onClick={generate}>
-        生成状态 →
+        生成排盘 →
       </button>
     </div>
   )
@@ -578,7 +604,7 @@ function HexNamePanel({ draft, setDraft }: LineEditorProps) {
 
   return (
     <>
-      <Panel tag="选择基础状态">
+      <Panel tag="选择本卦">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -603,15 +629,15 @@ function HexNamePanel({ draft, setDraft }: LineEditorProps) {
             </li>
           ))}
           {results.length === 0 && (
-            <li className="px-3 py-2 text-[0.9375rem] tracking-widest text-flux">未找到匹配状态</li>
+            <li className="px-3 py-2 text-[0.9375rem] tracking-widest text-flux">未找到匹配卦象</li>
           )}
         </ul>
       </Panel>
       {selected && (
         <div ref={followupRef} className="generator-scroll-target">
-          <Panel tag="翻转掩码 // 可选">
+          <Panel tag="设置动爻 // 可选">
             <p className="mb-3 text-[0.9375rem] text-fog">
-              基础状态：<span className="text-signal">{selected.chineseName}</span> · 点击爻线设置翻转
+              本卦：<span className="text-signal">{selected.chineseName}</span> · 点击爻线设置动爻
             </p>
             <LineEditor draft={draft} setDraft={setDraft} />
             <GenerateBar rawLines={draft} method="hexagram" />
@@ -665,7 +691,7 @@ function NumberPanel() {
               </span>
             </p>
             <p>
-              派生状态：{' '}
+              所得卦象：{' '}
               <span className="text-signal">
                 {TRIGRAMS[trigramKeyByRemainder(parsed.seed.upperRemainder) as keyof typeof TRIGRAMS].name}
                 {TRIGRAMS[trigramKeyByRemainder(parsed.seed.lowerRemainder) as keyof typeof TRIGRAMS].name}
@@ -720,7 +746,7 @@ function TimePanel() {
             <span className="tabular-nums">{previewBits.toString(2).padStart(6, '0')}</span>
           </div>
           <p className="mt-1 text-[0.875rem] opacity-70">
-            仅为预览 · 最终状态以点击时刻为准
+            仅为预览 · 最终排盘以点击时刻为准
           </p>
         </div>
         <button type="button" className="btn btn-primary min-w-44" onClick={generate}>

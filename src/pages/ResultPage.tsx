@@ -38,13 +38,13 @@ export function ResultPage() {
 
   if (!current || !currentMatchesLink) {
     if (linkParams) {
-      return <p className="pt-10 text-[0.9375rem] tracking-widest text-fog">正在重建状态…</p>
+      return <p className="pt-10 text-[0.9375rem] tracking-widest text-fog">正在还原卦象…</p>
     }
     return (
       <div className="pt-10 text-base leading-loose text-fog">
-        <p>内存中没有状态。</p>
+        <p>当前没有排盘。</p>
         <Link to="/" className="text-signal">
-          → 返回生成器
+          → 返回起卦
         </Link>
       </div>
     )
@@ -65,38 +65,38 @@ export function ResultPage() {
     <div className="pt-5">
       {isLinkMode && (
         <p className="mb-4 border border-edge bg-surface px-3 py-2 text-[0.875rem] tracking-[0.16em] text-fog" role="note">
-          共享状态 // 历法按查看时刻重新采样 · 链接不包含时间戳
+          来自分享链接 // 历法按查看时刻重新计算 · 链接不包含时间戳
         </p>
       )}
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border border-edge bg-surface px-3 py-2 text-[0.875rem] tracking-[0.18em] text-fog">
-        <span className="flex items-center gap-3">
-          <span className="text-signal">会话 {current.id}</span>
-          <span aria-hidden="true">//</span>
-          <span>状态锁定</span>
-          <span aria-hidden="true">//</span>
-          <span>{INPUT_METHOD_LABELS_UI[chart.inputMethod]}</span>
+      <div className="result-session-bar mb-4 flex flex-wrap items-center justify-between gap-2 border border-edge bg-surface px-3 py-2 text-[0.875rem] tracking-[0.18em] text-fog">
+        <span className="result-session-meta flex items-center gap-3">
+          <span className="shrink-0 whitespace-nowrap text-signal">排盘 {current.id}</span>
+          <span className="shrink-0" aria-hidden="true">//</span>
+          <span className="shrink-0 whitespace-nowrap">排盘完成</span>
+          <span className="shrink-0" aria-hidden="true">//</span>
+          <span className="shrink-0 whitespace-nowrap">{INPUT_METHOD_LABELS_UI[chart.inputMethod]}</span>
         </span>
-        <span className="tabular-nums">{chart.createdAt}</span>
+        <span className="result-session-time whitespace-nowrap tabular-nums">{chart.createdAt}</span>
       </div>
 
       <div className="result-state-grid">
         <div className="result-state-primary">
           <StatePanel
-            tag="初始状态"
+            tag="本卦"
             binary={chart.primary.binary}
             bits={chart.primary.bits}
             mask={chart.mutationMask}
             name={chart.primary.record.chineseName}
             hexNumber={chart.primary.record.kingWenNumber}
-            palace={`${chart.primary.palace} · ${chart.primary.palaceRank}${chart.primary.attribute ? ` · ${chart.primary.attribute}` : ''}`}
+            palace={`${chart.primary.palace}·${chart.primary.palaceRank}${chart.primary.attribute ? `·${chart.primary.attribute}` : ''}`}
           />
         </div>
 
-        <div className="result-state-xor" aria-label={`XOR ${bitsToString(chart.mutationMask)}`}>
+        <div className="result-state-xor" aria-label={`动爻标记 ${bitsToString(chart.mutationMask)}`}>
           <div className="hidden h-full w-px bg-edge lg:block" />
           <div className="result-state-xor-copy">
-            <p className={`result-state-xor-label ${hasMutation ? 'text-flux' : 'text-fog'}`}>翻转掩码</p>
+            <p className={`result-state-xor-label ${hasMutation ? 'text-flux' : 'text-fog'}`}>动爻标记</p>
             <p className={`result-state-xor-mask ${hasMutation ? 'text-flux' : 'text-ink'}`}>
               {bitsToString(chart.mutationMask)}
             </p>
@@ -110,13 +110,13 @@ export function ResultPage() {
 
         <div className="result-state-result">
           <StatePanel
-            tag="转换状态"
+            tag="变卦"
             binary={chart.result.binary}
             bits={chart.result.bits}
             mask={0}
             name={chart.result.record.chineseName}
             hexNumber={chart.result.record.kingWenNumber}
-            palace={`${chart.result.palace} · ${chart.result.palaceRank}${chart.result.attribute ? ` · ${chart.result.attribute}` : ''}`}
+            palace={`${chart.result.palace}·${chart.result.palaceRank}${chart.result.attribute ? `·${chart.result.attribute}` : ''}`}
           />
         </div>
       </div>
@@ -126,18 +126,18 @@ export function ResultPage() {
         <dl className="grid grid-cols-1 gap-x-8 gap-y-2 text-[0.9375rem] sm:grid-cols-2 lg:grid-cols-3">
           <Meta label="时间戳" value={chart.calendar.gregorian} />
           <Meta label="时区" value={`${chart.calendar.timezone} ${chart.calendar.utcOffset}`} />
-          <Meta label="农历时钟" value={chart.calendar.lunarText} />
+          <Meta label="农历" value={chart.calendar.lunarText} />
           <Meta
-            label="干支周期"
+            label="四柱"
             value={`${chart.calendar.ganzhi.year} / ${chart.calendar.ganzhi.month} / ${chart.calendar.ganzhi.day} / ${chart.calendar.ganzhi.hour}`}
           />
           <Meta label="旬空" value={chart.calendar.xunKong.join('')} />
-          <Meta label="卦身节点" value={`${chart.guaShen.branch}${chart.guaShen.onHexagram ? '' : ' // 未上卦'}`} />
+          <Meta label="卦身" value={`${chart.guaShen.branch}${chart.guaShen.onHexagram ? '' : ' // 未上卦'}`} />
         </dl>
         {chart.shensha.some((s) => s.branches.length > 0) && (
           <details className="mt-3">
             <summary className="cursor-pointer text-[0.875rem] tracking-[0.2em] text-fog hover:text-signal">
-              辅助信号 [{chart.shensha.filter((s) => s.branches.length > 0).length}]
+              神煞 [{chart.shensha.filter((s) => s.branches.length > 0).length}]
             </summary>
             <p className="mt-2 leading-relaxed text-fog">
               {chart.shensha
@@ -150,7 +150,7 @@ export function ResultPage() {
         {chart.fuShen.length > 0 && (
           <details className="mt-2">
             <summary className="cursor-pointer text-[0.875rem] tracking-[0.2em] text-fog hover:text-signal">
-              伏藏节点 [{chart.fuShen.length}]
+              伏神 [{chart.fuShen.length}]
             </summary>
             <p className="mt-2 leading-relaxed text-fog">
               {chart.fuShen
@@ -161,7 +161,12 @@ export function ResultPage() {
         )}
       </section>
 
-      <FullReading chart={chart} rawText={rawText} />
+      <FullReading
+        chart={chart}
+        rawText={rawText}
+        sessionId={current.id}
+        ordinal={current.ordinal}
+      />
 
       <section className="panel mt-4 p-4 sm:p-5">
         <span className="panel-tag">操作</span>
@@ -172,16 +177,16 @@ export function ResultPage() {
             className="btn"
             onClick={() => navigate('/', { state: { editRawLines: current.rawLines } })}
           >
-            [ 修改 ]
+            [ 修改排盘 ]
           </button>
           <button type="button" className="btn" onClick={() => navigate('/')}>
-            [ 新建状态 ]
+            [ 再起一卦 ]
           </button>
         </div>
         <p className="mt-3 text-[0.875rem] leading-relaxed text-fog">
           上方「复制排盘」输出适用于 AI 或六爻使用者。
           {settings.aiInstruction ? ' AI 指令附加：已开启。' : ' AI 指令附加：已关闭（可在设置中开启）。'}
-          {' '}分享链接仅包含初始状态与翻转掩码，不包含时间戳。
+          {' '}分享图包含本次排盘的全部信息；分享链接仅包含本卦与动爻信息，不包含时间戳。
         </p>
       </section>
 
@@ -194,11 +199,11 @@ export function ResultPage() {
             <span>正在登记全局序号…</span>
           ) : (
             <span>
-              这是 HEX//64 自上线以来生成的{' '}
+              这是 HEX//64 自上线以来完成的{' '}
               <span className="inline-flex items-center align-middle whitespace-nowrap">
                 第<strong className="text-lg font-bold tabular-nums text-signal">
                   {current.ordinal.toLocaleString('zh-CN')}
-                </strong>个卦
+                </strong>次起卦
               </span>
             </span>
           )}
@@ -235,7 +240,7 @@ function StatePanel(props: {
       <div className="state-name-block text-center">
         <p className="state-name font-bold">{props.name}</p>
         <p className="state-meta text-fog">
-          HEX {String(props.hexNumber).padStart(2, '0')} · {props.palace}
+          HEX {String(props.hexNumber).padStart(2, '0')}·{props.palace}
         </p>
       </div>
     </section>

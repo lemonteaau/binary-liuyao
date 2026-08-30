@@ -115,19 +115,23 @@ function Shell() {
 
 function Header({ timezone }: { timezone: string }) {
   return (
-    <header className="flex flex-wrap items-center justify-between gap-3 border-b border-edge py-4">
+    <header className="app-header border-b border-edge py-4">
       <Link
         to="/"
-        className="chroma text-lg font-bold tracking-[0.28em] text-signal no-underline"
+        className="app-logo chroma text-lg font-bold tracking-[0.28em] text-signal no-underline"
       >
         HEX//64
       </Link>
-      <nav className="flex items-center gap-1 text-[0.9375rem] tracking-[0.16em]">
-        <HeaderNavLink to="/">生成器</HeaderNavLink>
+      <nav className="app-nav flex items-center gap-1 text-[0.9375rem] tracking-[0.16em]">
+        <HeaderNavLink to="/">起卦</HeaderNavLink>
         <HeaderNavLink to="/settings">设置</HeaderNavLink>
-        <HeaderNavLink to="/about">协议</HeaderNavLink>
+        <HeaderNavLink to="/about">关于</HeaderNavLink>
       </nav>
-      <LiveClock key={timezone} timezone={timezone} className="text-[0.9375rem] tabular-nums tracking-[0.14em] text-fog" />
+      <LiveClock
+        key={timezone}
+        timezone={timezone}
+        className="app-clock text-[0.9375rem] tabular-nums tracking-[0.14em] text-fog"
+      />
     </header>
   )
 }

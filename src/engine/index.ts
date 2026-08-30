@@ -26,13 +26,13 @@ export interface GenerateChartParams {
 }
 
 export const INPUT_METHOD_LABELS: Record<InputMethod, string> = {
-  entropy: '电脑模拟',
-  coin: '摇币指定',
-  manual: '手动指定',
+  entropy: '电脑起卦',
+  coin: '摇币起卦',
+  manual: '手动排卦',
   hexagram: '卦名起卦',
   number: '数字起卦',
   time: '时间起卦',
-  link: '链接导入',
+  link: '分享链接',
 }
 
 /**

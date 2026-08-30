@@ -33,6 +33,8 @@ describe('FullReading 显示模式与复制', () => {
     expect(screen.getByRole('button', { name: '结构化' }).getAttribute('aria-pressed')).toBe('true')
     expect(screen.getByRole('button', { name: '纯文字' }).getAttribute('aria-pressed')).toBe('false')
     expect(screen.getByRole('region', { name: '本卦与变卦逐爻排盘' })).toBeTruthy()
+    expect(screen.getAllByText('本卦')).toHaveLength(1)
+    expect(screen.getAllByText('变卦')).toHaveLength(1)
     expect(screen.queryByRole('region', { name: '纯文字排盘' })).toBeNull()
     const copyButton = screen.getByRole('button', { name: '复制排盘' })
     expect(copyButton.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true')

@@ -56,7 +56,7 @@ export function HexLines({
             {mutating && showMutationLabels ? (
               <span className="w-10 shrink-0 text-[0.875rem] font-bold text-flux sm:w-16">
                 <span className="sm:hidden">◉ 动</span>
-                <span className="hidden tracking-widest sm:inline">◉ 翻转</span>
+                <span className="hidden tracking-widest sm:inline">◉ 动爻</span>
               </span>
             ) : showLabels ? (
               <span className="w-10 shrink-0 sm:w-16" />

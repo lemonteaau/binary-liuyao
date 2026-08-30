@@ -3,9 +3,9 @@ import { useEffect, useState } from 'react'
 const BOOT_LINES = [
   '系统初始化…',
   '历法同步…',
-  '熵源就绪',
+  '随机源就绪',
   '卦象映射已载入',
-  '状态锁定',
+  '排盘引擎就绪',
 ]
 
 export function BootSequence({ onDone }: { onDone: () => void }) {

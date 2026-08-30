@@ -1,7 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`RAW TEXT 格式（黄金快照） > 完整排盘文本与 PRD §14 结构一致 1`] = `
-"起卦方式：电脑模拟
+"起卦方式：电脑起卦
 
 公历时间：2026年08月24日 14时42分
 农历时间：二〇二六年 七月十二日 未时

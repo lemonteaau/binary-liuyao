@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "HEX//64 — binary hexagram state generator, fully client-side liuyao engine",
+  "description": "HEX//64 — client-side liuyao divination and charting tool",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

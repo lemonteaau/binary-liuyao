@@ -9,7 +9,7 @@ import { generateChart } from '@/engine'
 import { searchHexagrams } from '@/features/hexagram-search/search'
 import { formatRawText } from '@/formatters/rawText'
 
-describe('摇币指定', () => {
+describe('摇币起卦', () => {
   it('六轮铜钱结果可完整排盘并标记输入方式', () => {
     const chart = generateChart({
       inputMethod: 'coin',
@@ -19,7 +19,7 @@ describe('摇币指定', () => {
     })
     expect(chart.inputMethod).toBe('coin')
     expect(chart.lines.map((line) => line.value)).toEqual([6, 7, 8, 9, 7, 8])
-    expect(formatRawText(chart, { includeAiInstruction: false })).toContain('起卦方式：摇币指定')
+    expect(formatRawText(chart, { includeAiInstruction: false })).toContain('起卦方式：摇币起卦')
   })
 })
 
@@ -103,7 +103,7 @@ describe('时间起卦', () => {
   })
 })
 
-describe('卦名检索', () => {
+describe('卦名起卦', () => {
   it('包含匹配 + 序号匹配 + 空查询返回全部', () => {
     expect(searchHexagrams('坎').map((h) => h.chineseName)).toContain('坎为水')
     expect(searchHexagrams('屯')[0]!.kingWenNumber).toBe(3)
