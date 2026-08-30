@@ -3,6 +3,11 @@
   "name": "binary-liuyao",
   "pages_build_output_dir": "./dist",
   "compatibility_date": "2026-08-25",
+  "vars": {
+    "COUNTER_MAX_PER_MINUTE": "30",
+    "COUNTER_MAX_PER_HOUR": "200",
+    "COUNTER_MAX_PER_DAY": "500"
+  },
   "d1_databases": [
     {
       "binding": "DB",

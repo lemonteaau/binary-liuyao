@@ -123,6 +123,10 @@ const chart = generateChart({
 - 分享链接只编码 `PRIMARY` 和 `MUTATION MASK`，不携带时间戳
 - 分享链接打开时，历法数据按查看者当地时间重新计算
 
+## 计数接口安全
+
+计数接口仅接收同源的规范 UUID v4 请求，并带有请求体限制、重复事件去重和 D1 全局熔断。生产环境还应在 Cloudflare WAF 中对 `/api/hexagram-count` 启用按 IP 的速率限制；具体配置见 [Cloudflare 计数接口保护](docs/cloudflare-security.md)。
+
 ## 历法与规则
 
 农历、节气四柱和旬空由纯客户端库 `lunar-typescript` 提供。晚子时采用 `sect=1`，即 23:00 后日柱按次日计算。
