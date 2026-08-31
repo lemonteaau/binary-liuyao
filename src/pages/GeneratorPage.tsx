@@ -78,12 +78,11 @@ export function GeneratorPage() {
 
   return (
     <div className="pt-6">
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="mb-1 text-[0.875rem] tracking-[0.24em] text-fog">六爻起卦与排盘</p>
-          <h1 className="text-2xl font-bold tracking-[0.2em]">选择起卦方式</h1>
-        </div>
-        <HomepageCounter />
+      <div className="mb-4 md:mb-6">
+        <p className="mb-1 hidden text-[0.875rem] tracking-[0.24em] text-fog md:block">
+          六爻起卦与排盘
+        </p>
+        <h1 className="text-2xl font-bold tracking-[0.2em]">选择起卦方式</h1>
       </div>
 
       <div className="mode-grid" role="group" aria-label="起卦方式">
@@ -108,6 +107,8 @@ export function GeneratorPage() {
           </button>
         ))}
       </div>
+
+      <HomepageCounter />
 
       <div id="generator-active-panel" ref={activePanelRef} className="generator-scroll-target">
         {mode === 'entropy' && <EntropyPanel />}
@@ -201,7 +202,7 @@ function HomepageCounter() {
 
   return (
     <p
-      className="homepage-counter flex flex-wrap items-center justify-center gap-x-2 border border-edge bg-panel px-3 py-2 text-center text-[0.875rem] tracking-[0.14em] text-fog sm:justify-end sm:text-right"
+      className="homepage-counter mt-3 flex flex-wrap items-center justify-center gap-x-2 border border-edge bg-panel px-3 py-2 text-center text-[0.875rem] tracking-[0.14em] text-fog"
       aria-live="polite"
       aria-busy={status === 'loading'}
     >

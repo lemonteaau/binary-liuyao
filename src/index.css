@@ -846,6 +846,20 @@ html[data-motion="off"] .feedback-invitation {
   text-wrap: pretty;
 }
 
+@media (max-width: 767px) {
+  .tile {
+    padding-inline: 0.875rem;
+  }
+
+  .tile-description {
+    font-size: 0.8125rem;
+    line-height: 1.35;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    text-wrap: nowrap;
+  }
+}
+
 .settings-row {
   display: flex;
   align-items: center;
