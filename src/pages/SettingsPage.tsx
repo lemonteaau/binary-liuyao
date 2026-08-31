@@ -180,14 +180,6 @@ export function SettingsPage() {
         </p>
       </section>
 
-      <section className="panel mt-4 p-4 sm:p-5">
-        <span className="panel-tag">排盘参数</span>
-        <dl className="grid grid-cols-1 gap-y-2 text-[0.9375rem] sm:grid-cols-2">
-          <Info label="位序" value="初爻 = BIT 0（固定）" />
-          <Info label="随机源" value="WEB CRYPTO API" />
-          <Info label="存储" value="仅本地 / 最近 20 条" />
-        </dl>
-      </section>
     </div>
   )
 }
@@ -223,15 +215,6 @@ function SettingRow({
         <p className="mt-1 max-w-[62ch] text-[0.875rem] leading-relaxed text-fog">{description}</p>
       </div>
       {children}
-    </div>
-  )
-}
-
-function Info({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex gap-2">
-      <dt className="shrink-0 text-fog">{label}</dt>
-      <dd>{value}</dd>
     </div>
   )
 }
