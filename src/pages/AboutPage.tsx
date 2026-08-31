@@ -20,15 +20,20 @@ export function AboutPage() {
       <p className="mb-1 text-[0.875rem] tracking-[0.24em] text-fog">产品 / 方法</p>
       <h1 className="mb-6 text-2xl font-bold tracking-[0.2em]">关于 HEX//64</h1>
 
+      <Section tag="反馈" id="feedback" sectionRef={feedbackSectionRef}>
+        <div className="mb-4 max-w-2xl">
+          <h2 className="text-lg font-bold tracking-[0.16em] text-ink">写给作者</h2>
+        </div>
+        <FeedbackForm
+          source={shouldFocusFeedback ? 'invite' : 'about'}
+          focusOnMount={shouldFocusFeedback}
+        />
+      </Section>
+
       <Section tag="产品说明">
-        <p>
-          HEX//64 将六个二进制爻位映射到传统易经六十四卦结构。界面保留了 Cyber
-          风格的编码展示，同时采用本卦、动爻、变卦等六爻常用名称；底层运行一套完整的六爻排盘引擎。
-        </p>
         <p className="mt-2">
           所有排盘计算均在浏览器本地完成。本应用不会将起卦内容、输入数字或卦象上传至任何服务器；
-          无账号，仅使用自托管 Umami 进行匿名访问统计，且不统计分享链接中的片段参数。
-          只有你主动填写并发送的反馈文字会保存到 Cloudflare D1，不会自动附带排盘或历史记录。
+          仅使用自托管 Umami 进行匿名访问统计，且不统计分享链接中的片段参数。
         </p>
       </Section>
 
@@ -87,16 +92,6 @@ export function AboutPage() {
           分享链接会在 URL Hash 中保存卦象、原起卦时间、时区、起卦方式与排盘编号，打开后可还原本次排盘；
           Hash 不会随页面请求发送至服务器。旧版分享链接仍可打开，其历法信息会按查看者本地时刻计算。
         </p>
-      </Section>
-
-      <Section tag="反馈" id="feedback" sectionRef={feedbackSectionRef}>
-        <div className="mb-4 max-w-2xl">
-          <h2 className="text-lg font-bold tracking-[0.16em] text-ink">写给作者</h2>
-        </div>
-        <FeedbackForm
-          source={shouldFocusFeedback ? 'invite' : 'about'}
-          focusOnMount={shouldFocusFeedback}
-        />
       </Section>
     </div>
   )
