@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
+import {
+  Clock,
+  CoinVertical,
+  Monitor,
+  NumberSix,
+  Rows,
+  SlidersHorizontal,
+} from '@phosphor-icons/react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import coinFacesUrl from '@/assets/coin-faces.webp'
 import { HexLines } from '@/components/HexLines'
@@ -93,7 +101,9 @@ export function GeneratorPage() {
           >
             <span className="tile-head">
               <span className="tile-index">{String(index + 1).padStart(2, '0')}</span>
-              <span className="tile-action">{mode === m.id ? '已选择' : '选择'}</span>
+              <span className="tile-mode-icon" aria-hidden="true">
+                <ModeIcon mode={m.id} />
+              </span>
             </span>
             <span className="tile-title">{m.title}</span>
             <span className="tile-description">{m.sub}</span>
@@ -124,6 +134,27 @@ export function GeneratorPage() {
       </div>
     </div>
   )
+}
+
+function ModeIcon({ mode }: { mode: InputMethod }) {
+  const props = { size: 23, weight: 'regular' as const }
+
+  switch (mode) {
+    case 'coin':
+      return <CoinVertical {...props} />
+    case 'entropy':
+      return <Monitor {...props} />
+    case 'manual':
+      return <SlidersHorizontal {...props} />
+    case 'hexagram':
+      return <Rows {...props} />
+    case 'number':
+      return <NumberSix {...props} />
+    case 'time':
+      return <Clock {...props} />
+    default:
+      return null
+  }
 }
 
 function HomepageCounter() {

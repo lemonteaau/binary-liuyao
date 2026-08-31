@@ -15,6 +15,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
     "lunar-typescript": "^1.8.6",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

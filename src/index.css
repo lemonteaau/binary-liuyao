@@ -795,13 +795,28 @@ html[data-motion="off"] .feedback-invitation {
   font-variant-numeric: tabular-nums;
 }
 
-.tile-action {
-  transition: color 160ms ease;
+.tile-mode-icon {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--color-fog) 34%, var(--color-edge));
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  color: var(--color-fog);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
 }
 
-.tile:hover .tile-action,
-.tile[data-active="true"] .tile-action {
+.tile:hover .tile-mode-icon,
+.tile[data-active="true"] .tile-mode-icon {
+  border-color: var(--color-signal);
+  background: color-mix(in srgb, var(--color-signal) 8%, var(--color-surface));
   color: var(--color-signal);
+  transform: translateY(-1px);
 }
 
 .tile-title {
