@@ -4,8 +4,9 @@ import { CopyButton } from '@/components/CopyButton'
 import { FullReading } from '@/components/FullReading'
 import { HexLines } from '@/components/HexLines'
 import { generateChart } from '@/engine'
-import { bitsToString, stringToBits } from '@/engine/binary'
+import { bitsToString } from '@/engine/binary'
 import { formatRawText } from '@/formatters/rawText'
+import { buildShareUrl, parseShareLink } from '@/lib/share-link'
 import type { LineValue } from '@/types'
 import { INPUT_METHOD_LABELS_UI, useReading } from '@/store/reading'
 import { useSettings } from '@/store/settings'
@@ -18,23 +19,39 @@ export function ResultPage() {
   const { current, commitReading } = useReading()
   const { resolvedTimezone, settings } = useSettings()
 
-  const linkParams = useMemo(() => parseLinkParams(new URLSearchParams(location.search)), [location.search])
-  const currentMatchesLink = !linkParams || (
-    current?.chart.inputMethod === 'link' &&
-    current.chart.primary.bits === linkParams.primary &&
-    current.chart.mutationMask === linkParams.mask
+  const linkParams = useMemo(() => parseShareLink(new URLSearchParams(location.search)), [location.search])
+  const restoredLink = useMemo(() => {
+    if (!linkParams) return null
+    const rawLines = rawLinesFromBits(linkParams.primary, linkParams.mask)
+    const chart = generateChart({
+      inputMethod: linkParams.inputMethod ?? 'link',
+      rawLines,
+      when: linkParams.when,
+      timezone: linkParams.timezone ?? resolvedTimezone,
+    })
+    return { chart, rawLines }
+  }, [linkParams, resolvedTimezone])
+  const currentMatchesLink = !linkParams || Boolean(
+    restoredLink &&
+    current &&
+    (current.source === 'share-link' || current.chart.inputMethod === 'link') &&
+    current.chart.primary.bits === restoredLink.chart.primary.bits &&
+    current.chart.mutationMask === restoredLink.chart.mutationMask &&
+    current.chart.createdAt === restoredLink.chart.createdAt &&
+    current.chart.calendar.timezone === restoredLink.chart.calendar.timezone &&
+    current.chart.inputMethod === restoredLink.chart.inputMethod &&
+    (!linkParams.readingId || current.id === linkParams.readingId) &&
+    (!linkParams.ordinal || current.ordinal === linkParams.ordinal)
   )
 
   useEffect(() => {
-    if (!linkParams || currentMatchesLink) return
-    const rawLines = rawLinesFromBits(linkParams.primary, linkParams.mask)
-    const chart = generateChart({
-      inputMethod: 'link',
-      rawLines,
-      timezone: resolvedTimezone,
+    if (!linkParams || !restoredLink || currentMatchesLink) return
+    commitReading(restoredLink.chart, restoredLink.rawLines, {
+      fromShareLink: true,
+      readingId: linkParams.readingId,
+      ordinal: linkParams.ordinal,
     })
-    commitReading(chart, rawLines)
-  }, [linkParams, currentMatchesLink, commitReading, resolvedTimezone])
+  }, [linkParams, restoredLink, currentMatchesLink, commitReading])
 
   if (!current || !currentMatchesLink) {
     if (linkParams) {
@@ -53,19 +70,26 @@ export function ResultPage() {
   const chart = current.chart
   const rawText = formatRawText(chart, { includeAiInstruction: settings.aiInstruction })
   const isLinkMode = chart.inputMethod === 'link' || linkParams !== null
+  const restoredOriginalContext = Boolean(
+    linkParams?.when && linkParams.timezone && linkParams.inputMethod,
+  )
   const hasMutation = chart.mutationMask !== 0
 
   const shareUrl = () => {
-    const s = bitsToString(chart.primary.bits)
-    const m = bitsToString(chart.mutationMask)
-    return `${window.location.origin}${window.location.pathname}#/result?s=${s}&m=${m}`
+    return buildShareUrl(
+      chart,
+      `${window.location.origin}${window.location.pathname}`,
+      { readingId: current.id, ordinal: current.ordinal },
+    )
   }
 
   return (
     <div className="pt-5">
       {isLinkMode && (
         <p className="mb-4 border border-edge bg-surface px-3 py-2 text-[0.875rem] tracking-[0.16em] text-fog" role="note">
-          来自分享链接 // 历法按查看时刻重新计算 · 链接不包含时间戳
+          {restoredOriginalContext
+            ? '来自分享链接 // 已按原起卦时间与时区还原'
+            : '来自旧版分享链接 // 历法按查看时刻重新计算'}
         </p>
       )}
 
@@ -186,7 +210,7 @@ export function ResultPage() {
         <p className="mt-3 text-[0.875rem] leading-relaxed text-fog">
           上方「复制排盘」输出适用于 AI 或六爻使用者。
           {settings.aiInstruction ? ' AI 指令附加：已开启。' : ' AI 指令附加：已关闭（可在设置中开启）。'}
-          {' '}分享图包含本次排盘的全部信息；分享链接仅包含本卦与动爻信息，不包含时间戳。
+          {' '}分享图与分享链接都会保留本次排盘信息。
         </p>
       </section>
 
@@ -254,16 +278,6 @@ function Meta({ label, value }: { label: string; value: string }) {
       <dd className="min-w-0 break-all tabular-nums">{value}</dd>
     </div>
   )
-}
-
-function parseLinkParams(params: URLSearchParams): { primary: number; mask: number } | null {
-  const s = params.get('s')
-  const m = params.get('m')
-  if (!s || !m) return null
-  const primary = stringToBits(s.toUpperCase())
-  const mask = stringToBits(m.toUpperCase())
-  if (primary === null || mask === null) return null
-  return { primary, mask }
 }
 
 function rawLinesFromBits(primary: number, mask: number): RawLines {

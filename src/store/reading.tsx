@@ -7,8 +7,15 @@ export interface ReadingRecord {
   id: string
   chart: ChartData
   rawLines: [LineValue, LineValue, LineValue, LineValue, LineValue, LineValue]
+  source?: 'share-link'
   counterEventId?: string
   ordinal?: number | null
+}
+
+export interface CommitReadingOptions {
+  fromShareLink?: boolean
+  readingId?: string
+  ordinal?: number
 }
 
 const CURRENT_KEY = 'hex64.current.v1'
@@ -37,7 +44,11 @@ function loadHistory(): ReadingRecord[] {
 interface ReadingContextValue {
   current: ReadingRecord | null
   history: ReadingRecord[]
-  commitReading: (chart: ChartData, rawLines: ReadingRecord['rawLines']) => ReadingRecord
+  commitReading: (
+    chart: ChartData,
+    rawLines: ReadingRecord['rawLines'],
+    options?: CommitReadingOptions,
+  ) => ReadingRecord
   clearCurrent: () => void
 }
 
@@ -114,14 +125,15 @@ export function ReadingProvider({ children }: { children: ReactNode }) {
   }, [currentCounterEventId, currentId, currentOrdinal])
 
   const commitReading = useCallback(
-    (chart: ChartData, rawLines: ReadingRecord['rawLines']) => {
-      const shouldCount = chart.inputMethod !== 'link'
+    (chart: ChartData, rawLines: ReadingRecord['rawLines'], options: CommitReadingOptions = {}) => {
+      const shouldCount = !options.fromShareLink && chart.inputMethod !== 'link'
       const record: ReadingRecord = {
-        id: makeId(),
+        id: options.readingId ?? makeId(),
         chart,
         rawLines,
+        source: options.fromShareLink ? 'share-link' : undefined,
         counterEventId: shouldCount ? crypto.randomUUID() : undefined,
-        ordinal: shouldCount ? null : undefined,
+        ordinal: shouldCount ? null : options.ordinal,
       }
       setCurrent(record)
       setHistory((prev) => {
