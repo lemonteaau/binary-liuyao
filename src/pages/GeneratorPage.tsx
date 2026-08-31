@@ -191,7 +191,7 @@ function HomepageCounter() {
       aria-busy={status === 'loading'}
     >
       <span className="inline-flex items-center align-middle whitespace-nowrap">
-        自上线以来共完成第<strong
+        自上线以来共完成<strong
           className="homepage-counter-number text-lg font-bold tabular-nums text-signal"
           data-loading={status === 'loading'}
           title={status === 'unavailable' ? '暂时无法获取起卦总数' : undefined}
