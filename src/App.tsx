@@ -100,12 +100,7 @@ function Shell() {
               <Route path="*" element={<GeneratorPage />} />
             </Routes>
           </main>
-          <footer className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-edge py-3 text-[0.875rem] tracking-[0.18em] text-fog">
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-              <span>本地计算</span>
-              <span aria-hidden="true">//</span>
-              <span>匿名访问统计</span>
-            </div>
+          <footer className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-edge py-3 text-[0.875rem] tracking-[0.18em] text-fog">
             <div className="flex items-center gap-3">
               <span>By lemontea, with ❤️</span>
               <a
