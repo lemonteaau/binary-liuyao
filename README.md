@@ -16,6 +16,8 @@
 - 完整纯文本传统排盘复制
 - 最近 20 次结果本地存储
 - 从历史基数 166 开始的全局起卦计数
+- 关于页常驻匿名反馈栏，以及累计前台使用 8 分钟后出现一次的温和反馈邀请
+- 反馈写入 D1 后通过私有 Cloudflare Worker 异步发送邮件提醒
 - 保留起卦时间、时区、起卦方式与排盘编号的 URL 卦象分享
 - Mobile-first、键盘可操作、Reduced Motion 支持
 
@@ -95,7 +97,8 @@ src/
 ├── engine/        与 UI 无关的完整排盘引擎
 ├── features/      数字、时间、卦名等输入算法
 ├── formatters/    RAW DATA 文本输出
-├── functions/     Cloudflare Pages 计数接口
+├── cloudflare/    仅供 Service Binding 调用的邮件通知 Worker
+├── functions/     Cloudflare Pages 计数与匿名反馈接口
 ├── pages/         Generator / Result / Settings / About
 ├── store/         设置、当前结果和本地历史
 └── types/         领域模型
@@ -116,16 +119,25 @@ const chart = generateChart({
 
 - 所有计算均在浏览器本地完成
 - 新生成的卦仅向 Cloudflare D1 发送一个随机事件 ID，用于领取全局序号；不发送起卦输入或排盘内容
+- 只有用户主动发送的反馈文字会写入 Cloudflare D1；仅一并保存随机提交 ID、入口来源和提交时间，不保存 IP、UA、卦象或本地历史
+- 通知收件地址仅配置在 Cloudflare Worker 服务端绑定中，不写入仓库、前端资源或公开 API
 - 不包含账号系统；除匿名计数外，使用自托管 Umami 进行匿名访问统计
 - Umami 仅统计页面访问，并排除分享链接的 Hash 参数；不收集输入数字、卦象、排盘或剪贴板内容
 - 输入数字、卦象、排盘和剪贴板内容不会上传
 - 历史记录仅保存于 `localStorage`
+- 反馈邀请的累计前台使用时长、关闭状态和已提交状态仅保存于 `localStorage`；关闭后 30 天内不再出现，提交后不再出现
 - 分享链接在 URL Hash 中编码卦象、原起卦时间、时区、起卦方式与排盘编号；Hash 不会随页面请求发送至服务器
 - 旧版仅含 `PRIMARY` 和 `MUTATION MASK` 的链接仍可打开，其历法数据会按查看者当地时间计算
 
-## 计数接口安全
+## Cloudflare 接口安全
 
-计数接口仅接收同源的规范 UUID v4 请求，并带有请求体限制、重复事件去重和 D1 全局熔断。生产环境还应在 Cloudflare WAF 中对 `/api/hexagram-count` 启用按 IP 的速率限制；具体配置见 [Cloudflare 计数接口保护](docs/cloudflare-security.md)。
+计数与反馈接口仅接收同源 JSON 请求，并带有请求体限制、UUID v4 幂等去重和 D1 全局熔断。反馈正文限制为 2–1200 字符。生产环境还应在 Cloudflare WAF 中分别对 `/api/hexagram-count` 和 `/api/feedback` 启用按 IP 的速率限制；具体配置见 [Cloudflare 接口保护](docs/cloudflare-security.md)。
+
+反馈表使用现有的 Pages Function 与 `hex64-counter` D1 数据库。部署前需应用新增迁移：
+
+```bash
+npx wrangler d1 migrations apply hex64-counter --remote
+```
 
 ## 历法与规则
 

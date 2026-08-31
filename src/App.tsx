@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from 'react'
 import { HashRouter, Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { BootSequence, useBootOnce } from '@/components/BootSequence'
+import { FeedbackInvitation } from '@/components/FeedbackInvitation'
 import { LiveClock } from '@/components/LiveClock'
 import { GeneratorPage } from '@/pages/GeneratorPage'
 import { ResultPage } from '@/pages/ResultPage'
@@ -114,6 +115,7 @@ function Shell() {
           </footer>
         </div>
       </div>
+      <FeedbackInvitation />
       <CrtFx />
     </CrtFrame>
   )

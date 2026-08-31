@@ -6,13 +6,22 @@
   "vars": {
     "COUNTER_MAX_PER_MINUTE": "30",
     "COUNTER_MAX_PER_HOUR": "200",
-    "COUNTER_MAX_PER_DAY": "500"
+    "COUNTER_MAX_PER_DAY": "500",
+    "FEEDBACK_MAX_PER_MINUTE": "15",
+    "FEEDBACK_MAX_PER_HOUR": "100",
+    "FEEDBACK_MAX_PER_DAY": "500"
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "hex64-counter",
       "database_id": "01e38e84-0157-4518-a324-f9b1950b2faa"
+    }
+  ],
+  "services": [
+    {
+      "binding": "FEEDBACK_NOTIFIER",
+      "service": "binary-liuyao-feedback-notifier"
     }
   ]
 }

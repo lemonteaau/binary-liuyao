@@ -481,6 +481,205 @@ html[data-screen-fx="off"] .chroma {
     inset 0 0 10px rgba(255, 255, 255, 0.22);
 }
 
+/* 关于页反馈：像一张留在终端旁的便笺，而不是另一套产品 UI */
+.feedback-form textarea {
+  display: block;
+  width: 100%;
+  min-height: 8.75rem;
+  resize: vertical;
+  border: 1px solid var(--color-edge-bright);
+  border-radius: 0;
+  padding: 0.9rem 1rem;
+  background:
+    linear-gradient(rgba(61, 245, 198, 0.025) 1px, transparent 1px) 0 0 / 100%
+      1.75rem,
+    var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1.75;
+  caret-color: var(--color-signal);
+  box-shadow: inset 0 0 26px rgba(0, 0, 0, 0.32);
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.feedback-form textarea::placeholder {
+  color: color-mix(in srgb, var(--color-fog) 72%, transparent);
+}
+
+.feedback-form textarea:focus {
+  border-color: var(--color-signal);
+  outline: none;
+  box-shadow:
+    inset 0 0 26px rgba(0, 0, 0, 0.32),
+    0 0 18px color-mix(in srgb, var(--color-signal) 12%, transparent);
+}
+
+.feedback-form-footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.feedback-submit {
+  min-width: 7.5rem;
+  padding-inline: 1rem;
+  white-space: nowrap;
+}
+
+.feedback-success {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--color-signal) 42%, var(--color-edge));
+  padding: 1rem;
+  background: color-mix(in srgb, var(--color-signal) 5%, var(--color-surface));
+}
+
+.feedback-success-mark {
+  display: inline-grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--color-signal);
+  color: var(--color-signal);
+}
+
+.feedback-invitation {
+  position: absolute;
+  z-index: 8;
+  right: clamp(0.75rem, 2.5vw, 2rem);
+  bottom: clamp(0.75rem, 2.5vw, 2rem);
+  width: min(22rem, calc(100% - 1.5rem));
+  border: 1px solid color-mix(in srgb, var(--color-signal) 55%, var(--color-edge));
+  padding: 1.05rem 1.1rem 1rem;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-signal) 7%, transparent),
+      transparent 46%
+    ),
+    color-mix(in srgb, var(--color-panel) 94%, black);
+  color: var(--color-ink);
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.58),
+    0 0 22px color-mix(in srgb, var(--color-signal) 10%, transparent),
+    inset 0 0 24px rgba(0, 0, 0, 0.3);
+  animation: feedback-invitation-enter 360ms cubic-bezier(0.16, 0.78, 0.24, 1)
+    both;
+}
+
+.feedback-invitation-signal {
+  position: absolute;
+  top: -3px;
+  left: 1.1rem;
+  width: 3.5rem;
+  height: 3px;
+  background: var(--color-signal);
+  box-shadow: 0 0 12px var(--color-signal);
+}
+
+.feedback-invitation-close {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.65rem;
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--color-fog);
+  font: inherit;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.feedback-invitation-close:hover {
+  color: var(--color-signal);
+}
+
+.feedback-invitation h2 {
+  padding-right: 1.7rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.feedback-invitation > p {
+  margin-top: 0.6rem;
+  color: var(--color-fog);
+  font-size: 0.9375rem;
+  line-height: 1.65;
+}
+
+.feedback-invitation-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.7rem;
+  margin-top: 0.9rem;
+}
+
+.feedback-invitation-actions .btn {
+  padding: 0.55rem 0.85rem;
+  font-size: 0.9375rem;
+  text-decoration: none;
+}
+
+.feedback-invitation-later {
+  border: 0;
+  padding: 0.55rem 0.35rem;
+  background: transparent;
+  color: var(--color-fog);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.feedback-invitation-later:hover {
+  color: var(--color-ink);
+}
+
+@keyframes feedback-invitation-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+html[data-motion="off"] .feedback-invitation {
+  animation: none;
+}
+
+@media (max-width: 639px) {
+  .feedback-form-footer {
+    flex-direction: column;
+  }
+
+  .feedback-form-footer > :last-child {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .feedback-invitation {
+    right: 0.75rem;
+    bottom: 0.75rem;
+    left: 0.75rem;
+    width: auto;
+  }
+}
+
 .tile {
   display: flex;
   flex-direction: column;

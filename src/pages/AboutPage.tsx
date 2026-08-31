@@ -1,4 +1,20 @@
+import { useEffect, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { FeedbackForm } from '@/components/FeedbackForm'
+
 export function AboutPage() {
+  const [searchParams] = useSearchParams()
+  const feedbackSectionRef = useRef<HTMLElement>(null)
+  const shouldFocusFeedback = searchParams.get('feedback') === '1'
+
+  useEffect(() => {
+    if (!shouldFocusFeedback) return
+    const frame = window.requestAnimationFrame(() => {
+      feedbackSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [shouldFocusFeedback])
+
   return (
     <div className="max-w-3xl pt-6 text-base leading-relaxed">
       <p className="mb-1 text-[0.875rem] tracking-[0.24em] text-fog">产品 / 方法</p>
@@ -11,17 +27,9 @@ export function AboutPage() {
         </p>
         <p className="mt-2">
           所有排盘计算均在浏览器本地完成。本应用不会将起卦内容、输入数字或卦象上传至任何服务器；
-          无账号、无数据库，仅使用自托管 Umami 进行匿名访问统计，且不统计分享链接中的片段参数。
+          无账号，仅使用自托管 Umami 进行匿名访问统计，且不统计分享链接中的片段参数。
+          只有你主动填写并发送的反馈文字会保存到 Cloudflare D1，不会自动附带排盘或历史记录。
         </p>
-      </Section>
-
-      <Section tag="二进制模型">
-        <pre className="overflow-x-auto border border-edge bg-void p-3 text-[0.9375rem] leading-relaxed">{`本卦编码：6 bit，1 = 阳，0 = 阴    例如 010010（坎为水）
-动爻标记：1 = 动爻                  例如 000011
-变卦编码 = 本卦编码 XOR 动爻标记    →   010001（水雷屯）
-
-位序（固定）：bit 0 = 初爻
-显示顺序：L6 L5 L4 L3 L2 L1（MSB 在前）。`}</pre>
       </Section>
 
       <Section tag="输入算法">
@@ -80,13 +88,33 @@ export function AboutPage() {
           Hash 不会随页面请求发送至服务器。旧版分享链接仍可打开，其历法信息会按查看者本地时刻计算。
         </p>
       </Section>
+
+      <Section tag="反馈" id="feedback" sectionRef={feedbackSectionRef}>
+        <div className="mb-4 max-w-2xl">
+          <h2 className="text-lg font-bold tracking-[0.16em] text-ink">写给作者</h2>
+        </div>
+        <FeedbackForm
+          source={shouldFocusFeedback ? 'invite' : 'about'}
+          focusOnMount={shouldFocusFeedback}
+        />
+      </Section>
     </div>
   )
 }
 
-function Section({ tag, children }: { tag: string; children: React.ReactNode }) {
+function Section({
+  tag,
+  children,
+  id,
+  sectionRef,
+}: {
+  tag: string
+  children: React.ReactNode
+  id?: string
+  sectionRef?: React.Ref<HTMLElement>
+}) {
   return (
-    <section className="panel mb-4 p-4 sm:p-5">
+    <section ref={sectionRef} id={id} className="panel mb-4 scroll-mt-4 p-4 sm:p-5">
       <span className="panel-tag">{tag}</span>
       {children}
     </section>
