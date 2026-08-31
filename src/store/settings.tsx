@@ -1,9 +1,10 @@
-import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { detectTimezone } from '@/calendar/solar-lunar'
 import { DEFAULT_AI_INSTRUCTION } from '@/formatters/rawText'
 
 export type FontSize = 'small' | 'standard' | 'large'
+export type SettingsSaveStatus = 'saving' | 'saved' | 'error'
 
 export interface Settings {
   /** 'auto' 或 IANA 时区名 */
@@ -46,6 +47,7 @@ function isFontSize(value: unknown): value is FontSize {
 
 interface SettingsContextValue {
   settings: Settings
+  saveStatus: SettingsSaveStatus
   resolvedTimezone: string
   setTimezone: (tz: string) => void
   setFontSize: (fontSize: FontSize) => void
@@ -59,15 +61,21 @@ const SettingsContext = createContext<SettingsContextValue | null>(null)
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(loadSettings)
+  const [saveStatus, setSaveStatus] = useState<SettingsSaveStatus>('saved')
+  const settingsRef = useRef(settings)
+  const saveStatusTimerRef = useRef<number | null>(null)
   const detected = useMemo(() => detectTimezone(), [])
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settingsRef.current))
     } catch {
-      /* storage 不可用时静默降级 */
+      /* 首次加载时不打断使用；用户修改设置时会显示保存错误 */
     }
-  }, [settings])
+    return () => {
+      if (saveStatusTimerRef.current !== null) window.clearTimeout(saveStatusTimerRef.current)
+    }
+  }, [])
 
   useLayoutEffect(() => {
     document.documentElement.dataset.fontSize = settings.fontSize
@@ -76,12 +84,24 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, [settings.animation, settings.fontSize, settings.screenFx])
 
   const update = useCallback((patch: Partial<Settings>) => {
-    setSettings((prev) => ({ ...prev, ...patch }))
+    const next = { ...settingsRef.current, ...patch }
+    settingsRef.current = next
+    setSettings(next)
+    setSaveStatus('saving')
+
+    if (saveStatusTimerRef.current !== null) window.clearTimeout(saveStatusTimerRef.current)
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      saveStatusTimerRef.current = window.setTimeout(() => setSaveStatus('saved'), 300)
+    } catch {
+      setSaveStatus('error')
+    }
   }, [])
 
   const value = useMemo<SettingsContextValue>(
     () => ({
       settings,
+      saveStatus,
       resolvedTimezone: settings.timezone === 'auto' ? detected : settings.timezone,
       setTimezone: (timezone) => update({ timezone }),
       setFontSize: (fontSize) => update({ fontSize }),
@@ -90,7 +110,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setAnimation: (animation) => update({ animation }),
       setScreenFx: (screenFx) => update({ screenFx }),
     }),
-    [settings, detected, update],
+    [settings, saveStatus, detected, update],
   )
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>

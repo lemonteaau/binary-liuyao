@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { CrtFx } from '@/App'
 import { DEFAULT_AI_INSTRUCTION } from '@/formatters/rawText'
@@ -11,6 +11,7 @@ const STORAGE_KEY = 'hex64.settings.v1'
 
 afterEach(() => {
   cleanup()
+  vi.restoreAllMocks()
   localStorage.clear()
   delete document.documentElement.dataset.fontSize
   delete document.documentElement.dataset.motion
@@ -135,11 +136,14 @@ describe('AI 指令设置', () => {
       target: { value: '请先用白话总结，再逐项分析。' },
     })
 
+    expect(screen.getByRole('status').textContent).toBe('正在保存…')
+
     await waitFor(() => {
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}') as {
         aiInstructionPrompt?: string
       }
       expect(stored.aiInstructionPrompt).toBe('请先用白话总结，再逐项分析。')
+      expect(screen.getByRole('status').textContent).toBe('已保存')
     })
 
     firstRender.unmount()
@@ -151,5 +155,26 @@ describe('AI 指令设置', () => {
 
     expect((screen.getByLabelText('自定义提示词') as HTMLTextAreaElement).value)
       .toBe('请先用白话总结，再逐项分析。')
+  })
+
+  it('本地存储不可用时明确提示保存失败', async () => {
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('storage unavailable')
+    })
+
+    render(
+      <SettingsProvider>
+        <SettingsPage />
+      </SettingsProvider>,
+    )
+
+    fireEvent.change(screen.getByLabelText('自定义提示词'), {
+      target: { value: '无法保存的提示词' },
+    })
+
+    await waitFor(() => {
+      expect(screen.getByRole('status').textContent).toBe('保存失败')
+    })
+    expect(screen.getByText(/浏览器当前无法写入本地存储/)).toBeTruthy()
   })
 })

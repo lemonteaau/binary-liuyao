@@ -49,6 +49,7 @@ function timezoneOptions(): string[] {
 export function SettingsPage() {
   const {
     settings,
+    saveStatus,
     resolvedTimezone,
     setTimezone,
     setFontSize,
@@ -124,9 +125,20 @@ export function SettingsPage() {
             </ToggleBtn>
           </div>
         </div>
-        <label className="mt-4 block text-[0.875rem] tracking-[0.12em] text-fog" htmlFor="ai-instruction-prompt">
-          自定义提示词
-        </label>
+        <div className="mt-4 flex items-baseline justify-between gap-3">
+          <label className="block text-[0.875rem] tracking-[0.12em] text-fog" htmlFor="ai-instruction-prompt">
+            自定义提示词
+          </label>
+          <span
+            role="status"
+            aria-live="polite"
+            className={`shrink-0 text-[0.8125rem] tracking-[0.08em] ${
+              saveStatus === 'error' ? 'text-flux' : 'text-signal'
+            }`}
+          >
+            {saveStatus === 'saving' ? '正在保存…' : saveStatus === 'saved' ? '已保存' : '保存失败'}
+          </span>
+        </div>
         <textarea
           id="ai-instruction-prompt"
           value={settings.aiInstructionPrompt}
@@ -136,7 +148,8 @@ export function SettingsPage() {
           className="mt-2 w-full resize-y border border-edge bg-void px-3 py-2 text-base leading-relaxed text-ink focus:border-signal focus:outline-none"
         />
         <p className="mt-2 text-[0.8125rem] leading-relaxed text-fog">
-          保存在当前浏览器中，网站更新不会覆盖。留空时不附加任何提示词。
+          自动保存在当前浏览器中，网站更新不会覆盖。留空时不附加任何提示词。
+          {saveStatus === 'error' && ' 浏览器当前无法写入本地存储，请检查隐私设置。'}
         </p>
       </section>
 
