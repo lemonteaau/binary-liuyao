@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { scrollIntoViewOnMobile } from '@/lib/mobile-scroll'
+import { resetScrollPosition, scrollIntoViewOnMobile } from '@/lib/mobile-scroll'
 
 afterEach(() => {
   vi.restoreAllMocks()
@@ -57,5 +57,38 @@ describe('移动端交互滚动', () => {
 
     expect(scrollIntoViewOnMobile(target)).toBe(false)
     expect(scrollIntoView).not.toHaveBeenCalled()
+  })
+})
+
+describe('路由切换滚动复位', () => {
+  it('立即归零，并在后续两帧抵消 WebKit 的滚动锚定', () => {
+    const callbacks: FrameRequestCallback[] = []
+    const requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
+      callbacks.push(callback)
+      return callbacks.length
+    })
+    const cancelAnimationFrame = vi.fn()
+    vi.stubGlobal('requestAnimationFrame', requestAnimationFrame)
+    vi.stubGlobal('cancelAnimationFrame', cancelAnimationFrame)
+
+    const target = document.createElement('div')
+    target.scrollTop = 720
+    target.scrollLeft = 18
+
+    const cleanup = resetScrollPosition(target)
+    expect(target.scrollTop).toBe(0)
+    expect(target.scrollLeft).toBe(0)
+
+    target.scrollTop = 480
+    callbacks[0]!(0)
+    expect(target.scrollTop).toBe(0)
+
+    target.scrollTop = 240
+    callbacks[1]!(16)
+    expect(target.scrollTop).toBe(0)
+
+    cleanup()
+    expect(cancelAnimationFrame).toHaveBeenCalledWith(1)
+    expect(cancelAnimationFrame).toHaveBeenCalledWith(2)
   })
 })

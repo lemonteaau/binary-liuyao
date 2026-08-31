@@ -3,10 +3,8 @@ import type { Dispatch, SetStateAction } from 'react'
 import {
   Clock,
   CoinVertical,
+  HandPalm,
   Monitor,
-  NumberSix,
-  Rows,
-  SlidersHorizontal,
 } from '@phosphor-icons/react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import coinFacesUrl from '@/assets/coin-faces.webp'
@@ -145,16 +143,33 @@ function ModeIcon({ mode }: { mode: InputMethod }) {
     case 'entropy':
       return <Monitor {...props} />
     case 'manual':
-      return <SlidersHorizontal {...props} />
+      return <HandPalm {...props} />
     case 'hexagram':
-      return <Rows {...props} />
+      return <TrigramIcon />
     case 'number':
-      return <NumberSix {...props} />
+      return <span className="number-sequence-icon">123</span>
     case 'time':
       return <Clock {...props} />
     default:
       return null
   }
+}
+
+function TrigramIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      width="23"
+      height="23"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="square"
+    >
+      <path d="M4 6h16M4 12h6m4 0h6M4 18h16" />
+    </svg>
+  )
 }
 
 function HomepageCounter() {

@@ -160,6 +160,7 @@ body {
   position: absolute;
   inset: 0;
   overflow-y: auto;
+  overflow-anchor: none;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
   scrollbar-width: thin;
@@ -258,8 +259,10 @@ body {
 
 .homepage-counter-number {
   display: inline-flex;
-  min-width: 4.5ch;
+  width: 5ch;
+  flex: 0 0 5ch;
   justify-content: center;
+  white-space: nowrap;
 }
 
 .homepage-counter-number[data-loading="true"] {
@@ -809,6 +812,14 @@ html[data-motion="off"] .feedback-invitation {
     background-color 160ms ease,
     color 160ms ease,
     transform 160ms ease;
+}
+
+.number-sequence-icon {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
 }
 
 .tile:hover .tile-mode-icon,

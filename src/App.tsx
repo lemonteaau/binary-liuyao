@@ -3,6 +3,7 @@ import { HashRouter, Link, NavLink, Route, Routes, useLocation } from 'react-rou
 import { BootSequence, useBootOnce } from '@/components/BootSequence'
 import { FeedbackInvitation } from '@/components/FeedbackInvitation'
 import { LiveClock } from '@/components/LiveClock'
+import { resetScrollPosition } from '@/lib/mobile-scroll'
 import { GeneratorPage } from '@/pages/GeneratorPage'
 import { ResultPage } from '@/pages/ResultPage'
 import { SettingsPage } from '@/pages/SettingsPage'
@@ -58,11 +59,8 @@ function Shell() {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
-    const container = scrollContainerRef.current
-    if (!container) return
-    container.scrollTop = 0
-    container.scrollLeft = 0
-  }, [booting, location.key])
+    return resetScrollPosition(scrollContainerRef.current)
+  }, [booting, location.key, location.pathname, location.search])
 
   if (booting) {
     return (
