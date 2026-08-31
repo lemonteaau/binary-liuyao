@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { detectTimezone } from '@/calendar/solar-lunar'
+import { DEFAULT_AI_INSTRUCTION } from '@/formatters/rawText'
 
 export type FontSize = 'small' | 'standard' | 'large'
 
@@ -9,6 +10,7 @@ export interface Settings {
   timezone: string
   fontSize: FontSize
   aiInstruction: boolean
+  aiInstructionPrompt: string
   animation: boolean
   screenFx: boolean
 }
@@ -20,6 +22,7 @@ function loadSettings(): Settings {
     timezone: 'auto',
     fontSize: 'standard',
     aiInstruction: false,
+    aiInstructionPrompt: DEFAULT_AI_INSTRUCTION,
     animation: true,
     screenFx: true,
   }
@@ -28,7 +31,10 @@ function loadSettings(): Settings {
     if (!raw) return defaults
     const stored = JSON.parse(raw) as Partial<Settings>
     const fontSize = isFontSize(stored.fontSize) ? stored.fontSize : defaults.fontSize
-    return { ...defaults, ...stored, fontSize }
+    const aiInstructionPrompt = typeof stored.aiInstructionPrompt === 'string'
+      ? stored.aiInstructionPrompt
+      : defaults.aiInstructionPrompt
+    return { ...defaults, ...stored, fontSize, aiInstructionPrompt }
   } catch {
     return defaults
   }
@@ -44,6 +50,7 @@ interface SettingsContextValue {
   setTimezone: (tz: string) => void
   setFontSize: (fontSize: FontSize) => void
   setAiInstruction: (on: boolean) => void
+  setAiInstructionPrompt: (prompt: string) => void
   setAnimation: (on: boolean) => void
   setScreenFx: (on: boolean) => void
 }
@@ -79,6 +86,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setTimezone: (timezone) => update({ timezone }),
       setFontSize: (fontSize) => update({ fontSize }),
       setAiInstruction: (aiInstruction) => update({ aiInstruction }),
+      setAiInstructionPrompt: (aiInstructionPrompt) => update({ aiInstructionPrompt }),
       setAnimation: (animation) => update({ animation }),
       setScreenFx: (screenFx) => update({ screenFx }),
     }),

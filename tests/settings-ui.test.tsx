@@ -3,6 +3,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { CrtFx } from '@/App'
+import { DEFAULT_AI_INSTRUCTION } from '@/formatters/rawText'
 import { SettingsPage } from '@/pages/SettingsPage'
 import { SettingsProvider, useSettings } from '@/store/settings'
 
@@ -107,5 +108,48 @@ describe('动效设置', () => {
     expect(container.querySelector('.fx-roll')).toBeNull()
     expect(container.querySelector('.fx-flicker')).toBeNull()
     expect(container.querySelector('.fx-scanlines')).toBeTruthy()
+  })
+})
+
+describe('AI 指令设置', () => {
+  it('旧版设置自动补上默认提示词', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ aiInstruction: true }))
+
+    render(
+      <SettingsProvider>
+        <SettingsPage />
+      </SettingsProvider>,
+    )
+
+    expect((screen.getByLabelText('自定义提示词') as HTMLTextAreaElement).value).toBe(DEFAULT_AI_INSTRUCTION)
+  })
+
+  it('自定义提示词会持久化，并在重新挂载时恢复', async () => {
+    const firstRender = render(
+      <SettingsProvider>
+        <SettingsPage />
+      </SettingsProvider>,
+    )
+
+    fireEvent.change(screen.getByLabelText('自定义提示词'), {
+      target: { value: '请先用白话总结，再逐项分析。' },
+    })
+
+    await waitFor(() => {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}') as {
+        aiInstructionPrompt?: string
+      }
+      expect(stored.aiInstructionPrompt).toBe('请先用白话总结，再逐项分析。')
+    })
+
+    firstRender.unmount()
+    render(
+      <SettingsProvider>
+        <SettingsPage />
+      </SettingsProvider>,
+    )
+
+    expect((screen.getByLabelText('自定义提示词') as HTMLTextAreaElement).value)
+      .toBe('请先用白话总结，再逐项分析。')
   })
 })

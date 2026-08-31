@@ -143,7 +143,19 @@ describe('RAW TEXT 格式（黄金快照）', () => {
   })
 
   it('AI 指令开关生效', () => {
-    const text = formatRawText(goldenChart(), { includeAiInstruction: true })
-    expect(text.trimEnd().endsWith('请根据以上六爻排盘进行分析。')).toBe(true)
+    const text = formatRawText(goldenChart(), {
+      includeAiInstruction: true,
+      aiInstructionPrompt: '先给结论，再说明依据。',
+    })
+    expect(text.trimEnd().endsWith('先给结论，再说明依据。')).toBe(true)
+  })
+
+  it('AI 指令为空时不附加空白段落', () => {
+    const withoutInstruction = formatRawText(goldenChart(), { includeAiInstruction: false })
+    const withEmptyInstruction = formatRawText(goldenChart(), {
+      includeAiInstruction: true,
+      aiInstructionPrompt: '   ',
+    })
+    expect(withEmptyInstruction).toBe(withoutInstruction)
   })
 })

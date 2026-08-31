@@ -53,6 +53,7 @@ export function SettingsPage() {
     setTimezone,
     setFontSize,
     setAiInstruction,
+    setAiInstructionPrompt,
     setAnimation,
     setScreenFx,
   } = useSettings()
@@ -105,9 +106,9 @@ export function SettingsPage() {
 
       <section className="panel mt-4 p-4 sm:p-5">
         <span className="panel-tag">复制格式</span>
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-start justify-between gap-4">
           <p className="text-[0.9375rem] leading-relaxed text-fog">
-            附加 AI 指令 — 复制内容末尾附加「请根据以上六爻排盘进行分析。」
+            附加 AI 指令 — 复制排盘时，将下面的提示词附加在内容末尾。
             <br />
             当前设置：
             <span className={settings.aiInstruction ? 'text-signal' : 'text-flux'}>
@@ -123,6 +124,20 @@ export function SettingsPage() {
             </ToggleBtn>
           </div>
         </div>
+        <label className="mt-4 block text-[0.875rem] tracking-[0.12em] text-fog" htmlFor="ai-instruction-prompt">
+          自定义提示词
+        </label>
+        <textarea
+          id="ai-instruction-prompt"
+          value={settings.aiInstructionPrompt}
+          onChange={(event) => setAiInstructionPrompt(event.target.value)}
+          rows={4}
+          spellCheck={false}
+          className="mt-2 w-full resize-y border border-edge bg-void px-3 py-2 text-base leading-relaxed text-ink focus:border-signal focus:outline-none"
+        />
+        <p className="mt-2 text-[0.8125rem] leading-relaxed text-fog">
+          保存在当前浏览器中，网站更新不会覆盖。留空时不附加任何提示词。
+        </p>
       </section>
 
       <section className="panel mt-4 p-4 sm:p-5">

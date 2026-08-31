@@ -1,9 +1,13 @@
 import type { ChartData } from '@/types'
 import { INPUT_METHOD_LABELS } from '@/engine'
 
+export const DEFAULT_AI_INSTRUCTION = '请根据以上六爻排盘进行分析。'
+
 export interface RawTextOptions {
-  /** 末尾附加「请根据以上六爻排盘进行分析。」 */
+  /** 是否在末尾附加 AI 指令 */
   includeAiInstruction: boolean
+  /** 用户自定义的 AI 指令 */
+  aiInstructionPrompt?: string
 }
 
 const LINE_NAMES = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'] as const
@@ -72,9 +76,10 @@ export function formatRawText(chart: ChartData, options: RawTextOptions): string
   out.push('卦爻：')
   out.push(...lineLines)
 
-  if (options.includeAiInstruction) {
+  const aiInstructionPrompt = (options.aiInstructionPrompt ?? DEFAULT_AI_INSTRUCTION).trim()
+  if (options.includeAiInstruction && aiInstructionPrompt) {
     out.push('')
-    out.push('请根据以上六爻排盘进行分析。')
+    out.push(aiInstructionPrompt)
   }
 
   return out.join('\n')

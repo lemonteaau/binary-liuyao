@@ -68,7 +68,11 @@ export function ResultPage() {
   }
 
   const chart = current.chart
-  const rawText = formatRawText(chart, { includeAiInstruction: settings.aiInstruction })
+  const rawText = formatRawText(chart, {
+    includeAiInstruction: settings.aiInstruction,
+    aiInstructionPrompt: settings.aiInstructionPrompt,
+  })
+  const hasAiInstruction = settings.aiInstruction && settings.aiInstructionPrompt.trim().length > 0
   const isLinkMode = chart.inputMethod === 'link' || linkParams !== null
   const restoredOriginalContext = Boolean(
     linkParams?.when && linkParams.timezone && linkParams.inputMethod,
@@ -209,7 +213,7 @@ export function ResultPage() {
         </div>
         <p className="mt-3 text-[0.875rem] leading-relaxed text-fog">
           上方「复制排盘」输出适用于 AI 或六爻使用者。
-          {settings.aiInstruction ? ' AI 指令附加：已开启。' : ' AI 指令附加：已关闭（可在设置中开启）。'}
+          {hasAiInstruction ? ' AI 指令附加：已开启。' : ' AI 指令附加：未启用（可在设置中配置）。'}
           {' '}分享图与分享链接都会保留本次排盘信息。
         </p>
       </section>
