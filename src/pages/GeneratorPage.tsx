@@ -77,8 +77,8 @@ export function GeneratorPage() {
   }, [mode])
 
   return (
-    <div className="pt-6">
-      <div className="mb-4 md:mb-6">
+    <div className="generator-page pt-6">
+      <div className="generator-heading">
         <p className="mb-1 hidden text-[0.875rem] tracking-[0.24em] text-fog md:block">
           六爻起卦与排盘
         </p>
@@ -110,7 +110,11 @@ export function GeneratorPage() {
 
       <HomepageCounter />
 
-      <div id="generator-active-panel" ref={activePanelRef} className="generator-scroll-target">
+      <div
+        id="generator-active-panel"
+        ref={activePanelRef}
+        className="generator-active-panel generator-scroll-target"
+      >
         {mode === 'entropy' && <EntropyPanel />}
         {mode === 'coin' && (
           <CoinShakePanel
@@ -202,7 +206,7 @@ function HomepageCounter() {
 
   return (
     <p
-      className="homepage-counter mt-3 flex flex-wrap items-center justify-center gap-x-2 border border-edge bg-panel px-3 py-2 text-center text-[0.875rem] tracking-[0.14em] text-fog"
+      className="homepage-counter flex flex-wrap items-center justify-center gap-x-2 border border-edge bg-panel px-3 py-2 text-center text-[0.875rem] tracking-[0.14em] text-fog md:justify-end md:text-right"
       aria-live="polite"
       aria-busy={status === 'loading'}
     >
