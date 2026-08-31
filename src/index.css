@@ -126,6 +126,12 @@ body {
   animation: led-pulse 2.6s ease-in-out infinite;
 }
 
+@media (max-width: 767px) {
+  .crt-led {
+    display: none;
+  }
+}
+
 @keyframes led-pulse {
   0%,
   100% {
@@ -1910,6 +1916,11 @@ html[data-screen-fx="off"] .chroma {
   .homepage-counter-number[data-loading="true"] {
     animation: none !important;
     opacity: 0.65;
+  }
+
+  .fx-roll,
+  .fx-flicker {
+    display: none;
   }
 
   *,

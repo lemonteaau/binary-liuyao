@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { CrtFx } from '@/App'
+import { SettingsPage } from '@/pages/SettingsPage'
 import { SettingsProvider, useSettings } from '@/store/settings'
 
 const STORAGE_KEY = 'hex64.settings.v1'
@@ -83,5 +85,27 @@ describe('SettingsProvider 字号设置', () => {
 
     expect(screen.getByLabelText('当前字号').textContent).toBe('small')
     expect(document.documentElement.dataset.fontSize).toBe('small')
+  })
+})
+
+describe('动效设置', () => {
+  it('关闭动效时立即移除动态 CRT 光带，但保留静态扫描线', () => {
+    const { container } = render(
+      <SettingsProvider>
+        <CrtFx />
+        <SettingsPage />
+      </SettingsProvider>,
+    )
+
+    expect(container.querySelector('.fx-roll')).toBeTruthy()
+    expect(container.querySelector('.fx-flicker')).toBeTruthy()
+    expect(container.querySelector('.fx-scanlines')).toBeTruthy()
+
+    const animationControls = screen.getByRole('group', { name: '动画开关' })
+    fireEvent.click(within(animationControls).getByRole('button', { name: '关' }))
+
+    expect(container.querySelector('.fx-roll')).toBeNull()
+    expect(container.querySelector('.fx-flicker')).toBeNull()
+    expect(container.querySelector('.fx-scanlines')).toBeTruthy()
   })
 })

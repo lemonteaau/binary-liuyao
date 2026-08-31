@@ -32,14 +32,20 @@ function CrtFrame({ children }: { children: React.ReactNode }) {
   )
 }
 
-function CrtFx() {
+export function CrtFx() {
+  const { settings } = useSettings()
+
   return (
     <div className="crt-fx" aria-hidden="true">
       <div className="fx-grille" />
       <div className="fx-scanlines" />
-      <div className="fx-roll" />
       <div className="fx-vignette" />
-      <div className="fx-flicker" />
+      {settings.animation && (
+        <>
+          <div className="fx-roll" />
+          <div className="fx-flicker" />
+        </>
+      )}
     </div>
   )
 }
