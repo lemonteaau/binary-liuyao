@@ -227,7 +227,7 @@ export function ResultPage() {
             <span>正在登记全局序号…</span>
           ) : (
             <span>
-              这是 HEX//64 自上线以来完成的{' '}
+              这是HEX//64自上线以来完成的
               <span className="inline-flex items-center align-middle whitespace-nowrap">
                 第<strong className="text-lg font-bold tabular-nums text-signal">
                   {current.ordinal.toLocaleString('zh-CN')}
