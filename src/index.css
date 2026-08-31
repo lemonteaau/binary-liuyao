@@ -796,6 +796,17 @@ html[data-motion="off"] .feedback-invitation {
   }
 }
 
+@media (min-width: 1024px) and (min-height: 760px) {
+  #main-content:has(> .generator-page-idle) {
+    display: grid;
+  }
+
+  .generator-page-idle {
+    align-content: center;
+    padding-top: 0;
+  }
+}
+
 .tile {
   display: flex;
   min-height: 8rem;

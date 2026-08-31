@@ -62,7 +62,6 @@ export function SettingsPage() {
 
   return (
     <div className="pt-6">
-      <p className="mb-1 text-[0.875rem] tracking-[0.24em] text-fog">系统设置</p>
       <h1 className="mb-6 text-2xl font-bold tracking-[0.2em]">参数配置</h1>
 
       <section className="panel p-4 sm:p-5">

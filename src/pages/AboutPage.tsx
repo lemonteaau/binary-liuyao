@@ -17,7 +17,6 @@ export function AboutPage() {
 
   return (
     <div className="pt-6 text-base leading-relaxed">
-      <p className="mb-1 text-[0.875rem] tracking-[0.24em] text-fog">产品 / 方法</p>
       <h1 className="mb-6 text-2xl font-bold tracking-[0.2em]">关于 HEX//64</h1>
 
       <Section tag="反馈" id="feedback" sectionRef={feedbackSectionRef}>

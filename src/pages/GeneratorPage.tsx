@@ -77,11 +77,8 @@ export function GeneratorPage() {
   }, [mode])
 
   return (
-    <div className="generator-page pt-6">
+    <div className={cn('generator-page pt-6', !mode && 'generator-page-idle')}>
       <div className="generator-heading">
-        <p className="mb-1 hidden text-[0.875rem] tracking-[0.24em] text-fog md:block">
-          六爻起卦与排盘
-        </p>
         <h1 className="text-2xl font-bold tracking-[0.2em]">选择起卦方式</h1>
       </div>
 
