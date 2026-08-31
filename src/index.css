@@ -777,12 +777,12 @@ html[data-motion="off"] .feedback-invitation {
   }
 
   .generator-heading {
-    align-self: end;
+    align-self: center;
     margin-bottom: 1.5rem;
   }
 
   .homepage-counter {
-    align-self: end;
+    align-self: center;
     justify-self: end;
     margin-block: 0 1.5rem;
   }
