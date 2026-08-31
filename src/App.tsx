@@ -109,7 +109,7 @@ function Shell() {
               <span>匿名访问统计</span>
             </div>
             <div className="flex items-center gap-3">
-              <span>BY LEMONTEA // OPEN SOURCE</span>
+              <span>By lemontea, with ❤️</span>
               <a
                 href="https://github.com/lemonteaau/binary-liuyao"
                 target="_blank"

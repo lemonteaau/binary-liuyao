@@ -820,34 +820,6 @@ html[data-motion="off"] .feedback-invitation {
   text-wrap: pretty;
 }
 
-.generator-empty-guide {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 1rem;
-  margin-top: 1rem;
-  border-top: 1px solid var(--color-edge);
-  padding: 1rem 0.25rem 0;
-}
-
-.generator-empty-guide > span {
-  color: var(--color-signal);
-  font-size: 0.8125rem;
-  letter-spacing: 0.18em;
-}
-
-.generator-empty-guide strong {
-  font-size: 0.9375rem;
-  letter-spacing: 0.12em;
-}
-
-.generator-empty-guide p {
-  margin-top: 0.25rem;
-  max-width: 58ch;
-  color: var(--color-fog);
-  font-size: 0.875rem;
-  line-height: 1.65;
-}
-
 .settings-row {
   display: flex;
   align-items: center;

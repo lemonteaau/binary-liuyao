@@ -102,15 +102,6 @@ export function GeneratorPage() {
       </div>
 
       <div id="generator-active-panel" ref={activePanelRef} className="generator-scroll-target">
-        {mode === null && (
-          <section className="generator-empty-guide" aria-label="起卦流程提示">
-            <span>STEP 01</span>
-            <div>
-              <strong>先选择一种起卦方式</strong>
-              <p>所有计算都在当前浏览器完成；选择后会在这里显示下一步。</p>
-            </div>
-          </section>
-        )}
         {mode === 'entropy' && <EntropyPanel />}
         {mode === 'coin' && (
           <CoinShakePanel
