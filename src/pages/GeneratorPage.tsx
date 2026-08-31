@@ -37,12 +37,12 @@ import type { InputMethod, LineValue } from '@/types'
 type RawLines = [LineValue, LineValue, LineValue, LineValue, LineValue, LineValue]
 
 const MODES: Array<{ id: InputMethod; title: string; sub: string }> = [
-  { id: 'coin', title: '摇币起卦', sub: '逐爻启停 / 三枚铜钱' },
-  { id: 'entropy', title: '电脑起卦', sub: '加密随机 / 一键起卦' },
-  { id: 'manual', title: '手动排卦', sub: '逐爻设置阴阳动静' },
-  { id: 'hexagram', title: '卦名起卦', sub: '选择本卦与动爻' },
-  { id: 'number', title: '数字起卦', sub: '输入数字推演' },
-  { id: 'time', title: '时间起卦', sub: '使用本地时间' },
+  { id: 'coin', title: '摇币起卦', sub: '逐爻摇币 · 三枚铜钱' },
+  { id: 'entropy', title: '电脑起卦', sub: '加密随机 · 一键完成' },
+  { id: 'manual', title: '手动排卦', sub: '逐爻设置 · 阴阳动静' },
+  { id: 'hexagram', title: '卦名起卦', sub: '按卦名选择 · 指定动爻' },
+  { id: 'number', title: '数字起卦', sub: '输入数字 · 自动推演' },
+  { id: 'time', title: '时间起卦', sub: '当前时间 · 自动推演' },
 ]
 
 const COIN_LINE_NAMES = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'] as const
@@ -80,8 +80,8 @@ export function GeneratorPage() {
         <HomepageCounter />
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6" role="group" aria-label="起卦方式">
-        {MODES.map((m) => (
+      <div className="mode-grid" role="group" aria-label="起卦方式">
+        {MODES.map((m, index) => (
           <button
             key={m.id}
             type="button"
@@ -91,13 +91,26 @@ export function GeneratorPage() {
             aria-controls="generator-active-panel"
             onClick={() => setMode(m.id)}
           >
-            <span className="text-[1.0625rem] font-bold tracking-[0.18em]">{m.title}</span>
-            <span className="text-[0.875rem] tracking-[0.12em] text-fog">{m.sub}</span>
+            <span className="tile-head">
+              <span className="tile-index">{String(index + 1).padStart(2, '0')}</span>
+              <span className="tile-action">{mode === m.id ? '已选择' : '选择'}</span>
+            </span>
+            <span className="tile-title">{m.title}</span>
+            <span className="tile-description">{m.sub}</span>
           </button>
         ))}
       </div>
 
       <div id="generator-active-panel" ref={activePanelRef} className="generator-scroll-target">
+        {mode === null && (
+          <section className="generator-empty-guide" aria-label="起卦流程提示">
+            <span>STEP 01</span>
+            <div>
+              <strong>先选择一种起卦方式</strong>
+              <p>所有计算都在当前浏览器完成；选择后会在这里显示下一步。</p>
+            </div>
+          </section>
+        )}
         {mode === 'entropy' && <EntropyPanel />}
         {mode === 'coin' && (
           <CoinShakePanel

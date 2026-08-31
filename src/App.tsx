@@ -76,9 +76,24 @@ function Shell() {
   return (
     <CrtFrame>
       <div ref={scrollContainerRef} className="crt-content">
+        <button
+          type="button"
+          className="skip-link"
+          onClick={() => {
+            window.setTimeout(() => {
+              const heading = document.querySelector<HTMLElement>('#main-content h1')
+              if (!heading) return
+              heading.tabIndex = -1
+              heading.focus()
+              heading.scrollIntoView({ block: 'start' })
+            }, 0)
+          }}
+        >
+          跳到主要内容
+        </button>
         <div className="mx-auto flex min-h-full max-w-5xl flex-col px-4 sm:px-6">
           <Header timezone={resolvedTimezone} />
-          <main className="flex-1 pb-10">
+          <main id="main-content" tabIndex={-1} className="flex-1 pb-10">
             <Routes>
               <Route path="/" element={<GeneratorPage />} />
               <Route path="/result" element={<ResultPage />} />
@@ -94,7 +109,7 @@ function Shell() {
               <span>匿名访问统计</span>
             </div>
             <div className="flex items-center gap-3">
-              <span>By lemontea, with ❤️</span>
+              <span>BY LEMONTEA // OPEN SOURCE</span>
               <a
                 href="https://github.com/lemonteaau/binary-liuyao"
                 target="_blank"
@@ -150,7 +165,7 @@ function HeaderNavLink({ to, children }: { to: string; children: string }) {
       to={to}
       end={to === '/'}
       className={({ isActive }) =>
-        `px-2 py-1 no-underline transition-colors hover:text-signal ${
+        `app-nav-link inline-flex min-h-11 items-center px-2 no-underline ${
           isActive ? 'text-signal' : 'text-fog'
         }`
       }

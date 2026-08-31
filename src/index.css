@@ -186,6 +186,26 @@ body {
   background-clip: padding-box;
 }
 
+.skip-link {
+  position: absolute;
+  z-index: 9;
+  top: 0.75rem;
+  left: 50%;
+  transform: translate(-50%, -180%);
+  border: 1px solid var(--color-signal);
+  padding: 0.65rem 0.9rem;
+  background: var(--color-void);
+  color: var(--color-signal);
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.skip-link:focus {
+  transform: translate(-50%, 0);
+}
+
 .app-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -201,6 +221,34 @@ body {
 .app-nav {
   justify-self: center;
   white-space: nowrap;
+}
+
+.app-nav-link {
+  position: relative;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    transform 120ms ease;
+}
+
+.app-nav-link:hover {
+  color: var(--color-signal);
+  background: color-mix(in srgb, var(--color-signal) 4%, transparent);
+}
+
+.app-nav-link[aria-current="page"]::after {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.3rem;
+  left: 0.5rem;
+  height: 1px;
+  background: var(--color-signal);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--color-signal) 55%, transparent);
+  content: "";
+}
+
+.app-nav-link:active {
+  transform: translateY(1px);
 }
 
 .app-clock {
@@ -448,8 +496,13 @@ html[data-screen-fx="off"] .chroma {
     border-color 120ms ease,
     color 120ms ease,
     background 120ms ease,
-    box-shadow 120ms ease;
+    box-shadow 120ms ease,
+    transform 120ms ease;
   user-select: none;
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .btn:hover:not(:disabled) {
@@ -680,19 +733,39 @@ html[data-motion="off"] .feedback-invitation {
   }
 }
 
+.mode-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+@media (min-width: 768px) {
+  .mode-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .tile {
+    min-height: 9.25rem;
+  }
+}
+
 .tile {
   display: flex;
+  min-height: 8rem;
   flex-direction: column;
-  gap: 6px;
-  padding: 18px 16px;
+  gap: 0.45rem;
+  padding: 1rem;
   border: 1px solid var(--color-edge);
-  background: var(--color-panel);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--color-signal) 3%, transparent), transparent 52%),
+    var(--color-panel);
   text-align: left;
   cursor: pointer;
   transition:
-    border-color 120ms ease,
-    background 120ms ease,
-    box-shadow 120ms ease;
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease,
+    transform 120ms ease;
 }
 
 .tile:hover,
@@ -703,6 +776,101 @@ html[data-motion="off"] .feedback-invitation {
 
 .tile[data-active="true"] {
   background: color-mix(in srgb, var(--color-signal) 6%, var(--color-panel));
+}
+
+.tile:active {
+  transform: translateY(1px);
+}
+
+.tile-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--color-fog);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+}
+
+.tile-index {
+  font-variant-numeric: tabular-nums;
+}
+
+.tile-action {
+  transition: color 160ms ease;
+}
+
+.tile:hover .tile-action,
+.tile[data-active="true"] .tile-action {
+  color: var(--color-signal);
+}
+
+.tile-title {
+  margin-top: auto;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-wrap: balance;
+}
+
+.tile-description {
+  color: var(--color-fog);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  letter-spacing: 0.08em;
+  text-wrap: pretty;
+}
+
+.generator-empty-guide {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+  border-top: 1px solid var(--color-edge);
+  padding: 1rem 0.25rem 0;
+}
+
+.generator-empty-guide > span {
+  color: var(--color-signal);
+  font-size: 0.8125rem;
+  letter-spacing: 0.18em;
+}
+
+.generator-empty-guide strong {
+  font-size: 0.9375rem;
+  letter-spacing: 0.12em;
+}
+
+.generator-empty-guide p {
+  margin-top: 0.25rem;
+  max-width: 58ch;
+  color: var(--color-fog);
+  font-size: 0.875rem;
+  line-height: 1.65;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding-block: 0.25rem 1rem;
+}
+
+.settings-row + .settings-row {
+  border-top: 1px solid var(--color-edge);
+  padding-block: 1rem;
+}
+
+.settings-row:last-child {
+  padding-bottom: 0.25rem;
+}
+
+@media (max-width: 639px) {
+  .settings-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
 }
 
 .generator-scroll-target {

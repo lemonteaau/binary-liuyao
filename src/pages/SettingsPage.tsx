@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useSettings } from '@/store/settings'
 import type { FontSize } from '@/store/settings'
 
@@ -86,11 +87,11 @@ export function SettingsPage() {
       </section>
 
       <section className="panel mt-4 p-4 sm:p-5">
-        <span className="panel-tag">字号</span>
-        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-          <p className="text-[0.9375rem] leading-relaxed text-fog">
-            界面文字大小。手机端会在同一档位下稍微收紧，以留出更多排盘空间。
-          </p>
+        <span className="panel-tag">显示</span>
+        <SettingRow
+          title="界面字号"
+          description="手机端会在同一档位下稍微收紧，为排盘留出更多空间。"
+        >
           <div className="flex shrink-0 gap-1" role="group" aria-label="界面字号">
             {FONT_SIZE_OPTIONS.map((option) => (
               <ToggleBtn
@@ -102,12 +103,38 @@ export function SettingsPage() {
               </ToggleBtn>
             ))}
           </div>
-        </div>
+        </SettingRow>
+        <SettingRow
+          title="系统动效"
+          description="控制启动序列与界面动画；系统的“减少动态效果”设置始终优先。"
+        >
+          <div className="flex shrink-0 gap-1" role="group" aria-label="动画开关">
+            <ToggleBtn active={settings.animation} onClick={() => setAnimation(true)}>
+              开
+            </ToggleBtn>
+            <ToggleBtn active={!settings.animation} onClick={() => setAnimation(false)}>
+              关
+            </ToggleBtn>
+          </div>
+        </SettingRow>
+        <SettingRow
+          title="CRT 屏幕效果"
+          description="扫描线、荫罩、荧光辉光、刷新光带、亮度波动与暗角。"
+        >
+          <div className="flex shrink-0 gap-1" role="group" aria-label="CRT 屏幕效果开关">
+            <ToggleBtn active={settings.screenFx} onClick={() => setScreenFx(true)}>
+              开
+            </ToggleBtn>
+            <ToggleBtn active={!settings.screenFx} onClick={() => setScreenFx(false)}>
+              关
+            </ToggleBtn>
+          </div>
+        </SettingRow>
       </section>
 
       <section className="panel mt-4 p-4 sm:p-5">
         <span className="panel-tag">复制格式</span>
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:justify-between sm:gap-4">
           <p className="text-[0.9375rem] leading-relaxed text-fog">
             附加 AI 指令 — 复制排盘时，将下面的提示词附加在内容末尾。
             <br />
@@ -154,40 +181,6 @@ export function SettingsPage() {
       </section>
 
       <section className="panel mt-4 p-4 sm:p-5">
-        <span className="panel-tag">动效</span>
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-[0.9375rem] leading-relaxed text-fog">
-            动画 — 系统动效与启动序列。系统级「减少动态效果」设置始终优先。
-          </p>
-          <div className="flex shrink-0 gap-1" role="group" aria-label="动画开关">
-            <ToggleBtn active={settings.animation} onClick={() => setAnimation(true)}>
-              开
-            </ToggleBtn>
-            <ToggleBtn active={!settings.animation} onClick={() => setAnimation(false)}>
-              关
-            </ToggleBtn>
-          </div>
-        </div>
-      </section>
-
-      <section className="panel mt-4 p-4 sm:p-5">
-        <span className="panel-tag">屏幕</span>
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-[0.9375rem] leading-relaxed text-fog">
-            CRT 显示模拟 — 扫描线、荫罩、荧光辉光、刷新光带、亮度波动与暗角。关闭后仅保留暗色主题。
-          </p>
-          <div className="flex shrink-0 gap-1" role="group" aria-label="CRT 屏幕效果开关">
-            <ToggleBtn active={settings.screenFx} onClick={() => setScreenFx(true)}>
-              开
-            </ToggleBtn>
-            <ToggleBtn active={!settings.screenFx} onClick={() => setScreenFx(false)}>
-              关
-            </ToggleBtn>
-          </div>
-        </div>
-      </section>
-
-      <section className="panel mt-4 p-4 sm:p-5">
         <span className="panel-tag">排盘参数</span>
         <dl className="grid grid-cols-1 gap-y-2 text-[0.9375rem] sm:grid-cols-2">
           <Info label="位序" value="初爻 = BIT 0（固定）" />
@@ -205,12 +198,32 @@ function ToggleBtn({ active, onClick, children }: { active: boolean; onClick: ()
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`min-h-11 border px-4 py-2 text-[0.9375rem] tracking-[0.16em] ${
+      className={`min-h-11 border px-4 py-2 text-[0.9375rem] tracking-[0.16em] transition-[transform,border-color,color] active:translate-y-px ${
         active ? 'border-signal text-signal' : 'border-edge text-fog hover:border-edge-bright'
       }`}
     >
       {children}
     </button>
+  )
+}
+
+function SettingRow({
+  title,
+  description,
+  children,
+}: {
+  title: string
+  description: string
+  children: ReactNode
+}) {
+  return (
+    <div className="settings-row">
+      <div>
+        <h2 className="text-[1rem] font-bold tracking-[0.12em] text-ink">{title}</h2>
+        <p className="mt-1 max-w-[62ch] text-[0.875rem] leading-relaxed text-fog">{description}</p>
+      </div>
+      {children}
+    </div>
   )
 }
 
