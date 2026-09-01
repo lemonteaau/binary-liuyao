@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import {
   Clock,
@@ -52,6 +52,8 @@ const MODES: Array<{ id: InputMethod; title: string; sub: string }> = [
 ]
 
 const COIN_LINE_NAMES = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'] as const
+const GENERATOR_SHIFT_DURATION_MS = 520
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
 
 export function GeneratorPage() {
   const location = useLocation()
@@ -66,7 +68,44 @@ export function GeneratorPage() {
     createCoinShakeState,
   )
   const [coinError, setCoinError] = useState<string | null>(null)
+  const generatorPageRef = useRef<HTMLDivElement>(null)
+  const generatorHeadingRef = useRef<HTMLDivElement>(null)
   const activePanelRef = useRef<HTMLDivElement>(null)
+  const previousHeadingTopRef = useRef<number | null>(null)
+  const shiftAnimationRef = useRef<Animation | null>(null)
+
+  useLayoutEffect(() => {
+    const previousTop = previousHeadingTopRef.current
+    previousHeadingTopRef.current = null
+    const page = generatorPageRef.current
+    const heading = generatorHeadingRef.current
+    if (previousTop === null || !page || !heading || !shouldAnimateGeneratorShift()) return
+
+    const deltaY = previousTop - heading.getBoundingClientRect().top
+    if (Math.abs(deltaY) < 1 || typeof page.animate !== 'function') return
+
+    shiftAnimationRef.current?.cancel()
+    const animation = page.animate(
+      [
+        { transform: `translateY(${deltaY}px)` },
+        { transform: 'translateY(0)' },
+      ],
+      {
+        duration: GENERATOR_SHIFT_DURATION_MS,
+        easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+        fill: 'both',
+      },
+    )
+    shiftAnimationRef.current = animation
+
+    animation.finished
+      .then(() => {
+        if (shiftAnimationRef.current !== animation) return
+        animation.cancel()
+        shiftAnimationRef.current = null
+      })
+      .catch(() => undefined)
+  }, [mode])
 
   useEffect(() => {
     if (!mode) return
@@ -76,9 +115,21 @@ export function GeneratorPage() {
     return () => window.cancelAnimationFrame(frame)
   }, [mode])
 
+  useEffect(() => () => shiftAnimationRef.current?.cancel(), [])
+
+  const selectMode = (nextMode: InputMethod) => {
+    if (!mode && shouldAnimateGeneratorShift()) {
+      previousHeadingTopRef.current = generatorHeadingRef.current?.getBoundingClientRect().top ?? null
+    }
+    setMode(nextMode)
+  }
+
   return (
-    <div className={cn('generator-page pt-6', !mode && 'generator-page-idle')}>
-      <div className="generator-heading">
+    <div
+      ref={generatorPageRef}
+      className={cn('generator-page pt-6', !mode && 'generator-page-idle')}
+    >
+      <div ref={generatorHeadingRef} className="generator-heading">
         <h1 className="text-2xl font-bold tracking-[0.2em]">选择起卦方式</h1>
       </div>
 
@@ -91,7 +142,7 @@ export function GeneratorPage() {
             data-active={mode === m.id}
             aria-pressed={mode === m.id}
             aria-controls="generator-active-panel"
-            onClick={() => setMode(m.id)}
+            onClick={() => selectMode(m.id)}
           >
             <span className="tile-head">
               <span className="tile-index">{String(index + 1).padStart(2, '0')}</span>
@@ -134,6 +185,12 @@ export function GeneratorPage() {
       </div>
     </div>
   )
+}
+
+function shouldAnimateGeneratorShift(): boolean {
+  if (document.documentElement.dataset.motion === 'off') return false
+  return typeof window.matchMedia !== 'function'
+    || !window.matchMedia(REDUCED_MOTION_QUERY).matches
 }
 
 function ModeIcon({ mode }: { mode: InputMethod }) {
