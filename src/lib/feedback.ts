@@ -10,7 +10,7 @@ export interface FeedbackPromptState {
   submitted?: boolean
 }
 
-export const FEEDBACK_PROMPT_ACTIVE_MS = 8 * 60 * 1000
+export const FEEDBACK_PROMPT_ACTIVE_MS = 2 * 60 * 1000
 export const FEEDBACK_PROMPT_SNOOZE_MS = 30 * 24 * 60 * 60 * 1000
 export const FEEDBACK_PROMPT_STORAGE_KEY = 'hex64.feedback-prompt.v1'
 export const FEEDBACK_STATE_CHANGED_EVENT = 'hex64:feedback-state-changed'
