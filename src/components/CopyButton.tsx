@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 
@@ -23,6 +23,11 @@ export function CopyButton({
 }: CopyButtonProps) {
   const [state, setState] = useState<CopyState>('idle')
   const [fallbackText, setFallbackText] = useState<string | null>(null)
+  const resetTimerRef = useRef<number | null>(null)
+
+  useEffect(() => () => {
+    if (resetTimerRef.current !== null) window.clearTimeout(resetTimerRef.current)
+  }, [])
 
   async function copy() {
     const text = getText()
@@ -36,7 +41,11 @@ export function CopyButton({
       setState('fail')
       setFallbackText(text)
     }
-    setTimeout(() => setState((s) => (s === 'ok' ? 'idle' : s)), 1600)
+    if (resetTimerRef.current !== null) window.clearTimeout(resetTimerRef.current)
+    resetTimerRef.current = window.setTimeout(() => {
+      resetTimerRef.current = null
+      setState((current) => (current === 'ok' ? 'idle' : current))
+    }, 1600)
   }
 
   return (

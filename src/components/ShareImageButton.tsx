@@ -1,9 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/cn'
-import {
-  createReadingShareImage,
-  shareOrDownloadImage,
-} from '@/lib/share-image'
 import type { ChartData } from '@/types'
 
 type ExportState = 'idle' | 'rendering' | 'shared' | 'downloaded' | 'failed'
@@ -20,11 +16,20 @@ export function ShareImageButton({
   className?: string
 }) {
   const [state, setState] = useState<ExportState>('idle')
+  const resetTimerRef = useRef<number | null>(null)
+
+  useEffect(() => () => {
+    if (resetTimerRef.current !== null) window.clearTimeout(resetTimerRef.current)
+  }, [])
 
   async function exportImage() {
     if (state === 'rendering') return
     setState('rendering')
     try {
+      const {
+        createReadingShareImage,
+        shareOrDownloadImage,
+      } = await import('@/lib/share-image')
       const blob = await createReadingShareImage(chart, { sessionId, ordinal })
       const filename = shareImageFilename(chart)
       const result = await shareOrDownloadImage(blob, filename)
@@ -32,7 +37,9 @@ export function ShareImageButton({
     } catch {
       setState('failed')
     }
-    window.setTimeout(() => {
+    if (resetTimerRef.current !== null) window.clearTimeout(resetTimerRef.current)
+    resetTimerRef.current = window.setTimeout(() => {
+      resetTimerRef.current = null
       setState((current) => (current === 'rendering' ? current : 'idle'))
     }, 2_000)
   }

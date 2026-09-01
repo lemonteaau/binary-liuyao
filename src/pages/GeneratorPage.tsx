@@ -1,11 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
-import {
-  Clock,
-  CoinVertical,
-  HandPalm,
-  Monitor,
-} from '@phosphor-icons/react'
+import { Clock } from '@phosphor-icons/react/dist/icons/Clock'
+import { CoinVertical } from '@phosphor-icons/react/dist/icons/CoinVertical'
+import { HandPalm } from '@phosphor-icons/react/dist/icons/HandPalm'
+import { Monitor } from '@phosphor-icons/react/dist/icons/Monitor'
 import { useLocation, useNavigate } from 'react-router-dom'
 import coinFacesUrl from '@/assets/coin-faces.webp'
 import { HexLines } from '@/components/HexLines'
@@ -299,6 +297,11 @@ function EntropyPanel() {
   const { commitReading } = useReading()
   const { resolvedTimezone, settings } = useSettings()
   const [rolling, setRolling] = useState(false)
+  const finishTimerRef = useRef<number | null>(null)
+
+  useEffect(() => () => {
+    if (finishTimerRef.current !== null) window.clearTimeout(finishTimerRef.current)
+  }, [])
 
   function generate() {
     if (rolling) return
@@ -309,7 +312,10 @@ function EntropyPanel() {
       return
     }
     setRolling(true)
-    setTimeout(() => finish(lines, when), 560)
+    finishTimerRef.current = window.setTimeout(() => {
+      finishTimerRef.current = null
+      finish(lines, when)
+    }, 560)
   }
 
   function finish(lines: RawLines, when: Date) {
@@ -703,10 +709,17 @@ function HexNamePanel({ draft, setDraft }: LineEditorProps) {
   const results = useMemo(() => searchHexagrams(query).slice(0, 12), [query])
   const selected = hexagramByBits(bitsOf(draft))
   const followupRef = useRef<HTMLDivElement>(null)
+  const followupFrameRef = useRef<number | null>(null)
+
+  useEffect(() => () => {
+    if (followupFrameRef.current !== null) window.cancelAnimationFrame(followupFrameRef.current)
+  }, [])
 
   function selectHexagram(record: (typeof results)[number]) {
     setDraft(rawLinesFromRecord(record))
-    window.requestAnimationFrame(() => {
+    if (followupFrameRef.current !== null) window.cancelAnimationFrame(followupFrameRef.current)
+    followupFrameRef.current = window.requestAnimationFrame(() => {
+      followupFrameRef.current = null
       scrollIntoViewOnMobile(followupRef.current)
     })
   }

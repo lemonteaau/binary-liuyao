@@ -1105,12 +1105,10 @@ html[data-motion="off"] .feedback-invitation {
 
 .coin-flight {
   transform: translate3d(0, 0, 0);
-  will-change: transform;
 }
 
 .pixel-coin {
   transform-style: preserve-3d;
-  will-change: transform;
 }
 
 .coin-unit[data-face="tails"] .pixel-coin {
@@ -1155,10 +1153,12 @@ html[data-motion="off"] .feedback-invitation {
 
 .coin-console[data-shaking="true"] .coin-flight {
   animation: coin-flight 1080ms linear infinite;
+  will-change: transform;
 }
 
 .coin-console[data-shaking="true"] .pixel-coin {
   animation: coin-spin 1080ms linear infinite;
+  will-change: transform;
 }
 
 .coin-console[data-shaking="true"]

@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import type { ReactNode } from 'react'
 import { useSettings } from '@/store/settings'
 import type { FontSize } from '@/store/settings'
@@ -16,8 +17,7 @@ function detectTz(): string {
   }
 }
 
-function timezoneOptions(): string[] {
-  const detected = detectTz()
+function timezoneOptions(detected: string): string[] {
   const common = [
     'UTC',
     'Asia/Shanghai',
@@ -47,6 +47,20 @@ function timezoneOptions(): string[] {
   return [...new Set([detected, ...common, ...supported])].sort()
 }
 
+interface TimezoneCatalog {
+  detected: string
+  options: string[]
+}
+
+let timezoneCatalog: TimezoneCatalog | null = null
+
+function getTimezoneCatalog(): TimezoneCatalog {
+  if (timezoneCatalog) return timezoneCatalog
+  const detected = detectTz()
+  timezoneCatalog = { detected, options: timezoneOptions(detected) }
+  return timezoneCatalog
+}
+
 export function SettingsPage() {
   const {
     settings,
@@ -59,31 +73,19 @@ export function SettingsPage() {
     setAnimation,
     setScreenFx,
   } = useSettings()
+  const timezoneData = getTimezoneCatalog()
 
   return (
     <div className="pt-6">
       <h1 className="mb-6 text-2xl font-bold tracking-[0.2em]">参数配置</h1>
 
-      <section className="panel p-4 sm:p-5">
-        <span className="panel-tag">时区</span>
-        <p className="mb-3 text-[0.9375rem] leading-relaxed text-fog">
-          排盘使用所选时区的当地墙上时间。自动 = 浏览器当前时区。
-          当前生效：<span className="text-signal">{resolvedTimezone}</span>
-        </p>
-        <select
-          value={settings.timezone}
-          onChange={(e) => setTimezone(e.target.value)}
-          aria-label="时区"
-          className="w-full max-w-md border border-edge bg-void px-3 py-2 text-base text-ink focus:border-signal focus:outline-none"
-        >
-          <option value="auto">自动 ({detectTz()})</option>
-          {timezoneOptions().map((tz) => (
-            <option key={tz} value={tz}>
-              {tz}
-            </option>
-          ))}
-        </select>
-      </section>
+      <TimezoneSection
+        timezone={settings.timezone}
+        resolvedTimezone={resolvedTimezone}
+        detectedTimezone={timezoneData.detected}
+        options={timezoneData.options}
+        onTimezoneChange={setTimezone}
+      />
 
       <section className="panel mt-4 p-4 sm:p-5">
         <span className="panel-tag">显示</span>
@@ -182,6 +184,43 @@ export function SettingsPage() {
     </div>
   )
 }
+
+const TimezoneSection = memo(function TimezoneSection({
+  timezone,
+  resolvedTimezone,
+  detectedTimezone,
+  options,
+  onTimezoneChange,
+}: {
+  timezone: string
+  resolvedTimezone: string
+  detectedTimezone: string
+  options: string[]
+  onTimezoneChange: (timezone: string) => void
+}) {
+  return (
+    <section className="panel p-4 sm:p-5">
+      <span className="panel-tag">时区</span>
+      <p className="mb-3 text-[0.9375rem] leading-relaxed text-fog">
+        排盘使用所选时区的当地墙上时间。自动 = 浏览器当前时区。
+        当前生效：<span className="text-signal">{resolvedTimezone}</span>
+      </p>
+      <select
+        value={timezone}
+        onChange={(event) => onTimezoneChange(event.target.value)}
+        aria-label="时区"
+        className="w-full max-w-md border border-edge bg-void px-3 py-2 text-base text-ink focus:border-signal focus:outline-none"
+      >
+        <option value="auto">自动 ({detectedTimezone})</option>
+        {options.map((tz) => (
+          <option key={tz} value={tz}>
+            {tz}
+          </option>
+        ))}
+      </select>
+    </section>
+  )
+})
 
 function ToggleBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: string }) {
   return (

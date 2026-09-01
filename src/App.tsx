@@ -9,7 +9,7 @@ import { ResultPage } from '@/pages/ResultPage'
 import { SettingsPage } from '@/pages/SettingsPage'
 import { AboutPage } from '@/pages/AboutPage'
 import { ReadingProvider } from '@/store/reading'
-import { SettingsProvider, useSettings } from '@/store/settings'
+import { SettingsProvider, useDisplaySettings } from '@/store/settings'
 
 export function App() {
   return (
@@ -35,14 +35,14 @@ function CrtFrame({ children }: { children: React.ReactNode }) {
 }
 
 export function CrtFx() {
-  const { settings } = useSettings()
+  const { animation } = useDisplaySettings()
 
   return (
     <div className="crt-fx" aria-hidden="true">
       <div className="fx-grille" />
       <div className="fx-scanlines" />
       <div className="fx-vignette" />
-      {settings.animation && (
+      {animation && (
         <>
           <div className="fx-roll" />
           <div className="fx-flicker" />
@@ -53,8 +53,8 @@ export function CrtFx() {
 }
 
 function Shell() {
-  const { settings, resolvedTimezone } = useSettings()
-  const { booting, finish } = useBootOnce(settings.animation)
+  const { animation, resolvedTimezone } = useDisplaySettings()
+  const { booting, finish } = useBootOnce(animation)
   const location = useLocation()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 

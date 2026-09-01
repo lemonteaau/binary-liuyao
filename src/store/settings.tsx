@@ -59,6 +59,13 @@ interface SettingsContextValue {
 
 const SettingsContext = createContext<SettingsContextValue | null>(null)
 
+interface DisplaySettingsContextValue {
+  animation: boolean
+  resolvedTimezone: string
+}
+
+const DisplaySettingsContext = createContext<DisplaySettingsContextValue | null>(null)
+
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(loadSettings)
   const [saveStatus, setSaveStatus] = useState<SettingsSaveStatus>('saved')
@@ -98,26 +105,64 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const resolvedTimezone = settings.timezone === 'auto' ? detected : settings.timezone
+  const setTimezone = useCallback((timezone: string) => update({ timezone }), [update])
+  const setFontSize = useCallback((fontSize: FontSize) => update({ fontSize }), [update])
+  const setAiInstruction = useCallback(
+    (aiInstruction: boolean) => update({ aiInstruction }),
+    [update],
+  )
+  const setAiInstructionPrompt = useCallback(
+    (aiInstructionPrompt: string) => update({ aiInstructionPrompt }),
+    [update],
+  )
+  const setAnimation = useCallback((animation: boolean) => update({ animation }), [update])
+  const setScreenFx = useCallback((screenFx: boolean) => update({ screenFx }), [update])
+
   const value = useMemo<SettingsContextValue>(
     () => ({
       settings,
       saveStatus,
-      resolvedTimezone: settings.timezone === 'auto' ? detected : settings.timezone,
-      setTimezone: (timezone) => update({ timezone }),
-      setFontSize: (fontSize) => update({ fontSize }),
-      setAiInstruction: (aiInstruction) => update({ aiInstruction }),
-      setAiInstructionPrompt: (aiInstructionPrompt) => update({ aiInstructionPrompt }),
-      setAnimation: (animation) => update({ animation }),
-      setScreenFx: (screenFx) => update({ screenFx }),
+      resolvedTimezone,
+      setTimezone,
+      setFontSize,
+      setAiInstruction,
+      setAiInstructionPrompt,
+      setAnimation,
+      setScreenFx,
     }),
-    [settings, saveStatus, detected, update],
+    [
+      settings,
+      saveStatus,
+      resolvedTimezone,
+      setTimezone,
+      setFontSize,
+      setAiInstruction,
+      setAiInstructionPrompt,
+      setAnimation,
+      setScreenFx,
+    ],
+  )
+  const displayValue = useMemo<DisplaySettingsContextValue>(
+    () => ({ animation: settings.animation, resolvedTimezone }),
+    [settings.animation, resolvedTimezone],
   )
 
-  return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>
+  return (
+    <DisplaySettingsContext.Provider value={displayValue}>
+      <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>
+    </DisplaySettingsContext.Provider>
+  )
 }
 
 export function useSettings(): SettingsContextValue {
   const ctx = useContext(SettingsContext)
   if (!ctx) throw new Error('useSettings must be used within SettingsProvider')
+  return ctx
+}
+
+export function useDisplaySettings(): DisplaySettingsContextValue {
+  const ctx = useContext(DisplaySettingsContext)
+  if (!ctx) throw new Error('useDisplaySettings must be used within SettingsProvider')
   return ctx
 }
