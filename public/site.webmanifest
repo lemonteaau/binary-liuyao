@@ -1,0 +1,18 @@
+{
+  "name": "HEX//64 六爻排盘",
+  "short_name": "六爻排盘",
+  "description": "免费的在线六爻起卦与排盘工具",
+  "lang": "zh-CN",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#040807",
+  "theme_color": "#040807",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    }
+  ]
+}

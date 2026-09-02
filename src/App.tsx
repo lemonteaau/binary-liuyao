@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { HashRouter, Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { BootSequence, useBootOnce } from '@/components/BootSequence'
 import { FeedbackInvitation } from '@/components/FeedbackInvitation'
@@ -57,6 +57,14 @@ function Shell() {
   const { booting, finish } = useBootOnce(animation)
   const location = useLocation()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const metadata = routeMetadata(location.pathname)
+    document.title = metadata.title
+    document
+      .querySelector<HTMLMetaElement>('meta[name="description"]')
+      ?.setAttribute('content', metadata.description)
+  }, [location.pathname])
 
   useLayoutEffect(() => {
     return resetScrollPosition(scrollContainerRef.current)
@@ -127,6 +135,34 @@ function Shell() {
       <CrtFx />
     </CrtFrame>
   )
+}
+
+const DEFAULT_DESCRIPTION =
+  'HEX//64 是免费的在线六爻排盘工具，支持摇币、电脑、手动、卦名、数字和时间起卦，自动生成纳甲、六亲、六神、世应、伏神、卦身、神煞与四柱；所有计算均在浏览器本地完成。'
+
+function routeMetadata(pathname: string): { title: string; description: string } {
+  switch (pathname) {
+    case '/result':
+      return {
+        title: '六爻排盘结果 - HEX//64',
+        description: '查看 HEX//64 生成的六爻排盘结果，包括本卦、动爻、变卦、纳甲、六亲、六神、世应、伏神、卦身、神煞与四柱。',
+      }
+    case '/settings':
+      return {
+        title: '设置 - HEX//64 六爻排盘',
+        description: '设置 HEX//64 六爻排盘的时区、字号、动效与排盘复制选项。',
+      }
+    case '/about':
+      return {
+        title: '关于 - HEX//64 六爻排盘',
+        description: '了解 HEX//64 在线六爻排盘的起卦算法、排盘内容、隐私保护与分享方式。',
+      }
+    default:
+      return {
+        title: '六爻排盘｜免费在线起卦、纳甲装卦 - HEX//64',
+        description: DEFAULT_DESCRIPTION,
+      }
+  }
 }
 
 function Header({ timezone }: { timezone: string }) {

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="room" cx="50%" cy="0%" r="110%">
+      <stop offset="0" stop-color="#24302e"/>
+      <stop offset="0.55" stop-color="#101817"/>
+      <stop offset="1" stop-color="#040807"/>
+    </radialGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#0d201c"/>
+      <stop offset="0.5" stop-color="#07100e"/>
+      <stop offset="1" stop-color="#040807"/>
+    </linearGradient>
+    <pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse">
+      <path d="M0 3.5H4" stroke="#000" stroke-opacity=".22"/>
+    </pattern>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#room)"/>
+  <rect x="42" y="42" width="1116" height="546" rx="34" fill="#161d1c" stroke="#344540" stroke-width="3"/>
+  <rect x="68" y="68" width="1064" height="494" rx="22" fill="url(#screen)" stroke="#1c332e" stroke-width="2"/>
+  <rect x="68" y="68" width="1064" height="494" rx="22" fill="url(#scan)"/>
+
+  <g fill="#3df5c6" font-family="Hiragino Sans GB">
+    <text x="120" y="145" font-size="28" font-weight="700" letter-spacing="8" filter="url(#glow)">HEX//64</text>
+    <text x="120" y="275" font-size="78" font-weight="700" letter-spacing="12">六爻排盘</text>
+  </g>
+  <text x="124" y="337" fill="#d7efe6" font-size="29" font-family="Hiragino Sans GB" letter-spacing="4">免费在线起卦 · 自动纳甲装卦 · 本地计算</text>
+  <text x="124" y="432" fill="#7fa398" font-size="22" font-family="Hiragino Sans GB" letter-spacing="2">摇币 / 电脑 / 手动 / 卦名 / 数字 / 时间</text>
+  <text x="124" y="478" fill="#7fa398" font-size="20" font-family="Hiragino Sans GB" letter-spacing="2">纳甲 · 六亲 · 六神 · 世应 · 伏神 · 卦身 · 神煞 · 四柱</text>
+
+  <g transform="translate(890 146)" fill="#3df5c6" filter="url(#glow)">
+    <rect x="0" y="0" width="190" height="18" rx="2"/>
+    <rect x="0" y="52" width="78" height="18" rx="2"/><rect x="112" y="52" width="78" height="18" rx="2"/>
+    <rect x="0" y="104" width="190" height="18" rx="2"/>
+    <rect x="0" y="156" width="78" height="18" rx="2"/><rect x="112" y="156" width="78" height="18" rx="2"/>
+    <rect x="0" y="208" width="190" height="18" rx="2"/>
+    <rect x="0" y="260" width="78" height="18" rx="2"/><rect x="112" y="260" width="78" height="18" rx="2"/>
+  </g>
+  <circle cx="1092" cy="528" r="5" fill="#3df5c6" filter="url(#glow)"/>
+</svg>
