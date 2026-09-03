@@ -7,7 +7,6 @@ import { Monitor } from '@phosphor-icons/react/dist/icons/Monitor'
 import { TextAa } from '@phosphor-icons/react/dist/icons/TextAa'
 import { useLocation, useNavigate } from 'react-router-dom'
 import coinFacesUrl from '@/assets/coin-faces.webp'
-import { HexLines } from '@/components/HexLines'
 import { LiveTimestamp } from '@/components/LiveClock'
 import { generateChart } from '@/engine'
 import {
@@ -932,10 +931,6 @@ function TimePanel() {
   const navigate = useNavigate()
   const { commitReading } = useReading()
   const { resolvedTimezone } = useSettings()
-  const derived = useMemo(
-    () => deriveTimeSeed(new Date(), resolvedTimezone),
-    [resolvedTimezone],
-  )
 
   function generate() {
     const when = new Date()
@@ -949,8 +944,6 @@ function TimePanel() {
     commitReading(chart, rawLines)
     navigate('/result')
   }
-
-  const previewBits = bitsOf(derived.rawLines)
 
   return (
     <Panel tag="使用当前时间戳">
