@@ -1,12 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { claimHexagramOrdinal } from '@/lib/hexagram-counter'
+import type { HanziSeed } from '@/features/hanzi/derive'
 import type { ChartData, InputMethod, LineValue } from '@/types'
 
 export interface ReadingRecord {
   id: string
   chart: ChartData
   rawLines: [LineValue, LineValue, LineValue, LineValue, LineValue, LineValue]
+  hanziSeed?: HanziSeed
   source?: 'share-link'
   counterEventId?: string
   ordinal?: number | null
@@ -16,6 +18,7 @@ export interface CommitReadingOptions {
   fromShareLink?: boolean
   readingId?: string
   ordinal?: number
+  hanziSeed?: HanziSeed
 }
 
 const CURRENT_KEY = 'hex64.current.v1'
@@ -131,6 +134,7 @@ export function ReadingProvider({ children }: { children: ReactNode }) {
         id: options.readingId ?? makeId(),
         chart,
         rawLines,
+        hanziSeed: options.hanziSeed,
         source: options.fromShareLink ? 'share-link' : undefined,
         counterEventId: shouldCount ? crypto.randomUUID() : undefined,
         ordinal: shouldCount ? null : options.ordinal,
@@ -177,5 +181,6 @@ export const INPUT_METHOD_LABELS_UI: Record<InputMethod, string> = {
   hexagram: '卦名起卦',
   number: '数字起卦',
   time: '时间起卦',
+  hanzi: '汉字起卦',
   link: '分享链接',
 }

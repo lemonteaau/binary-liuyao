@@ -138,7 +138,7 @@ function Shell() {
 }
 
 const DEFAULT_DESCRIPTION =
-  'HEX//64 是免费的在线六爻排盘工具，支持摇币、电脑、手动、卦名、数字和时间起卦，自动生成纳甲、六亲、六神、世应、伏神、卦身、神煞与四柱；所有计算均在浏览器本地完成。'
+  'HEX//64 是免费的在线六爻排盘工具，支持摇币、电脑、手动、卦名、数字、时间和汉字起卦，自动生成纳甲、六亲、六神、世应、伏神、卦身、神煞与四柱；所有计算均在浏览器本地完成。'
 
 function routeMetadata(pathname: string): { title: string; description: string } {
   switch (pathname) {

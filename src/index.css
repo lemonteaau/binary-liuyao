@@ -482,6 +482,98 @@ html[data-screen-fx="off"] .chroma {
   border: 1px solid var(--color-edge);
 }
 
+.ritual-guide {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  border-left: 1px solid var(--color-signal);
+  padding: 0.55rem 0.75rem;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-signal) 7%, transparent),
+    transparent 78%
+  );
+  color: var(--color-fog);
+  font-size: 0.9375rem;
+  line-height: 1.65;
+}
+
+.ritual-guide-mark {
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--color-signal) 55%, var(--color-edge));
+  color: var(--color-signal);
+  font-size: 0.875rem;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-signal) 10%, transparent);
+}
+
+.hanzi-seed-preview {
+  border-top: 1px solid var(--color-edge);
+  padding-top: 0.8rem;
+}
+
+.hanzi-seed-groups {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--color-edge);
+  background: var(--color-surface);
+}
+
+.hanzi-seed-groups > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.8rem 0.9rem;
+}
+
+.hanzi-seed-groups > div + div {
+  border-left: 1px solid var(--color-edge);
+}
+
+.hanzi-seed-groups > div:last-child {
+  background: color-mix(in srgb, var(--color-signal) 4%, transparent);
+}
+
+.hanzi-seed-label {
+  color: var(--color-fog);
+  font-size: 0.8125rem;
+  letter-spacing: 0.1em;
+}
+
+.hanzi-seed-groups strong {
+  overflow: hidden;
+  color: var(--color-signal);
+  font-size: 1.25rem;
+  letter-spacing: 0.14em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hanzi-seed-groups strong + span {
+  color: var(--color-fog);
+  font-size: 0.875rem;
+}
+
+@media (max-width: 639px) {
+  .ritual-guide {
+    align-items: flex-start;
+  }
+
+  .hanzi-seed-groups {
+    grid-template-columns: 1fr;
+  }
+
+  .hanzi-seed-groups > div + div {
+    border-top: 1px solid var(--color-edge);
+    border-left: 0;
+  }
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -2038,6 +2130,7 @@ html[data-motion="off"] .feedback-invitation {
 .zhouyi-classics-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(9, auto);
 }
 
 .zhouyi-classics-grid[data-single="true"] {
@@ -2045,10 +2138,14 @@ html[data-motion="off"] .feedback-invitation {
 }
 
 .zhouyi-hexagram {
+  display: grid;
+  grid-row: 1 / span 9;
+  grid-template-rows: subgrid;
   min-width: 0;
 }
 
 .zhouyi-hexagram + .zhouyi-hexagram {
+  grid-column: 2;
   border-left: 1px solid var(--color-edge-bright);
 }
 
@@ -2074,7 +2171,7 @@ html[data-motion="off"] .feedback-invitation {
 
 .zhouyi-statement {
   display: grid;
-  grid-template-columns: 5rem minmax(0, 1fr);
+  grid-template-columns: 7rem minmax(0, 1fr);
   align-items: start;
   gap: 1rem;
   padding: 1rem;
@@ -2104,6 +2201,12 @@ html[data-motion="off"] .feedback-invitation {
   gap: 1rem;
   padding: 0.85rem 1rem;
   border-bottom: 1px solid var(--color-edge);
+}
+
+.zhouyi-line-texts {
+  display: grid;
+  grid-row: span 6;
+  grid-template-rows: subgrid;
 }
 
 .zhouyi-line-texts li[data-mutating="true"] {
@@ -2316,15 +2419,27 @@ html[data-motion="off"] .feedback-invitation {
 
   .zhouyi-classics-grid {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+
+  .zhouyi-hexagram {
+    display: block;
+    grid-row: auto;
+  }
+
+  .zhouyi-line-texts {
+    display: block;
+    grid-row: auto;
   }
 
   .zhouyi-hexagram + .zhouyi-hexagram {
+    grid-column: auto;
     border-top: 1px solid var(--color-edge-bright);
     border-left: 0;
   }
 
   .zhouyi-statement {
-    grid-template-columns: 4rem minmax(0, 1fr);
+    grid-template-columns: 5.25rem minmax(0, 1fr);
     gap: 0.7rem;
     padding: 0.85rem 0.75rem;
   }

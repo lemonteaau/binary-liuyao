@@ -10,6 +10,7 @@
 - 六十四卦名称/文王序号检索
 - 数字起卦
 - 时间起卦
+- 汉字起卦（繁简笔画、单字结构拆分）
 - 公历、农历、四柱干支、旬空和 IANA 时区
 - 纳甲、六亲、六神、世应、伏神、卦身、神煞
 - Cyber 风格本卦、动爻标记和变卦展示
@@ -87,6 +88,15 @@ npm test
 - 年支和时支按 `子=1 ... 亥=12`
 - 闰月按该月月数处理
 
+### 汉字起卦
+
+- 单个汉字：左部或上部笔画数取上卦，右部或下部笔画数取下卦，总笔画数取动爻
+- `2–10` 个汉字：前后分为两组；奇数时前组少一字、后组多一字，偶数时均分
+- `2–10` 个汉字的两组总笔画数分别取上下卦，全部总笔画数取动爻
+- `11` 个汉字及以上：分组方式不变，以两组字数及总字数代替笔画数
+- 余数 `0`：卦取坤，动爻取上爻；空格会忽略，其他非汉字字符会提示修正
+- 繁简笔画与部首由 `cnchar` 计算；单字部件方向由 CCD 汉字结构数据校正，全部在浏览器本地完成
+
 ## 架构
 
 ```text
@@ -95,7 +105,7 @@ src/
 ├── components/    通用 Cyber UI 组件
 ├── data/          八卦、纳甲、六十四卦数据
 ├── engine/        与 UI 无关的完整排盘引擎
-├── features/      数字、时间、卦名等输入算法
+├── features/      数字、时间、汉字、卦名等输入算法
 ├── formatters/    RAW DATA 文本输出
 ├── cloudflare/    仅供 Service Binding 调用的邮件通知 Worker
 ├── functions/     Cloudflare Pages 计数与匿名反馈接口
@@ -122,8 +132,8 @@ const chart = generateChart({
 - 只有用户主动发送的反馈文字会写入 Cloudflare D1；仅一并保存随机提交 ID、入口来源和提交时间，不保存 IP、UA、卦象或本地历史
 - 通知收件地址仅配置在 Cloudflare Worker 服务端绑定中，不写入仓库、前端资源或公开 API
 - 不包含账号系统；除匿名计数外，使用自托管 Umami 进行匿名访问统计
-- Umami 仅统计页面访问，并排除分享链接的 Hash 参数；不收集输入数字、卦象、排盘或剪贴板内容
-- 输入数字、卦象、排盘和剪贴板内容不会上传
+- Umami 仅统计页面访问，并排除分享链接的 Hash 参数；不收集输入数字、汉字、卦象、排盘或剪贴板内容
+- 输入数字、汉字、卦象、排盘和剪贴板内容不会上传
 - 历史记录仅保存于 `localStorage`
 - 反馈邀请的累计前台使用时长、关闭状态和已提交状态仅保存于 `localStorage`；关闭后 30 天内不再出现，提交后不再出现
 - 分享链接在 URL Hash 中编码卦象、原起卦时间、时区、起卦方式与排盘编号；Hash 不会随页面请求发送至服务器
@@ -144,6 +154,13 @@ npx wrangler d1 migrations apply hex64-counter --remote
 农历、节气四柱和旬空由纯客户端库 `lunar-typescript` 提供。晚子时采用 `sect=1`，即 23:00 后日柱按次日计算。
 
 神煞规则存在流派差异。本项目按 PRD 样本锁定流派：贵人使用“庚辛逢虎马”版本，天喜按日支季节，天医按日支退一位，羊刃仅计算阳干。规则集中在 `src/engine/shensha.ts`，可独立替换。
+
+## 参考与鸣谢
+
+- [likeSo/liu-yao](https://github.com/likeSo/liu-yao)：汉字、数字、时间与铜钱等起卦入口及汉字分段规则的功能参考。本项目根据自身数据模型独立实现，并补充了单字部件方向校正、输入校验和测试。
+- [theajack/cnchar](https://github.com/theajack/cnchar)：提供繁简汉字笔画、部首和字形结构信息，采用 MIT License。
+- [leonsilicon/chinese-characters-decomposition](https://github.com/leonsilicon/chinese-characters-decomposition)：提供 CCD 汉字顶层部件拆分数据，用于区分单字的左/右或上/下部分；代码包采用 MIT License，底层数据来源与条款见其项目说明。
+- [6tail/lunar-typescript](https://github.com/6tail/lunar-typescript)：提供农历、节气与干支历法计算，采用 MIT License。
 
 ## 开源协议
 

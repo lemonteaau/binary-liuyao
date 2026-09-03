@@ -42,6 +42,12 @@ describe('分享链接', () => {
     expect(parsed).toEqual({ primary: 42, mask: 8 })
   })
 
+  it('接受汉字起卦方式元数据', () => {
+    const parsed = parseShareLink(new URLSearchParams('s=101010&m=001000&i=hanzi'))
+
+    expect(parsed?.inputMethod).toBe('hanzi')
+  })
+
   it('忽略被篡改的可选元数据', () => {
     const parsed = parseShareLink(new URLSearchParams(
       's=101010&m=001000&t=not-a-time&z=Invalid%2FZone&i=unknown&r=oops&o=-1',

@@ -32,6 +32,7 @@ export const INPUT_METHOD_LABELS: Record<InputMethod, string> = {
   hexagram: '卦名起卦',
   number: '数字起卦',
   time: '时间起卦',
+  hanzi: '汉字起卦',
   link: '分享链接',
 }
 

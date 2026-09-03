@@ -5,6 +5,9 @@ import { FullReading } from '@/components/FullReading'
 import { HexLines } from '@/components/HexLines'
 import { generateChart } from '@/engine'
 import { bitsToString } from '@/engine/binary'
+import { TRIGRAMS } from '@/data/trigrams'
+import { trigramKeyByRemainder } from '@/features/number/derive'
+import type { HanziSeed } from '@/features/hanzi/derive'
 import { formatRawText } from '@/formatters/rawText'
 import { buildShareUrl, parseShareLink } from '@/lib/share-link'
 import type { LineValue } from '@/types'
@@ -107,6 +110,10 @@ export function ResultPage() {
         </span>
         <span className="result-session-time whitespace-nowrap tabular-nums">{chart.createdAt}</span>
       </div>
+
+      {chart.inputMethod === 'hanzi' && current.hanziSeed && (
+        <HanziSeedResult seed={current.hanziSeed} />
+      )}
 
       <div className="result-state-grid">
         <div className="result-state-primary">
@@ -239,6 +246,65 @@ export function ResultPage() {
       )}
     </div>
   )
+}
+
+function HanziSeedResult({ seed }: { seed: HanziSeed }) {
+  const upperTrigram = TRIGRAMS[
+    trigramKeyByRemainder(seed.upperRemainder) as keyof typeof TRIGRAMS
+  ].name
+  const lowerTrigram = TRIGRAMS[
+    trigramKeyByRemainder(seed.lowerRemainder) as keyof typeof TRIGRAMS
+  ].name
+  const unit = seed.strategy === 'character-count' ? '字' : '画'
+  const splitLabels = hanziSplitLabels(seed.singleCharacterParts?.layout)
+
+  return (
+    <section className="panel mb-4 p-4 sm:p-5" aria-label="汉字起卦推演明细">
+      <span className="panel-tag">汉字取象 // 推演明细</span>
+      <div className="hanzi-seed-preview">
+        <div className="hanzi-seed-groups">
+          <div>
+            <span className="hanzi-seed-label">上卦 · {splitLabels[0]}</span>
+            <strong>{seed.upperText || '—'}</strong>
+            <span>{seed.upperValue} {unit} → {upperTrigram}</span>
+          </div>
+          <div>
+            <span className="hanzi-seed-label">下卦 · {splitLabels[1]}</span>
+            <strong>{seed.lowerText || '—'}</strong>
+            <span>{seed.lowerValue} {unit} → {lowerTrigram}</span>
+          </div>
+          <div>
+            <span className="hanzi-seed-label">动爻 · 合计</span>
+            <strong>{seed.movingValue}</strong>
+            <span>{unit}数取余 → L{seed.movingLine + 1}</span>
+          </div>
+        </div>
+        {seed.strategy === 'stroke-count' && (
+          <p className="mt-2 text-[0.875rem] leading-relaxed text-fog">
+            单字笔画：{seed.characters.map((character, index) => (
+              <span key={`${character}-${index}`} className="mr-3 inline-block">
+                {character} {seed.characterStrokes[index]} 画 /
+              </span>
+            ))}
+          </p>
+        )}
+        {seed.strategy === 'character-count' && (
+          <p className="mt-2 text-[0.875rem] leading-relaxed text-fog">
+            共 {seed.characters.length} 字，已按字数推演，不再计算笔画。
+          </p>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function hanziSplitLabels(
+  layout: 'horizontal' | 'vertical' | 'other' | undefined,
+): [string, string] {
+  if (layout === 'horizontal') return ['左部', '右部']
+  if (layout === 'vertical') return ['上部', '下部']
+  if (layout === 'other') return ['第一部分', '第二部分']
+  return ['前半', '后半']
 }
 
 function StatePanel(props: {

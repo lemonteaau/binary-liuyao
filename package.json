@@ -16,6 +16,10 @@
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
+    "chinese-characters-decomposition": "^0.1.0",
+    "cnchar": "^3.2.6",
+    "cnchar-radical": "^3.2.6",
+    "cnchar-trad": "^3.2.6",
     "lunar-typescript": "^1.8.6",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

@@ -4,6 +4,7 @@ import { Clock } from '@phosphor-icons/react/dist/icons/Clock'
 import { CoinVertical } from '@phosphor-icons/react/dist/icons/CoinVertical'
 import { HandPalm } from '@phosphor-icons/react/dist/icons/HandPalm'
 import { Monitor } from '@phosphor-icons/react/dist/icons/Monitor'
+import { TextAa } from '@phosphor-icons/react/dist/icons/TextAa'
 import { useLocation, useNavigate } from 'react-router-dom'
 import coinFacesUrl from '@/assets/coin-faces.webp'
 import { HexLines } from '@/components/HexLines'
@@ -30,6 +31,7 @@ import {
   createCoinShakeState,
 } from '@/features/coin-shake/model'
 import type { CoinShakeAction, CoinShakeState } from '@/features/coin-shake/model'
+import type { HanziDerivation } from '@/features/hanzi/derive'
 import { cn } from '@/lib/cn'
 import { getCurrentHexagramOrdinal } from '@/lib/hexagram-counter'
 import { scrollIntoViewOnMobile } from '@/lib/mobile-scroll'
@@ -47,6 +49,7 @@ const MODES: Array<{ id: InputMethod; title: string; sub: string }> = [
   { id: 'hexagram', title: '卦名起卦', sub: '按卦名选择 · 指定动爻' },
   { id: 'number', title: '数字起卦', sub: '输入数字 · 自动推演' },
   { id: 'time', title: '时间起卦', sub: '当前时间 · 自动推演' },
+  { id: 'hanzi', title: '汉字起卦', sub: '取字计画 · 自动推演' },
 ]
 
 const COIN_LINE_NAMES = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'] as const
@@ -178,6 +181,7 @@ export function GeneratorPage() {
         )}
         {mode === 'number' && <NumberPanel />}
         {mode === 'time' && <TimePanel />}
+        {mode === 'hanzi' && <HanziPanel />}
 
         {mode === 'manual' && <GenerateBar rawLines={draft} method="manual" />}
       </div>
@@ -207,6 +211,8 @@ function ModeIcon({ mode }: { mode: InputMethod }) {
       return <span className="number-sequence-icon">123</span>
     case 'time':
       return <Clock {...props} />
+    case 'hanzi':
+      return <TextAa {...props} />
     default:
       return null
   }
@@ -292,6 +298,15 @@ function Panel({ tag, children }: { tag: string; children: React.ReactNode }) {
   )
 }
 
+function RitualGuide({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="ritual-guide" aria-label="起卦提示">
+      <span className="ritual-guide-mark" aria-hidden="true">念</span>
+      <p>{children}</p>
+    </div>
+  )
+}
+
 function EntropyPanel() {
   const navigate = useNavigate()
   const { commitReading } = useReading()
@@ -331,14 +346,17 @@ function EntropyPanel() {
 
   return (
     <Panel tag="电脑起卦 // 加密随机">
+      <RitualGuide>
+        一事一问。先静心片刻，在心中默念所问之事；念定，再点击起卦。
+      </RitualGuide>
       <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-[0.9375rem] leading-relaxed text-fog">
+        {/*<div className="text-[0.9375rem] leading-relaxed text-fog">
           <p>六爻 × 三枚铜钱</p>
           <p>
             随机源：<span className="text-signal">WEB CRYPTO API</span>
           </p>
           <p>6 : 7 : 8 : 9 = 1/8 : 3/8 : 3/8 : 1/8</p>
-        </div>
+        </div>*/}
         <button type="button" className="btn btn-primary min-w-44" onClick={generate} disabled={rolling}>
           {rolling ? '正在起卦…' : '立即起卦'}
         </button>
@@ -419,6 +437,9 @@ function CoinShakePanel({
   return (
     <>
       <Panel tag="摇币起卦 // 三枚铜钱">
+        <RitualGuide>
+          一事一问。静心默念后，从初爻开始摇动三枚铜钱。
+        </RitualGuide>
         <div className="coin-layout grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(20rem,0.85fr)]">
           <div className="coin-operation">
             <button
@@ -675,10 +696,12 @@ function GenerateBar({
   rawLines,
   method,
   when,
+  hanziSeed,
 }: {
   rawLines: RawLines
   method: InputMethod
   when?: Date
+  hanziSeed?: Extract<HanziDerivation, { ok: true }>['seed']
 }) {
   const navigate = useNavigate()
   const { commitReading } = useReading()
@@ -691,7 +714,7 @@ function GenerateBar({
       when,
       timezone: resolvedTimezone,
     })
-    commitReading(chart, rawLines)
+    commitReading(chart, rawLines, { hanziSeed })
     navigate('/result')
   }
 
@@ -787,6 +810,9 @@ function NumberPanel() {
   return (
     <>
       <Panel tag="数字种子">
+        <RitualGuide>
+          一事一问。静心默念后，输入最先浮现于心的数字。
+        </RitualGuide>
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -795,10 +821,10 @@ function NumberPanel() {
           aria-label="数字种子"
           className="w-full border border-edge bg-void px-3 py-2 text-lg tracking-[0.2em] text-ink placeholder:tracking-normal placeholder:text-fog/60 focus:border-signal focus:outline-none"
         />
-        <p className="mt-2 text-[0.875rem] leading-relaxed text-fog">
+        {/*<p className="mt-2 text-[0.875rem] leading-relaxed text-fog">
           规则：上卦 = A MOD 8 · 下卦 = B MOD 8 · 动爻 = C MOD 6 ·
           余数 0 → 坤 / 上爻
-        </p>
+        </p>*/}
         {input.trim() !== '' && !valid && (
           <p className="mt-2 text-[0.9375rem] tracking-widest text-flux" role="alert">
             种子无效 — 请输入数字
@@ -828,6 +854,80 @@ function NumberPanel() {
   )
 }
 
+type HanziDeriver = (input: string) => HanziDerivation
+
+function HanziPanel() {
+  const [input, setInput] = useState('')
+  const [derive, setDerive] = useState<HanziDeriver | null>(null)
+  const [loadFailed, setLoadFailed] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    import('@/features/hanzi/derive')
+      .then((module) => {
+        if (active) setDerive(() => module.deriveHanziSeed)
+      })
+      .catch(() => {
+        if (active) setLoadFailed(true)
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const parsed = useMemo(() => derive?.(input) ?? null, [derive, input])
+  const hasInput = input.trim() !== ''
+
+  return (
+    <>
+      <Panel tag="汉字取象 // 本地拆字">
+        <RitualGuide>
+          一事一问。静心默念后，写下最先想到或第一眼看到的相关汉字。
+        </RitualGuide>
+        <label className="block">
+          <span className="mb-2 block text-[0.875rem] tracking-[0.14em] text-fog">
+            所取汉字
+          </span>
+          <input
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            disabled={!derive || loadFailed}
+            autoComplete="off"
+            placeholder={loadFailed ? '笔画资料加载失败' : derive ? '例如：明 / 工作顺利 / 水到渠成' : '正在加载笔画资料…'}
+            aria-label="用于起卦的汉字"
+            className="w-full border border-edge bg-void px-3 py-2 text-lg tracking-[0.16em] text-ink placeholder:tracking-normal placeholder:text-fog/60 focus:border-signal focus:outline-none disabled:cursor-wait disabled:opacity-60"
+          />
+        </label>
+        <p className="mt-2 text-[0.875rem] leading-relaxed text-fog">
+          1 字按字形左右或上下拆分 · 2–10 字按前后两组笔画 · 11 字起按前后两组字数
+        </p>
+
+        {loadFailed && (
+          <p className="mt-2 text-[0.9375rem] tracking-widest text-flux" role="alert">
+            汉字笔画资料未能载入，请刷新后重试。
+          </p>
+        )}
+        {hasInput && parsed && !parsed.ok && (
+          <p className="mt-2 text-[0.9375rem] tracking-widest text-flux" role="alert">
+            {hanziErrorText(parsed)}
+          </p>
+        )}
+      </Panel>
+      {parsed?.ok && (
+        <GenerateBar rawLines={parsed.rawLines} method="hanzi" hanziSeed={parsed.seed} />
+      )}
+    </>
+  )
+}
+
+function hanziErrorText(parsed: Extract<HanziDerivation, { ok: false }>): string {
+  if (parsed.error === 'NON_HANZI') return '请输入汉字；空格会自动忽略。'
+  if (parsed.error === 'UNSUPPORTED_CHARACTER') {
+    return `暂未收录这些字：${parsed.unsupportedCharacters?.join('、') ?? ''}`
+  }
+  return '请输入至少一个汉字。'
+}
+
 function TimePanel() {
   const navigate = useNavigate()
   const { commitReading } = useReading()
@@ -854,6 +954,9 @@ function TimePanel() {
 
   return (
     <Panel tag="使用当前时间戳">
+      <RitualGuide>
+        一事一问。静心默念所问之事；念定，就以此刻起卦。
+      </RitualGuide>
       <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-[0.9375rem] leading-relaxed text-fog">
           <p>
@@ -863,13 +966,13 @@ function TimePanel() {
             时间戳：<LiveTimestamp timezone={resolvedTimezone} className="text-ink" />
           </p>
           <p>时区：{resolvedTimezone}</p>
-          <div className="mt-2 flex items-center gap-3">
+          {/*<div className="mt-2 flex items-center gap-3">
             <HexLines bits={previewBits} compact showLabels={false} />
             <span className="tabular-nums">{previewBits.toString(2).padStart(6, '0')}</span>
-          </div>
-          <p className="mt-1 text-[0.875rem] opacity-70">
+          </div>*/}
+          {/*<p className="mt-1 text-[0.875rem] opacity-70">
             仅为预览 · 最终排盘以点击时刻为准
-          </p>
+          </p>*/}
         </div>
         <button type="button" className="btn btn-primary min-w-44" onClick={generate}>
           使用当前时间戳

@@ -8,6 +8,7 @@ const INPUT_METHODS: readonly InputMethod[] = [
   'hexagram',
   'number',
   'time',
+  'hanzi',
   'link',
 ]
 

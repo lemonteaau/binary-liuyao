@@ -5,6 +5,7 @@ import {
   splitSingleNumber,
 } from '@/features/number/derive'
 import { deriveTimeSeed } from '@/features/time/derive'
+import { deriveHanziSeed } from '@/features/hanzi/derive'
 import { generateChart } from '@/engine'
 import { searchHexagrams } from '@/features/hexagram-search/search'
 import { formatRawText } from '@/formatters/rawText'
@@ -100,6 +101,88 @@ describe('时间起卦', () => {
   it('闰月按本月数处理（2025 闰六月 → 月数 6）', () => {
     const { seed } = deriveTimeSeed(new Date('2025-07-25T12:00:00+08:00'), 'Asia/Shanghai')
     expect(seed.lunarMonth).toBe(6)
+  })
+})
+
+describe('汉字起卦', () => {
+  it('单字按实际字形方向拆分左右或上下部分', () => {
+    const horizontal = deriveHanziSeed('部')
+    expect(horizontal.ok).toBe(true)
+    if (!horizontal.ok) return
+    expect(horizontal.seed).toMatchObject({
+      strategy: 'single-character',
+      upperValue: 8,
+      lowerValue: 2,
+      movingValue: 10,
+      movingLine: 3,
+      singleCharacterParts: { layout: 'horizontal' },
+    })
+
+    const vertical = deriveHanziSeed('想')
+    expect(vertical.ok).toBe(true)
+    if (!vertical.ok) return
+    expect(vertical.seed).toMatchObject({
+      upperValue: 9,
+      lowerValue: 4,
+      movingValue: 13,
+      movingLine: 0,
+      singleCharacterParts: { layout: 'vertical' },
+    })
+  })
+
+  it('2–10 字按前少后多的规则分组并计算笔画', () => {
+    const result = deriveHanziSeed('天地人')
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.seed).toMatchObject({
+      strategy: 'stroke-count',
+      upperText: '天',
+      lowerText: '地人',
+      characterStrokes: [4, 6, 2],
+      upperValue: 4,
+      lowerValue: 8,
+      movingValue: 12,
+      upperRemainder: 4,
+      lowerRemainder: 8,
+      movingLine: 5,
+    })
+  })
+
+  it('11 字及以上改用字数，不依赖笔画资料', () => {
+    const result = deriveHanziSeed('一二三四五六七八九十人')
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.seed).toMatchObject({
+      strategy: 'character-count',
+      upperText: '一二三四五',
+      lowerText: '六七八九十人',
+      characterStrokes: [],
+      upperValue: 5,
+      lowerValue: 6,
+      movingValue: 11,
+      movingLine: 4,
+    })
+  })
+
+  it('兼容空格、繁体字和扩展区汉字，拒绝其他字符', () => {
+    expect(deriveHanziSeed('工作 顺利').ok).toBe(true)
+    expect(deriveHanziSeed('漢字').ok).toBe(true)
+    expect(deriveHanziSeed('𠮷').ok).toBe(true)
+    expect(deriveHanziSeed('工作！').ok).toBe(false)
+    expect(deriveHanziSeed('').ok).toBe(false)
+  })
+
+  it('生成排盘时保留汉字起卦方式', () => {
+    const result = deriveHanziSeed('明')
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    const chart = generateChart({
+      inputMethod: 'hanzi',
+      rawLines: result.rawLines,
+      when: new Date('2026-08-24T06:42:37Z'),
+      timezone: 'UTC',
+    })
+    expect(formatRawText(chart, { includeAiInstruction: false })).toContain('起卦方式：汉字起卦')
   })
 })
 
