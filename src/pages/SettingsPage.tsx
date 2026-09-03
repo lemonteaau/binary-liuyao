@@ -1,5 +1,6 @@
 import { memo } from 'react'
 import type { ReactNode } from 'react'
+import { formatTimezone, timezoneOptionLabel } from '@/lib/timezone-display'
 import { useSettings } from '@/store/settings'
 import type { FontSize } from '@/store/settings'
 
@@ -203,7 +204,7 @@ const TimezoneSection = memo(function TimezoneSection({
       <span className="panel-tag">时区</span>
       <p className="mb-3 text-[0.9375rem] leading-relaxed text-fog">
         排盘使用所选时区的当地墙上时间。自动 = 浏览器当前时区。
-        当前生效：<span className="text-signal">{resolvedTimezone}</span>
+        当前生效：<span className="text-signal">{formatTimezone(resolvedTimezone)}</span>
       </p>
       <select
         value={timezone}
@@ -211,10 +212,10 @@ const TimezoneSection = memo(function TimezoneSection({
         aria-label="时区"
         className="w-full max-w-md border border-edge bg-void px-3 py-2 text-base text-ink focus:border-signal focus:outline-none"
       >
-        <option value="auto">自动 ({detectedTimezone})</option>
+        <option value="auto">自动 ({timezoneOptionLabel(detectedTimezone)})</option>
         {options.map((tz) => (
           <option key={tz} value={tz}>
-            {tz}
+            {timezoneOptionLabel(tz)}
           </option>
         ))}
       </select>

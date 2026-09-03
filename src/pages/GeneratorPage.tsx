@@ -34,6 +34,7 @@ import type { HanziDerivation } from '@/features/hanzi/derive'
 import { cn } from '@/lib/cn'
 import { getCurrentHexagramOrdinal } from '@/lib/hexagram-counter'
 import { scrollIntoViewOnMobile } from '@/lib/mobile-scroll'
+import { formatTimezone } from '@/lib/timezone-display'
 import { useReading } from '@/store/reading'
 import { useSettings } from '@/store/settings'
 import { TRIGRAMS } from '@/data/trigrams'
@@ -958,7 +959,7 @@ function TimePanel() {
           <p>
             时间戳：<LiveTimestamp timezone={resolvedTimezone} className="text-ink" />
           </p>
-          <p>时区：{resolvedTimezone}</p>
+          <p>时区：{formatTimezone(resolvedTimezone)}</p>
           {/*<div className="mt-2 flex items-center gap-3">
             <HexLines bits={previewBits} compact showLabels={false} />
             <span className="tabular-nums">{previewBits.toString(2).padStart(6, '0')}</span>

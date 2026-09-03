@@ -2,6 +2,7 @@ import { TRIGRAMS } from '@/data/trigrams'
 import { zhouyiTextByKingWen } from '@/data/zhouyi'
 import { INPUT_METHOD_LABELS } from '@/engine'
 import { bitsToString } from '@/engine/binary'
+import { formatTimezoneWithOffset, parseGregorianToDate } from '@/lib/timezone-display'
 import type { ChartData, ChartLine, HexStateInfo } from '@/types'
 
 export const SHARE_IMAGE_SITE = 'liuyao.lemontea.xyz'
@@ -121,7 +122,14 @@ export function buildShareImageModel(
       { label: '起卦方式', value: INPUT_METHOD_LABELS[chart.inputMethod] },
       { label: '公历', value: chart.calendar.gregorian },
       { label: '农历', value: `${chart.calendar.lunarText}日 · ${chart.calendar.hourZhi}时` },
-      { label: '时区', value: `${chart.calendar.timezone} ${chart.calendar.utcOffset}` },
+      {
+        label: '时区',
+        value: formatTimezoneWithOffset(
+          chart.calendar.timezone,
+          chart.calendar.utcOffset,
+          parseGregorianToDate(chart.calendar.gregorian),
+        ),
+      },
       {
         label: '干支',
         value: `${chart.calendar.ganzhi.year}年 ${chart.calendar.ganzhi.month}月 ${chart.calendar.ganzhi.day}日 ${chart.calendar.ganzhi.hour}时`,

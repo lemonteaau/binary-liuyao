@@ -10,6 +10,7 @@ import { trigramKeyByRemainder } from '@/features/number/derive'
 import type { HanziSeed } from '@/features/hanzi/derive'
 import { formatRawText } from '@/formatters/rawText'
 import { buildShareUrl, parseShareLink } from '@/lib/share-link'
+import { formatTimezoneWithOffset, parseGregorianToDate } from '@/lib/timezone-display'
 import type { LineValue } from '@/types'
 import { INPUT_METHOD_LABELS_UI, useReading } from '@/store/reading'
 import { useSettings } from '@/store/settings'
@@ -160,7 +161,14 @@ export function ResultPage() {
         <span className="panel-tag">元数据</span>
         <dl className="grid grid-cols-1 gap-x-8 gap-y-2 text-[0.9375rem] sm:grid-cols-2 lg:grid-cols-3">
           <Meta label="时间戳" value={chart.calendar.gregorian} />
-          <Meta label="时区" value={`${chart.calendar.timezone} ${chart.calendar.utcOffset}`} />
+          <Meta
+            label="时区"
+            value={formatTimezoneWithOffset(
+              chart.calendar.timezone,
+              chart.calendar.utcOffset,
+              parseGregorianToDate(chart.calendar.gregorian),
+            )}
+          />
           <Meta label="农历" value={chart.calendar.lunarText} />
           <Meta
             label="四柱"

@@ -4,6 +4,7 @@ import { ShareImageButton } from '@/components/ShareImageButton'
 import { ZhouyiClassics } from '@/components/ZhouyiClassics'
 import { TRIGRAMS } from '@/data/trigrams'
 import { cn } from '@/lib/cn'
+import { formatTimezoneWithOffset, parseGregorianToDate } from '@/lib/timezone-display'
 import type { ChartData, ChartLine, HexStateInfo, NajiaLine } from '@/types'
 
 const LINE_NAMES = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'] as const
@@ -79,7 +80,11 @@ export function FullReading({
               />
               <ReadingDatum
                 label="时区"
-                value={`${chart.calendar.timezone} ${chart.calendar.utcOffset}`}
+                value={formatTimezoneWithOffset(
+                  chart.calendar.timezone,
+                  chart.calendar.utcOffset,
+                  parseGregorianToDate(chart.calendar.gregorian),
+                )}
               />
               <ReadingDatum label="旬空" value={chart.calendar.xunKong.join('')} />
               <ReadingDatum
