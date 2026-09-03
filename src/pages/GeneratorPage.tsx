@@ -4,7 +4,6 @@ import { Clock } from '@phosphor-icons/react/dist/icons/Clock'
 import { CoinVertical } from '@phosphor-icons/react/dist/icons/CoinVertical'
 import { HandPalm } from '@phosphor-icons/react/dist/icons/HandPalm'
 import { Monitor } from '@phosphor-icons/react/dist/icons/Monitor'
-import { TextAa } from '@phosphor-icons/react/dist/icons/TextAa'
 import { useLocation, useNavigate } from 'react-router-dom'
 import coinFacesUrl from '@/assets/coin-faces.webp'
 import { LiveTimestamp } from '@/components/LiveClock'
@@ -212,7 +211,7 @@ function ModeIcon({ mode }: { mode: InputMethod }) {
     case 'time':
       return <Clock {...props} />
     case 'hanzi':
-      return <TextAa {...props} />
+      return <span className="hanzi-glyph-icon" aria-hidden="true">文</span>
     default:
       return null
   }
