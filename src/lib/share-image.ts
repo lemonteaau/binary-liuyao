@@ -1,4 +1,5 @@
 import { TRIGRAMS } from '@/data/trigrams'
+import { zhouyiTextByKingWen } from '@/data/zhouyi'
 import { INPUT_METHOD_LABELS } from '@/engine'
 import { bitsToString } from '@/engine/binary'
 import type { ChartData, ChartLine, HexStateInfo } from '@/types'
@@ -6,9 +7,18 @@ import type { ChartData, ChartLine, HexStateInfo } from '@/types'
 export const SHARE_IMAGE_SITE = 'liuyao.lemontea.xyz'
 
 const WIDTH = 1080
-const HEIGHT = 1920
+const MIN_HEIGHT = 1920
 const PAD = 54
 const CONTENT_WIDTH = WIDTH - PAD * 2
+const CLASSICS_Y = 1580
+const SECTION_GAP = 26
+const CLASSIC_CARD_GAP = 28
+const CLASSIC_CARD_HEADER_HEIGHT = 76
+const CLASSIC_TEXT_SIZE = 24
+const CLASSIC_LINE_HEIGHT = 38
+const CLASSIC_TEXT_X = 160
+const SHENSHA_HEIGHT = 210
+const FOOTER_HEIGHT = 90
 const FONT_FAMILY = '"Fusion Pixel 12", "PingFang SC", "Microsoft YaHei", monospace'
 const COLORS = {
   background: '#040807',
@@ -41,6 +51,7 @@ export interface ShareImageModel {
   mutationMask: string
   metadata: Array<{ label: string; value: string }>
   lines: ShareLineModel[]
+  classics: ShareClassicsModel
   shensha: string[]
   footer: string
 }
@@ -64,6 +75,25 @@ interface ShareLineModel {
   change: string
   mutating: boolean
   fuShen: string | null
+}
+
+interface ShareClassicsModel {
+  primary: ShareClassicHexagramModel
+  result: ShareClassicHexagramModel | null
+}
+
+interface ShareClassicHexagramModel {
+  label: string
+  name: string
+  statement: string
+  lines: ShareClassicLineModel[]
+  special: ShareClassicLineModel | null
+}
+
+interface ShareClassicLineModel {
+  label: string
+  text: string
+  mutating: boolean
 }
 
 export function buildShareImageModel(
@@ -105,6 +135,12 @@ export function buildShareImageModel(
     lines: [...chart.lines]
       .sort((a, b) => b.index - a.index)
       .map((line) => lineModel(chart, line)),
+    classics: {
+      primary: classicModel('本卦', chart.primary, chart.mutationMask, true),
+      result: chart.primary.bits === chart.result.bits
+        ? null
+        : classicModel('变卦', chart.result, chart.mutationMask, false),
+    },
     shensha: visibleShensha.length > 0 ? visibleShensha : ['本次无神煞命中'],
     footer: SHARE_IMAGE_SITE,
   }
@@ -116,13 +152,17 @@ export async function createReadingShareImage(
 ): Promise<Blob> {
   await document.fonts?.load(`24px ${FONT_FAMILY}`).catch(() => undefined)
 
+  const model = buildShareImageModel(chart, options)
   const canvas = document.createElement('canvas')
   canvas.width = WIDTH
-  canvas.height = HEIGHT
-  const ctx = canvas.getContext('2d')
+  canvas.height = 1
+  let ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('Canvas 2D context is unavailable')
 
-  renderShareImage(ctx, buildShareImageModel(chart, options))
+  canvas.height = calculateShareImageHeight(ctx, model)
+  ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Canvas 2D context is unavailable')
+  renderShareImage(ctx, model)
 
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((blob) => {
@@ -186,13 +226,39 @@ function lineModel(chart: ChartData, line: ChartLine): ShareLineModel {
   }
 }
 
+function classicModel(
+  label: string,
+  state: HexStateInfo,
+  mutationMask: number,
+  primary: boolean,
+): ShareClassicHexagramModel {
+  const classic = zhouyiTextByKingWen(state.record.kingWenNumber)
+  return {
+    label,
+    name: state.record.chineseName,
+    statement: classic.statement,
+    lines: classic.lines
+      .map((line, index) => ({
+        ...line,
+        mutating: primary && Boolean((mutationMask >> index) & 1),
+      }))
+      .reverse(),
+    special: classic.special
+      ? {
+          ...classic.special,
+          mutating: primary && mutationMask === 0b111111,
+        }
+      : null,
+  }
+}
+
 function najiaText(najia: ChartLine['primary']['najia']): string {
   return `${najia.stem}${najia.branch}${najia.element}`
 }
 
 function renderShareImage(ctx: CanvasRenderingContext2D, model: ShareImageModel): void {
   ctx.fillStyle = COLORS.background
-  ctx.fillRect(0, 0, WIDTH, HEIGHT)
+  ctx.fillRect(0, 0, WIDTH, ctx.canvas.height)
   drawGrid(ctx)
 
   ctx.textBaseline = 'top'
@@ -215,16 +281,18 @@ function renderShareImage(ctx: CanvasRenderingContext2D, model: ShareImageModel)
   drawSummary(ctx, model, 174)
   drawMetadata(ctx, model, 516)
   drawMatrix(ctx, model, 824)
-  drawShensha(ctx, model, 1580)
-  drawFooter(ctx, model)
+  const classicsHeight = drawClassics(ctx, model.classics, CLASSICS_Y)
+  const shenshaY = CLASSICS_Y + classicsHeight + SECTION_GAP
+  drawShensha(ctx, model, shenshaY)
+  drawFooter(ctx, model, shenshaY + SHENSHA_HEIGHT + SECTION_GAP)
 }
 
 function drawGrid(ctx: CanvasRenderingContext2D): void {
   ctx.save()
   ctx.strokeStyle = 'rgba(61, 245, 198, 0.025)'
   ctx.lineWidth = 1
-  for (let x = 0; x <= WIDTH; x += 24) strokeLine(ctx, x, 0, x, HEIGHT, ctx.strokeStyle)
-  for (let y = 0; y <= HEIGHT; y += 24) strokeLine(ctx, 0, y, WIDTH, y, ctx.strokeStyle)
+  for (let x = 0; x <= WIDTH; x += 24) strokeLine(ctx, x, 0, x, ctx.canvas.height, ctx.strokeStyle)
+  for (let y = 0; y <= ctx.canvas.height; y += 24) strokeLine(ctx, 0, y, WIDTH, y, ctx.strokeStyle)
   ctx.restore()
 }
 
@@ -410,8 +478,192 @@ function drawLineCell(
   ctx.restore()
 }
 
+function calculateShareImageHeight(
+  ctx: CanvasRenderingContext2D,
+  model: ShareImageModel,
+): number {
+  const classicsHeight = measureClassicsHeight(ctx, model.classics)
+  const contentHeight = CLASSICS_Y
+    + classicsHeight
+    + SECTION_GAP
+    + SHENSHA_HEIGHT
+    + SECTION_GAP
+    + FOOTER_HEIGHT
+  return Math.max(MIN_HEIGHT, Math.ceil(contentHeight))
+}
+
+function measureClassicsHeight(
+  ctx: CanvasRenderingContext2D,
+  classics: ShareClassicsModel,
+): number {
+  const primaryHeight = measureClassicCardHeight(ctx, classics.primary, CONTENT_WIDTH)
+  const resultHeight = classics.result
+    ? CLASSIC_CARD_GAP + measureClassicCardHeight(ctx, classics.result, CONTENT_WIDTH)
+    : 0
+  return 54 + primaryHeight + resultHeight
+}
+
+function measureClassicCardHeight(
+  ctx: CanvasRenderingContext2D,
+  classic: ShareClassicHexagramModel,
+  width: number,
+): number {
+  const rows = [classic.statement, ...classic.lines.map((line) => line.text)]
+  if (classic.special) rows.push(classic.special.text)
+  return CLASSIC_CARD_HEADER_HEIGHT + rows.reduce(
+    (height, text) => height + measureClassicRowHeight(ctx, text, width),
+    0,
+  )
+}
+
+function measureClassicRowHeight(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  width: number,
+): number {
+  setFont(ctx, CLASSIC_TEXT_SIZE)
+  const textWidth = width - CLASSIC_TEXT_X - 24
+  return Math.max(78, wrapText(ctx, text, textWidth).length * CLASSIC_LINE_HEIGHT + 36)
+}
+
+function drawClassics(
+  ctx: CanvasRenderingContext2D,
+  classics: ShareClassicsModel,
+  y: number,
+): number {
+  const height = measureClassicsHeight(ctx, classics)
+  drawPanel(ctx, PAD, y, CONTENT_WIDTH, height, '周易原文 · 卦辞 / 六爻')
+
+  let cardY = y + 54
+  drawClassicCard(ctx, classics.primary, PAD, cardY, CONTENT_WIDTH)
+  if (classics.result) {
+    cardY += measureClassicCardHeight(ctx, classics.primary, CONTENT_WIDTH)
+    strokeLine(
+      ctx,
+      PAD + 24,
+      cardY + CLASSIC_CARD_GAP / 2,
+      WIDTH - PAD - 24,
+      cardY + CLASSIC_CARD_GAP / 2,
+      COLORS.edgeBright,
+    )
+    cardY += CLASSIC_CARD_GAP
+    drawClassicCard(ctx, classics.result, PAD, cardY, CONTENT_WIDTH)
+  }
+
+  return height
+}
+
+function drawClassicCard(
+  ctx: CanvasRenderingContext2D,
+  classic: ShareClassicHexagramModel,
+  x: number,
+  y: number,
+  width: number,
+): void {
+  ctx.fillStyle = COLORS.surface
+  ctx.fillRect(x, y, width, CLASSIC_CARD_HEADER_HEIGHT)
+  ctx.save()
+  ctx.strokeStyle = 'rgba(61, 245, 198, 0.32)'
+  ctx.lineWidth = 2
+  ctx.strokeRect(
+    x + 1,
+    y + 1,
+    width - 2,
+    CLASSIC_CARD_HEADER_HEIGHT - 2,
+  )
+  ctx.restore()
+  ctx.fillStyle = COLORS.signal
+  ctx.fillRect(x, y, 4, CLASSIC_CARD_HEADER_HEIGHT)
+  setFont(ctx, 22)
+  ctx.fillStyle = COLORS.fog
+  ctx.fillText(classic.label, x + 24, y + 27)
+  setFont(ctx, 32, true)
+  ctx.fillStyle = COLORS.signal
+  ctx.fillText(classic.name, x + CLASSIC_TEXT_X, y + 20)
+  let rowY = y + CLASSIC_CARD_HEADER_HEIGHT
+  rowY += drawClassicRow(ctx, '卦辞', classic.statement, x, rowY, width, false)
+  classic.lines.forEach((line) => {
+    rowY += drawClassicRow(
+      ctx,
+      line.mutating ? `${line.label} · 动` : line.label,
+      line.text,
+      x,
+      rowY,
+      width,
+      line.mutating,
+    )
+  })
+  if (classic.special) {
+    drawClassicRow(
+      ctx,
+      classic.special.mutating ? `${classic.special.label} · 动` : classic.special.label,
+      classic.special.text,
+      x,
+      rowY,
+      width,
+      classic.special.mutating,
+      true,
+    )
+  }
+}
+
+function drawClassicRow(
+  ctx: CanvasRenderingContext2D,
+  label: string,
+  text: string,
+  x: number,
+  y: number,
+  width: number,
+  mutating: boolean,
+  special = false,
+): number {
+  const height = measureClassicRowHeight(ctx, text, width)
+  if (mutating) {
+    ctx.fillStyle = 'rgba(255, 77, 106, 0.09)'
+    ctx.fillRect(x, y, width, height)
+    ctx.fillStyle = COLORS.flux
+    ctx.fillRect(x, y, 3, height)
+  } else if (special) {
+    ctx.fillStyle = 'rgba(61, 245, 198, 0.04)'
+    ctx.fillRect(x, y, width, height)
+  }
+
+  setFont(ctx, 21, mutating)
+  ctx.fillStyle = mutating ? COLORS.flux : COLORS.signal
+  ctx.fillText(label, x + 24, y + 24)
+
+  setFont(ctx, CLASSIC_TEXT_SIZE)
+  ctx.fillStyle = COLORS.ink
+  const textX = x + CLASSIC_TEXT_X
+  wrapText(ctx, text, width - CLASSIC_TEXT_X - 24).forEach((line, index) => {
+    ctx.fillText(line, textX, y + 18 + index * CLASSIC_LINE_HEIGHT)
+  })
+  strokeLine(ctx, x, y + height, x + width, y + height, COLORS.edge)
+  return height
+}
+
+function wrapText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+): string[] {
+  const lines: string[] = []
+  let current = ''
+  for (const character of text) {
+    const candidate = current + character
+    if (current && ctx.measureText(candidate).width > maxWidth) {
+      lines.push(current)
+      current = character
+    } else {
+      current = candidate
+    }
+  }
+  if (current) lines.push(current)
+  return lines.length > 0 ? lines : ['']
+}
+
 function drawShensha(ctx: CanvasRenderingContext2D, model: ShareImageModel, y: number): void {
-  drawPanel(ctx, PAD, y, CONTENT_WIDTH, 210, `神煞 · ${model.shensha.length} 项`)
+  drawPanel(ctx, PAD, y, CONTENT_WIDTH, SHENSHA_HEIGHT, `神煞 · ${model.shensha.length} 项`)
   let x = PAD + 24
   let chipY = y + 64
   const maxX = WIDTH - PAD - 24
@@ -432,8 +684,11 @@ function drawShensha(ctx: CanvasRenderingContext2D, model: ShareImageModel, y: n
   })
 }
 
-function drawFooter(ctx: CanvasRenderingContext2D, model: ShareImageModel): void {
-  const y = 1810
+function drawFooter(
+  ctx: CanvasRenderingContext2D,
+  model: ShareImageModel,
+  y: number,
+): void {
   strokeLine(ctx, PAD, y, WIDTH - PAD, y, COLORS.edgeBright)
   setFont(ctx, 24)
   ctx.fillStyle = COLORS.fog

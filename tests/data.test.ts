@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { PURE_BITS, HEXAGRAMS, hexagramByBits, hexagramByKingWen } from '@/data/hexagrams'
 import { BRANCHES, BRANCH_ELEMENTS, TRIGRAMS, TRIGRAM_KEYS } from '@/data/trigrams'
+import { zhouyiTextByKingWen } from '@/data/zhouyi'
 
 describe('八卦数据', () => {
   it('八个卦 key 与 bits 一一对应（LSB = 初爻）', () => {
@@ -66,5 +67,44 @@ describe('六十四卦表', () => {
     // 坎为水 = 010010（显示串 MSB 在前 = L6L5L4L3L2L1）
     expect(hexagramByBits(PURE_BITS.kan)!.chineseName).toBe('坎为水')
     expect((PURE_BITS.kan & 63).toString(2).padStart(6, '0')).toBe('010010')
+  })
+})
+
+describe('周易原文', () => {
+  it('完整覆盖 64 卦、每卦卦辞与六条爻辞', () => {
+    for (let kingWenNumber = 1; kingWenNumber <= 64; kingWenNumber++) {
+      const record = hexagramByKingWen(kingWenNumber)!
+      const classic = zhouyiTextByKingWen(kingWenNumber)
+
+      expect(classic.statement.length).toBeGreaterThan(0)
+      expect(classic.lines).toHaveLength(6)
+
+      classic.lines.forEach((line, index) => {
+        const lineType = (record.bits >> index) & 1 ? '九' : '六'
+        const position = index === 0 ? '初' : index === 5 ? '上' : lineType
+        const expectedLabel = index === 0 || index === 5
+          ? `${position}${lineType}`
+          : `${position}${['', '', '二', '三', '四', '五'][index + 1]}`
+
+        expect(line.label).toBe(expectedLabel)
+        expect(line.text.length).toBeGreaterThan(0)
+      })
+    }
+  })
+
+  it('保留乾坤用辞与经典文本', () => {
+    expect(zhouyiTextByKingWen(1)).toMatchObject({
+      statement: '元亨利贞。',
+      special: { label: '用九', text: '见群龙无首，吉。' },
+    })
+    expect(zhouyiTextByKingWen(2).special).toEqual({ label: '用六', text: '利永贞。' })
+    expect(zhouyiTextByKingWen(3).lines[0]).toEqual({
+      label: '初九',
+      text: '磐桓，利居贞，利建侯。',
+    })
+    expect(zhouyiTextByKingWen(64).lines[5]).toEqual({
+      label: '上九',
+      text: '有孚于饮酒，无咎。濡其首，有孚失是。',
+    })
   })
 })

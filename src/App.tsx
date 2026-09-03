@@ -145,7 +145,7 @@ function routeMetadata(pathname: string): { title: string; description: string }
     case '/result':
       return {
         title: '六爻排盘结果 - HEX//64',
-        description: '查看 HEX//64 生成的六爻排盘结果，包括本卦、动爻、变卦、纳甲、六亲、六神、世应、伏神、卦身、神煞与四柱。',
+        description: '查看 HEX//64 生成的六爻排盘结果，包括本卦、动爻、变卦、周易卦辞爻辞、纳甲、六亲、六神、世应、伏神、卦身、神煞与四柱。',
       }
     case '/settings':
       return {

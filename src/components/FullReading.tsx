@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { CopyButton } from '@/components/CopyButton'
 import { ShareImageButton } from '@/components/ShareImageButton'
+import { ZhouyiClassics } from '@/components/ZhouyiClassics'
 import { TRIGRAMS } from '@/data/trigrams'
 import { cn } from '@/lib/cn'
 import type { ChartData, ChartLine, HexStateInfo, NajiaLine } from '@/types'
@@ -135,6 +136,8 @@ export function FullReading({
           <pre>{rawText}</pre>
         </section>
       )}
+
+      <ZhouyiClassics chart={chart} />
     </section>
   )
 }
