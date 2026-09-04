@@ -1,5 +1,6 @@
-import { useEffect, useLayoutEffect, useRef } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { HashRouter, Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
+import { BookmarkInvitation } from '@/components/BookmarkInvitation'
 import { BootSequence, useBootOnce } from '@/components/BootSequence'
 import { FeedbackInvitation } from '@/components/FeedbackInvitation'
 import { LiveClock } from '@/components/LiveClock'
@@ -57,6 +58,19 @@ function Shell() {
   const { booting, finish } = useBootOnce(animation)
   const location = useLocation()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const feedbackCooldownTimerRef = useRef<number>(0)
+  const [bookmarkInvitationVisible, setBookmarkInvitationVisible] = useState(false)
+  const [feedbackInvitationDeferred, setFeedbackInvitationDeferred] = useState(false)
+
+  const deferFeedbackInvitation = useCallback(() => {
+    window.clearTimeout(feedbackCooldownTimerRef.current)
+    setFeedbackInvitationDeferred(true)
+    feedbackCooldownTimerRef.current = window.setTimeout(() => {
+      setFeedbackInvitationDeferred(false)
+    }, 60_000)
+  }, [])
+
+  useEffect(() => () => window.clearTimeout(feedbackCooldownTimerRef.current), [])
 
   useEffect(() => {
     const metadata = routeMetadata(location.pathname)
@@ -131,7 +145,13 @@ function Shell() {
           </footer>
         </div>
       </div>
-      <FeedbackInvitation />
+      <BookmarkInvitation
+        onDismiss={deferFeedbackInvitation}
+        onVisibilityChange={setBookmarkInvitationVisible}
+      />
+      <FeedbackInvitation
+        suppressed={bookmarkInvitationVisible || feedbackInvitationDeferred}
+      />
       <CrtFx />
     </CrtFrame>
   )

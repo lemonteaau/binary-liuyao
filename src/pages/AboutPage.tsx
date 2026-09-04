@@ -36,6 +36,19 @@ export function AboutPage() {
         </p>
       </Section>
 
+      <Section tag="再次访问">
+        <div className="bookmark-help">
+          <h2 className="text-lg font-bold tracking-[0.16em] text-ink">把本站留在手边</h2>
+          <p className="mt-2 text-fog">
+            桌面浏览器可按 <kbd>⌘ D</kbd>（macOS）或 <kbd>Ctrl D</kbd>（Windows / Linux）加入书签。
+            快捷键可能因浏览器设置而不同。
+          </p>
+          <p className="mt-2 text-fog">
+            在手机上，可从浏览器的分享或菜单中选择“添加书签”或“添加到主屏幕”。
+          </p>
+        </div>
+      </Section>
+
       <Section tag="输入算法">
         <dl className="space-y-3">
           <div>

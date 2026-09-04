@@ -11,7 +11,7 @@ import {
 
 const TRACK_INTERVAL_MS = 15_000
 
-export function FeedbackInvitation() {
+export function FeedbackInvitation({ suppressed = false }: { suppressed?: boolean }) {
   const location = useLocation()
   const isLocalPreview = import.meta.env.DEV &&
     new URLSearchParams(location.search).get('feedback-preview') === '1'
@@ -46,10 +46,10 @@ export function FeedbackInvitation() {
       lastTick = now
       if (document.visibilityState === 'hidden') return
 
-      activeMs += elapsed
       const latest = loadFeedbackPromptState()
       if (latest.submitted || (latest.dismissedUntil ?? 0) > now) return
 
+      activeMs = Math.max(activeMs, latest.activeMs) + elapsed
       saveFeedbackPromptState({ ...latest, activeMs })
       if (activeMs >= FEEDBACK_PROMPT_ACTIVE_MS) setVisible(true)
     }
@@ -80,7 +80,7 @@ export function FeedbackInvitation() {
   }
 
   const shouldShow = visible || (isLocalPreview && !previewDismissed)
-  if (!shouldShow || location.pathname === '/about') return null
+  if (suppressed || !shouldShow || location.pathname === '/about') return null
 
   return (
     <aside className="feedback-invitation" aria-labelledby="feedback-invitation-title">

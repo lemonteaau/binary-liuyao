@@ -1,6 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { claimHexagramOrdinal } from '@/lib/hexagram-counter'
+import {
+  recordBookmarkPromptReading,
+  syncBookmarkPromptReadingCount,
+} from '@/lib/bookmark-prompt'
 import type { HanziSeed } from '@/features/hanzi/derive'
 import type { ChartData, InputMethod, LineValue } from '@/types'
 
@@ -87,6 +91,13 @@ export function ReadingProvider({ children }: { children: ReactNode }) {
   const currentOrdinal = current?.ordinal
 
   useEffect(() => {
+    const localReadingCount = history.filter(
+      (record) => record.source !== 'share-link' && record.chart.inputMethod !== 'link',
+    ).length
+    syncBookmarkPromptReadingCount(localReadingCount)
+  }, [history])
+
+  useEffect(() => {
     if (!currentId || currentOrdinal !== null || !currentCounterEventId) return
 
     const readingId = currentId
@@ -146,6 +157,7 @@ export function ReadingProvider({ children }: { children: ReactNode }) {
         return next
       })
       saveCurrent(record)
+      if (shouldCount) recordBookmarkPromptReading()
       return record
     },
     [],

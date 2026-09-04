@@ -767,6 +767,33 @@ html[data-screen-fx="off"] .chroma {
   line-height: 1.65;
 }
 
+.feedback-invitation > .bookmark-invitation-kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.45rem;
+  color: var(--color-signal);
+  font-size: 0.75rem;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.bookmark-invitation kbd,
+.bookmark-help kbd {
+  display: inline-block;
+  margin-inline: 0.18rem;
+  border: 1px solid color-mix(in srgb, var(--color-fog) 45%, var(--color-edge));
+  padding: 0.12rem 0.35rem;
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+}
+
 .feedback-invitation-actions {
   display: flex;
   align-items: center;
