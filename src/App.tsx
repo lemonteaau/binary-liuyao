@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { HashRouter, Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { BookmarkInvitation } from '@/components/BookmarkInvitation'
 import { BootSequence, useBootOnce } from '@/components/BootSequence'
 import { FeedbackInvitation } from '@/components/FeedbackInvitation'
 import { LiveClock } from '@/components/LiveClock'
-import { resetScrollPosition } from '@/lib/mobile-scroll'
 import { GeneratorPage } from '@/pages/GeneratorPage'
 import { ResultPage } from '@/pages/ResultPage'
 import { SettingsPage } from '@/pages/SettingsPage'
@@ -57,7 +56,6 @@ function Shell() {
   const { animation, resolvedTimezone } = useDisplaySettings()
   const { booting, finish } = useBootOnce(animation)
   const location = useLocation()
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
   const feedbackCooldownTimerRef = useRef<number>(0)
   const [bookmarkInvitationVisible, setBookmarkInvitationVisible] = useState(false)
   const [feedbackInvitationDeferred, setFeedbackInvitationDeferred] = useState(false)
@@ -80,10 +78,6 @@ function Shell() {
       ?.setAttribute('content', metadata.description)
   }, [location.pathname])
 
-  useLayoutEffect(() => {
-    return resetScrollPosition(scrollContainerRef.current)
-  }, [booting, location.key, location.pathname, location.search])
-
   if (booting) {
     return (
       <CrtFrame>
@@ -95,7 +89,13 @@ function Shell() {
 
   return (
     <CrtFrame>
-      <div ref={scrollContainerRef} className="crt-content">
+      {/*
+        iOS WebKit may keep the stale backing store of a programmatically reset
+        overflow scroller until the user scrolls again. A new route gets a new
+        native scroll layer instead, which both starts at zero and paints the
+        incoming page immediately.
+      */}
+      <div key={location.key} className="crt-content">
         <button
           type="button"
           className="skip-link"
