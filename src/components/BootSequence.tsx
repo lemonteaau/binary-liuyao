@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 const BOOT_LINES = [
   '系统初始化…',
@@ -24,8 +24,15 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
     <div
       className="crt-power-on absolute inset-0 z-10 flex cursor-pointer flex-col justify-end bg-void p-6"
       onClick={onDone}
-      role="status"
-      aria-label="系统正在启动"
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onDone()
+        }
+      }}
+      tabIndex={0}
+      role="button"
+      aria-label="系统正在启动，跳过启动动画"
     >
       <div className="text-base leading-6 text-fog">
         {BOOT_LINES.slice(0, lineCount).map((line, i) => (
@@ -45,6 +52,8 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
 export function useBootOnce(enabled: boolean): { booting: boolean; finish: () => void } {
   const [booting, setBooting] = useState(() => {
     if (!enabled) return false
+    if (typeof window.matchMedia === 'function'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false
     try {
       return !sessionStorage.getItem('hex64.booted')
     } catch {
@@ -61,5 +70,6 @@ export function useBootOnce(enabled: boolean): { booting: boolean; finish: () =>
     }
   }, [booting])
 
-  return { booting, finish: () => setBooting(false) }
+  const finish = useCallback(() => setBooting(false), [])
+  return { booting, finish }
 }

@@ -64,23 +64,35 @@ function formatTimestampIn(tz: string): string {
 }
 
 export function LiveClock({ timezone, className }: LiveClockProps) {
-  const [now, setNow] = useState(() => formatIn(timezone))
-
-  useEffect(() => {
-    const t = setInterval(() => setNow(formatIn(timezone)), 1000)
-    return () => clearInterval(t)
-  }, [timezone])
+  const now = useVisibleClock(timezone, formatIn)
 
   return <span className={className}>{now}</span>
 }
 
 export function LiveTimestamp({ timezone, className }: LiveClockProps) {
-  const [now, setNow] = useState(() => formatTimestampIn(timezone))
-
-  useEffect(() => {
-    const timer = setInterval(() => setNow(formatTimestampIn(timezone)), 1000)
-    return () => clearInterval(timer)
-  }, [timezone])
+  const now = useVisibleClock(timezone, formatTimestampIn)
 
   return <span className={className}>{now}</span>
+}
+
+function useVisibleClock(timezone: string, format: (timezone: string) => string): string {
+  const [now, setNow] = useState(() => format(timezone))
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setInterval> | undefined
+    const sync = () => {
+      clearInterval(timer)
+      if (document.visibilityState === 'hidden') return
+      setNow(format(timezone))
+      timer = setInterval(() => setNow(format(timezone)), 1000)
+    }
+    sync()
+    document.addEventListener('visibilitychange', sync)
+    return () => {
+      clearInterval(timer)
+      document.removeEventListener('visibilitychange', sync)
+    }
+  }, [timezone, format])
+
+  return now
 }

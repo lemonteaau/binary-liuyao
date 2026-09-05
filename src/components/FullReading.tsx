@@ -83,7 +83,7 @@ export function FullReading({
                 value={formatTimezoneWithOffset(
                   chart.calendar.timezone,
                   chart.calendar.utcOffset,
-                  parseGregorianToDate(chart.calendar.gregorian),
+                  parseGregorianToDate(chart.calendar.gregorian, chart.calendar.utcOffset),
                 )}
               />
               <ReadingDatum label="旬空" value={chart.calendar.xunKong.join('')} />

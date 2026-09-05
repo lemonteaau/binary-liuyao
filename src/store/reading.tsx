@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { claimHexagramOrdinal } from '@/lib/hexagram-counter'
+import { isReadingRecord } from '@/lib/reading-storage'
 import {
   recordBookmarkPromptReading,
   syncBookmarkPromptReadingCount,
@@ -32,7 +33,8 @@ const HISTORY_LIMIT = 20
 function loadCurrent(): ReadingRecord | null {
   try {
     const raw = localStorage.getItem(CURRENT_KEY)
-    return raw ? (JSON.parse(raw) as ReadingRecord) : null
+    const record: unknown = raw ? JSON.parse(raw) : null
+    return isReadingRecord(record) ? record : null
   } catch {
     return null
   }
@@ -41,8 +43,8 @@ function loadCurrent(): ReadingRecord | null {
 function loadHistory(): ReadingRecord[] {
   try {
     const raw = localStorage.getItem(HISTORY_KEY)
-    const list = raw ? (JSON.parse(raw) as ReadingRecord[]) : []
-    return Array.isArray(list) ? list : []
+    const list: unknown = raw ? JSON.parse(raw) : []
+    return Array.isArray(list) ? list.filter(isReadingRecord).slice(0, HISTORY_LIMIT) : []
   } catch {
     return []
   }

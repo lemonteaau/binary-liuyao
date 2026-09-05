@@ -63,6 +63,7 @@ export function ResultPage() {
     }
     return (
       <div className="pt-10 text-base leading-loose text-fog">
+        <h1 className="sr-only">六爻排盘结果</h1>
         <p>当前没有排盘。</p>
         <Link to="/" className="text-signal">
           → 返回起卦
@@ -93,6 +94,7 @@ export function ResultPage() {
 
   return (
     <div className="pt-5">
+      <h1 className="sr-only">六爻排盘结果</h1>
       {isLinkMode && (
         <p className="mb-4 border border-edge bg-surface px-3 py-2 text-[0.875rem] tracking-[0.16em] text-fog" role="note">
           {restoredOriginalContext
@@ -166,7 +168,7 @@ export function ResultPage() {
             value={formatTimezoneWithOffset(
               chart.calendar.timezone,
               chart.calendar.utcOffset,
-              parseGregorianToDate(chart.calendar.gregorian),
+              parseGregorianToDate(chart.calendar.gregorian, chart.calendar.utcOffset),
             )}
           />
           <Meta label="农历" value={chart.calendar.lunarText} />

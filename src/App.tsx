@@ -102,10 +102,11 @@ function Shell() {
           onClick={() => {
             window.setTimeout(() => {
               const heading = document.querySelector<HTMLElement>('#main-content h1')
+                ?? document.getElementById('main-content')
               if (!heading) return
               heading.tabIndex = -1
               heading.focus()
-              heading.scrollIntoView({ block: 'start' })
+              document.getElementById('main-content')?.scrollIntoView({ block: 'start' })
             }, 0)
           }}
         >

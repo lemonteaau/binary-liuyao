@@ -18,8 +18,15 @@ export function FeedbackForm({
   const textareaId = useId()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const submissionIdRef = useRef<string | null>(null)
+  const submittedMessageRef = useRef<string | null>(null)
+  const requestRef = useRef<AbortController | null>(null)
   const [message, setMessage] = useState('')
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
+
+  useEffect(() => () => {
+    requestRef.current?.abort()
+    requestRef.current = null
+  }, [])
 
   useEffect(() => {
     if (!focusOnMount) return
@@ -31,24 +38,37 @@ export function FeedbackForm({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (requestRef.current) return
     const trimmedMessage = message.trim()
     if (trimmedMessage.length < 2 || trimmedMessage.length > MAX_MESSAGE_LENGTH) return
 
     setStatus('submitting')
-    submissionIdRef.current ??= crypto.randomUUID()
+    const controller = new AbortController()
+    requestRef.current = controller
+    const timeout = window.setTimeout(() => controller.abort(), 10_000)
 
     try {
+      if (submittedMessageRef.current !== trimmedMessage) {
+        submissionIdRef.current = null
+      }
+      submissionIdRef.current ??= crypto.randomUUID()
+      submittedMessageRef.current = trimmedMessage
       await submitFeedback({
         submissionId: submissionIdRef.current,
         message: trimmedMessage,
         source,
+        signal: controller.signal,
       })
+      if (requestRef.current !== controller) return
       markFeedbackSubmitted()
       submissionIdRef.current = null
       setMessage('')
       setStatus('success')
     } catch {
-      setStatus('error')
+      if (requestRef.current === controller) setStatus('error')
+    } finally {
+      window.clearTimeout(timeout)
+      if (requestRef.current === controller) requestRef.current = null
     }
   }
 

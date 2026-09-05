@@ -2331,6 +2331,8 @@ html[data-motion="off"] .feedback-invitation {
 
   .result-session-meta {
     flex: none;
+    flex-wrap: wrap;
+    max-width: 100%;
     gap: 0.4rem;
     white-space: nowrap;
   }

@@ -64,6 +64,7 @@ export function CopyButton({
             复制失败 // 请手动选择文本
           </p>
           <textarea
+            aria-label="可手动复制的文本"
             readOnly
             value={fallbackText}
             onFocus={(e) => e.currentTarget.select()}

@@ -1,4 +1,4 @@
-let cachedLongFormatter: Map<string, Intl.DateTimeFormat> = new Map()
+const cachedLongFormatter: Map<string, Intl.DateTimeFormat> = new Map()
 
 function getLongFormatter(timezone: string): Intl.DateTimeFormat | null {
   const cached = cachedLongFormatter.get(timezone)
@@ -74,11 +74,12 @@ export function timezoneOptionLabel(timezone: string, date: Date = new Date()): 
 
 /**
  * 尝试从 gregorian 字符串解析日期，用于让夏令时名称与排盘当时一致
- * 格式如 "2026-08-24 15:42:37"，解析失败则回退到 now
+ * 使用排盘保存的 UTC 偏移，避免查看者时区影响夏令时名称。
+ * 解析失败则回退到 now；省略偏移时兼容原来的本地时间解析。
  */
-export function parseGregorianToDate(gregorian: string): Date {
-  // 将 "YYYY-MM-DD HH:mm:ss" 转为可解析的 ISO 形式，按本地时间
-  const iso = gregorian.replace(' ', 'T')
+export function parseGregorianToDate(gregorian: string, utcOffset?: string): Date {
+  const offset = utcOffset?.match(/^UTC([+-]\d{2}:\d{2})$/)?.[1] ?? ''
+  const iso = gregorian.replace(' ', 'T') + offset
   const d = new Date(iso)
   return Number.isNaN(d.getTime()) ? new Date() : d
 }

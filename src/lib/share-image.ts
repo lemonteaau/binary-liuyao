@@ -127,7 +127,7 @@ export function buildShareImageModel(
         value: formatTimezoneWithOffset(
           chart.calendar.timezone,
           chart.calendar.utcOffset,
-          parseGregorianToDate(chart.calendar.gregorian),
+          parseGregorianToDate(chart.calendar.gregorian, chart.calendar.utcOffset),
         ),
       },
       {

@@ -21,16 +21,22 @@ export interface ZonedParts {
   second: number
 }
 
+// 排盘会连续读取同一时区（墙上时间、UTC 偏移）；复用最近的格式器。
+let zonedFormatterCache: { timezone: string; formatter: Intl.DateTimeFormat } | undefined
+
 /** 将绝对时间换算到指定 IANA 时区的墙上时间分量 */
 export function zonedParts(date: Date, timeZone: string): ZonedParts {
   let dtf: Intl.DateTimeFormat
   try {
-    dtf = new Intl.DateTimeFormat('en-CA', {
+    dtf = zonedFormatterCache?.timezone === timeZone
+      ? zonedFormatterCache.formatter
+      : new Intl.DateTimeFormat('en-CA', {
       timeZone,
       year: 'numeric', month: '2-digit', day: '2-digit',
       hour: '2-digit', minute: '2-digit', second: '2-digit',
       hourCycle: 'h23',
     })
+    zonedFormatterCache = { timezone: timeZone, formatter: dtf }
   } catch {
     // 非法时区回退 UTC
     return zonedParts(date, DEFAULT_TIMEZONE)

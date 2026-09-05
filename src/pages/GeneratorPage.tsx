@@ -321,7 +321,7 @@ function EntropyPanel() {
     if (rolling) return
     const lines = tossRawLines()
     const when = new Date()
-    if (!settings.animation) {
+    if (!settings.animation || !shouldAnimateGeneratorShift()) {
       finish(lines, when)
       return
     }
@@ -756,13 +756,12 @@ function HexNamePanel({ draft, setDraft }: LineEditorProps) {
           aria-label="按卦名或文王序号检索"
           className="w-full border border-edge bg-void px-3 py-2 text-lg text-ink placeholder:text-fog/60 focus:border-signal focus:outline-none"
         />
-        <ul className="mt-3 grid max-h-52 grid-cols-1 gap-1 overflow-y-auto sm:grid-cols-2" role="listbox" aria-label="检索结果">
+        <ul className="mt-3 grid max-h-52 grid-cols-1 gap-1 overflow-y-auto sm:grid-cols-2" aria-label="检索结果">
           {results.map((h) => (
             <li key={h.kingWenNumber}>
               <button
                 type="button"
-                role="option"
-                aria-selected={selected?.kingWenNumber === h.kingWenNumber}
+                aria-pressed={selected?.kingWenNumber === h.kingWenNumber}
                 onClick={() => selectHexagram(h)}
                 className="flex w-full items-center justify-between border border-edge bg-surface px-3 py-2 text-left text-base hover:border-signal data-[active=true]:border-signal"
                 data-active={selected?.kingWenNumber === h.kingWenNumber}

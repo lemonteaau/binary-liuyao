@@ -30,12 +30,29 @@ function loadSettings(): Settings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return defaults
-    const stored = JSON.parse(raw) as Partial<Settings>
+    const stored = JSON.parse(raw) as Partial<Settings> | null
+    if (!stored || typeof stored !== 'object' || Array.isArray(stored)) return defaults
     const fontSize = isFontSize(stored.fontSize) ? stored.fontSize : defaults.fontSize
     const aiInstructionPrompt = typeof stored.aiInstructionPrompt === 'string'
       ? stored.aiInstructionPrompt
       : defaults.aiInstructionPrompt
-    return { ...defaults, ...stored, fontSize, aiInstructionPrompt }
+    let timezone = defaults.timezone
+    if (typeof stored.timezone === 'string' && stored.timezone !== 'auto') {
+      try {
+        new Intl.DateTimeFormat('en', { timeZone: stored.timezone })
+        timezone = stored.timezone
+      } catch {
+        /* 损坏或已失效的时区设置回退到自动检测 */
+      }
+    }
+    return {
+      timezone,
+      fontSize,
+      aiInstructionPrompt,
+      aiInstruction: typeof stored.aiInstruction === 'boolean' ? stored.aiInstruction : defaults.aiInstruction,
+      animation: typeof stored.animation === 'boolean' ? stored.animation : defaults.animation,
+      screenFx: typeof stored.screenFx === 'boolean' ? stored.screenFx : defaults.screenFx,
+    }
   } catch {
     return defaults
   }
