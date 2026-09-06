@@ -16,6 +16,21 @@ afterEach(() => {
 })
 
 describe('AI 解卦教程', () => {
+  it('点击导航后隐藏 NEW，重新打开页面仍保持隐藏', () => {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ animation: false }))
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline in test')))
+    window.location.hash = '#/ai-guide'
+    const view = render(<App />)
+
+    expect(screen.getByText('NEW')).toBeTruthy()
+    fireEvent.click(screen.getByRole('link', { name: '[AI解卦]' }))
+    expect(screen.queryByText('NEW')).toBeNull()
+
+    view.unmount()
+    render(<App />)
+    expect(screen.queryByText('NEW')).toBeNull()
+  })
+
   it('从导航进入后展示完整流程并可一键启用推荐设置', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'clipboard', {

@@ -237,6 +237,24 @@ body {
   background: color-mix(in srgb, var(--color-signal) 4%, transparent);
 }
 
+.app-nav-new {
+  position: absolute;
+  top: -0.2rem;
+  right: 0.25rem;
+  border: 1px solid var(--color-signal);
+  border-radius: 3px;
+  padding: 1px 4px;
+  background: var(--color-signal);
+  color: var(--color-void);
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--color-signal) 20%, transparent);
+  pointer-events: none;
+}
+
 .app-nav-link[aria-current="page"]::after {
   position: absolute;
   right: 0.5rem;

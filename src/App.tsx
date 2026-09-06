@@ -194,6 +194,23 @@ function routeMetadata(pathname: string): { title: string; description: string }
 }
 
 function Header({ timezone }: { timezone: string }) {
+  const [showGuideBadge, setShowGuideBadge] = useState(() => {
+    try {
+      return localStorage.getItem('hex64.ai-guide.seen') !== '1'
+    } catch {
+      return true
+    }
+  })
+
+  function dismissGuideBadge() {
+    setShowGuideBadge(false)
+    try {
+      localStorage.setItem('hex64.ai-guide.seen', '1')
+    } catch {
+      // Keep the badge dismissed for this session when storage is unavailable.
+    }
+  }
+
   return (
     <header className="app-header border-b border-edge py-4">
       <Link
@@ -204,7 +221,7 @@ function Header({ timezone }: { timezone: string }) {
       </Link>
       <nav className="app-nav flex items-center gap-1 text-[0.9375rem] tracking-[0.16em]">
         <HeaderNavLink to="/">起卦</HeaderNavLink>
-        <HeaderNavLink to="/ai-guide">AI解卦</HeaderNavLink>
+        <HeaderNavLink to="/ai-guide" showNew={showGuideBadge} onClick={dismissGuideBadge}>AI解卦</HeaderNavLink>
         <HeaderNavLink to="/settings">设置</HeaderNavLink>
         <HeaderNavLink to="/about">关于</HeaderNavLink>
       </nav>
@@ -217,11 +234,17 @@ function Header({ timezone }: { timezone: string }) {
   )
 }
 
-function HeaderNavLink({ to, children }: { to: string; children: string }) {
+function HeaderNavLink({ to, children, showNew = false, onClick }: {
+  to: string
+  children: string
+  showNew?: boolean
+  onClick?: () => void
+}) {
   return (
     <NavLink
       to={to}
       end={to === '/'}
+      onClick={onClick}
       className={({ isActive }) =>
         `app-nav-link inline-flex min-h-11 items-center px-2 no-underline ${
           isActive ? 'text-signal' : 'text-fog'
@@ -229,6 +252,7 @@ function HeaderNavLink({ to, children }: { to: string; children: string }) {
       }
     >
       [{children}]
+      {showNew && <span className="app-nav-new" aria-hidden="true">NEW</span>}
     </NavLink>
   )
 }
