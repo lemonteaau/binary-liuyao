@@ -30,7 +30,11 @@ describe('AI 解卦教程', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: 'AI解卦教程' })).toBeTruthy()
     expect(screen.getByRole('link', { name: '[AI解卦]' }).getAttribute('aria-current')).toBe('page')
-    expect(screen.getAllByRole('img')).toHaveLength(6)
+    expect(document.querySelectorAll('.ai-guide-shot img')).toHaveLength(6)
+    expect(screen.getByRole('img', { name: 'Codex' })).toBeTruthy()
+    expect(screen.getByRole('img', { name: 'Claude Code' })).toBeTruthy()
+    expect(screen.getByRole('img', { name: 'OpenCode' })).toBeTruthy()
+    expect(screen.getByText(/Skills 功能可能需要会员订阅/)).toBeTruthy()
     expect(screen.queryByText('请调用六爻skill，根据以上六爻排盘进行分析，要分析的问题是：')).toBeNull()
 
     fireEvent.click(screen.getByRole('button', { name: '复制安装指令' }))

@@ -777,6 +777,32 @@ html[data-screen-fx="off"] .chroma {
   margin-bottom: 0.2rem;
 }
 
+.ai-guide-agent-title-row,
+.ai-guide-agent-logos {
+  display: flex;
+  align-items: center;
+}
+
+.ai-guide-agent-title-row {
+  flex-wrap: wrap;
+  gap: 0.7rem 1rem;
+}
+
+.ai-guide-agent-logos {
+  gap: 0.65rem;
+}
+
+.ai-guide-agent-logos img {
+  display: block;
+  width: 2.15rem;
+  height: 2.15rem;
+  object-fit: contain;
+}
+
+.ai-guide-agent-logos .ai-guide-agent-logo--monochrome {
+  filter: invert(92%);
+}
+
 .ai-guide-agent-install h2 {
   margin: 0;
   font-size: clamp(1.15rem, 3vw, 1.4rem);
@@ -849,6 +875,15 @@ html[data-screen-fx="off"] .chroma {
 
   .ai-guide-agent-install::before {
     display: none;
+  }
+
+  .ai-guide-agent-title-row {
+    gap: 0.55rem 0.75rem;
+  }
+
+  .ai-guide-agent-logos img {
+    width: 1.9rem;
+    height: 1.9rem;
   }
 
   .ai-guide-shot {

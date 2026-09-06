@@ -71,7 +71,14 @@ export function AiGuidePage() {
       <section className="ai-guide-agent-install ai-guide-agent-install--top" aria-labelledby="agent-install-title">
         <div className="ai-guide-agent-install-heading">
           <p className="ai-guide-kicker">CODE AGENT</p>
-          <h2 id="agent-install-title">使用Codex/Claude Code等Agent一键安装</h2>
+          <div className="ai-guide-agent-title-row">
+            <h2 id="agent-install-title">一键安装到</h2>
+            <div className="ai-guide-agent-logos" aria-label="支持 Codex、Claude Code 和 OpenCode">
+              <img className="ai-guide-agent-logo--monochrome" src="/agent-icons/codex.svg" alt="Codex" title="Codex" width="36" height="36" />
+              <img src="/agent-icons/claude-code.svg" alt="Claude Code" title="Claude Code" width="36" height="36" />
+              <img className="ai-guide-agent-logo--monochrome" src="/agent-icons/opencode.svg" alt="OpenCode" title="OpenCode" width="36" height="36" />
+            </div>
+          </div>
         </div>
         <CopyButton
           label="复制安装指令"
@@ -121,8 +128,10 @@ export function AiGuidePage() {
           height={676}
         />
         <p className="ai-guide-note">
-          如果你的 ChatGPT 里暂时看不到 Plugins 或 Skills，请检查当前账号或工作区是否已开放该功能。
-          OpenAI 将 Skill 定义为可复用的工作流，并支持在 ChatGPT 中用 @ 明确选择。
+          ChatGPT 的 Skills 功能可能需要会员订阅，并且会受账号或工作区权限影响。
+          如果暂时看不到 Plugins 或 Skills，也可以复制页面上方的安装指令，
+          尝试在 Codex、Claude Code、OpenCode 等支持 Agent Skills 的工具中安装和调用。
+          OpenAI 支持在 ChatGPT 中用 @ 明确选择 Skill。
           <a
             href="https://learn.chatgpt.com/zh-Hans/docs/skills-and-plugins"
             target="_blank"
@@ -216,8 +225,8 @@ export function AiGuidePage() {
         <p className="ai-guide-kicker">READY</p>
         <h2>现在可以试一卦</h2>
         <p>
-          AI 会先给出不含术语的总结，再展开课程内判断。六爻解读适合用来整理思路，
-          不应替代医疗、法律、财务或人身安全方面的专业意见。
+          AI 会先给出不含术语的总结，再展开判断。六爻解读只是工具，适合用来整理思路，
+          不应也不能替代医疗、法律、财务或人身安全等方面的专业意见。
         </p>
         <Link className="btn btn-primary" to="/">
           返回起卦
