@@ -56,8 +56,8 @@ describe('AI 解卦教程', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '复制安装指令' }))
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(expect.stringContaining('https://github.com/lemonteaau/liuyao-eight-lesson-interpreter')))
-    expect(track).toHaveBeenCalledWith('agent-install-copy-click', undefined)
-    expect(track).toHaveBeenCalledWith('agent-install-copy-success', undefined)
+    expect(track).toHaveBeenCalledWith('点击复制Agent安装指令', undefined)
+    expect(track).toHaveBeenCalledWith('成功复制Agent安装指令', undefined)
 
     fireEvent.click(screen.getByRole('button', { name: '一键设置' }))
     await waitFor(() => expect(screen.getByRole('button', { name: '已设置 ✓' })).toBeTruthy())
@@ -65,8 +65,8 @@ describe('AI 解卦教程', () => {
       aiInstruction: true,
       aiInstructionPrompt: '请调用六爻skill，根据以上六爻排盘进行分析，要分析的问题是：',
     })
-    expect(track).toHaveBeenCalledWith('ai-copy-setup-click', { requires_confirmation: false })
-    expect(track).toHaveBeenCalledWith('ai-copy-setup-success', { source: 'direct' })
+    expect(track).toHaveBeenCalledWith('点击设置AI解卦', { 是否需要确认: false })
+    expect(track).toHaveBeenCalledWith('成功设置AI解卦', { 设置来源: '直接设置' })
   })
 
   it('覆盖非默认提示词前要求确认', async () => {
@@ -85,11 +85,11 @@ describe('AI 解卦教程', () => {
     fireEvent.click(screen.getByRole('button', { name: '一键设置' }))
     expect(screen.getByRole('alert').textContent).toContain('检测到已有自定义提示词')
     expect(JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? '{}').aiInstructionPrompt).toBe('保留我的自定义提示词')
-    expect(track).toHaveBeenCalledWith('ai-copy-setup-click', { requires_confirmation: true })
+    expect(track).toHaveBeenCalledWith('点击设置AI解卦', { 是否需要确认: true })
 
     fireEvent.click(screen.getByRole('button', { name: '取消' }))
     expect(screen.queryByRole('alert')).toBeNull()
-    expect(track).toHaveBeenCalledWith('ai-copy-overwrite-cancel', undefined)
+    expect(track).toHaveBeenCalledWith('取消覆盖AI解卦设置', undefined)
 
     fireEvent.click(screen.getByRole('button', { name: '一键设置' }))
     fireEvent.click(screen.getByRole('button', { name: '覆盖并启用' }))
@@ -98,7 +98,7 @@ describe('AI 解卦教程', () => {
       aiInstruction: true,
       aiInstructionPrompt: '请调用六爻skill，根据以上六爻排盘进行分析，要分析的问题是：',
     })
-    expect(track).toHaveBeenCalledWith('ai-copy-overwrite-confirm', undefined)
-    expect(track).toHaveBeenCalledWith('ai-copy-setup-success', { source: 'overwrite' })
+    expect(track).toHaveBeenCalledWith('确认覆盖AI解卦设置', undefined)
+    expect(track).toHaveBeenCalledWith('成功设置AI解卦', { 设置来源: '覆盖设置' })
   })
 })

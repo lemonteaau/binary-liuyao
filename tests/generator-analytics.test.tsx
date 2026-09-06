@@ -29,9 +29,9 @@ describe('起卦页 Umami 事件', () => {
     fireEvent.click(manualButton)
     fireEvent.click(screen.getByRole('button', { name: /数字起卦/ }))
 
-    expect(track).toHaveBeenCalledWith('divination-method-select', { method: 'manual' })
-    expect(track).toHaveBeenCalledWith('divination-method-select', { method: 'number' })
-    expect(track.mock.calls.filter(([event]) => event === 'divination-method-select')).toHaveLength(2)
+    expect(track).toHaveBeenCalledWith('选择起卦方式', { 起卦方式: '手动排卦' })
+    expect(track).toHaveBeenCalledWith('选择起卦方式', { 起卦方式: '数字起卦' })
+    expect(track.mock.calls.filter(([event]) => event === '选择起卦方式')).toHaveLength(2)
   })
 
   it('记录最终起卦点击和成功生成', async () => {
@@ -46,8 +46,8 @@ describe('起卦页 Umami 事件', () => {
     fireEvent.click(screen.getByRole('button', { name: '生成排盘 →' }))
 
     await waitFor(() => expect(window.location.hash).toBe('#/result'))
-    expect(track).toHaveBeenCalledWith('divination-generate-click', { method: 'manual' })
-    expect(track).toHaveBeenCalledWith('divination-generate-success', { method: 'manual' })
+    expect(track).toHaveBeenCalledWith('点击生成排盘', { 起卦方式: '手动排卦' })
+    expect(track).toHaveBeenCalledWith('成功生成排盘', { 起卦方式: '手动排卦' })
   })
 
   it('摇币只记录首次开始，并记录重置时已完成的爻数', () => {
@@ -63,7 +63,7 @@ describe('起卦页 Umami 事件', () => {
     fireEvent.click(screen.getByRole('button', { name: '点击停止并记录初爻' }))
     fireEvent.click(screen.getByRole('button', { name: '重置本次摇卦' }))
 
-    expect(track.mock.calls.filter(([event]) => event === 'coin-divination-start')).toHaveLength(1)
-    expect(track).toHaveBeenCalledWith('coin-divination-reset', { completed_lines: 1 })
+    expect(track.mock.calls.filter(([event]) => event === '开始摇币起卦')).toHaveLength(1)
+    expect(track).toHaveBeenCalledWith('重置摇币起卦', { 已完成爻数: 1 })
   })
 })

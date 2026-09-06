@@ -34,7 +34,9 @@ export function AiGuidePage() {
     setAiInstructionPrompt(AI_PROMPT)
     setAiInstruction(true)
     setConfirmOverwrite(false)
-    trackEvent('ai-copy-setup-success', { source })
+    trackEvent('成功设置AI解卦', {
+      设置来源: source === 'direct' ? '直接设置' : '覆盖设置',
+    })
   }
 
   function requestAiGuideSetup() {
@@ -43,7 +45,7 @@ export function AiGuidePage() {
       && currentPrompt !== DEFAULT_AI_INSTRUCTION
       && currentPrompt !== AI_PROMPT
 
-    trackEvent('ai-copy-setup-click', { requires_confirmation: hasCustomPrompt })
+    trackEvent('点击设置AI解卦', { 是否需要确认: hasCustomPrompt })
 
     if (hasCustomPrompt) {
       setConfirmOverwrite(true)
@@ -54,12 +56,12 @@ export function AiGuidePage() {
   }
 
   function confirmAiGuideOverwrite() {
-    trackEvent('ai-copy-overwrite-confirm')
+    trackEvent('确认覆盖AI解卦设置')
     applyAiGuideSettings('overwrite')
   }
 
   function cancelAiGuideOverwrite() {
-    trackEvent('ai-copy-overwrite-cancel')
+    trackEvent('取消覆盖AI解卦设置')
     setConfirmOverwrite(false)
   }
 
@@ -98,8 +100,8 @@ export function AiGuidePage() {
           label="复制安装指令"
           getText={() => AGENT_INSTALL_PROMPT}
           className="ai-guide-agent-copy"
-          onCopyAttempt={() => trackEvent('agent-install-copy-click')}
-          onCopied={() => trackEvent('agent-install-copy-success')}
+          onCopyAttempt={() => trackEvent('点击复制Agent安装指令')}
+          onCopied={() => trackEvent('成功复制Agent安装指令')}
         />
       </section>
 

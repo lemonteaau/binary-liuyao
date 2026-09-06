@@ -107,6 +107,6 @@ describe('FullReading 显示模式与复制', () => {
       expect(writeText).toHaveBeenCalledTimes(1)
     })
     expect(writeText).toHaveBeenCalledWith(rawText)
-    expect(track).toHaveBeenCalledWith('chart-copy-success', { ai_instruction: true })
+    expect(track).toHaveBeenCalledWith('成功复制排盘', { 是否包含AI指令: true })
   })
 })

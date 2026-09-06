@@ -30,7 +30,7 @@ import {
 } from '@/features/coin-shake/model'
 import type { CoinShakeAction, CoinShakeState } from '@/features/coin-shake/model'
 import type { HanziDerivation } from '@/features/hanzi/derive'
-import { trackEvent } from '@/lib/analytics'
+import { trackDivinationEvent, trackEvent } from '@/lib/analytics'
 import { cn } from '@/lib/cn'
 import { getCurrentHexagramOrdinal } from '@/lib/hexagram-counter'
 import { scrollIntoViewOnMobile } from '@/lib/mobile-scroll'
@@ -123,7 +123,7 @@ export function GeneratorPage() {
       previousHeadingTopRef.current = generatorHeadingRef.current?.getBoundingClientRect().top ?? null
     }
     if (mode !== nextMode) {
-      trackEvent('divination-method-select', { method: nextMode })
+      trackDivinationEvent('选择起卦方式', nextMode)
     }
     setMode(nextMode)
   }
@@ -326,7 +326,7 @@ function EntropyPanel() {
 
   function generate() {
     if (rolling) return
-    trackEvent('divination-generate-click', { method: 'entropy' })
+    trackDivinationEvent('点击生成排盘', 'entropy')
     const lines = tossRawLines()
     const when = new Date()
     if (!settings.animation || !shouldAnimateGeneratorShift()) {
@@ -401,7 +401,7 @@ function CoinShakePanel({
     setError(null)
     if (state.phase === 'complete') {
       if (!completeLines) return
-      trackEvent('divination-generate-click', { method: 'coin' })
+      trackDivinationEvent('点击生成排盘', 'coin')
       const chart = generateChart({
         inputMethod: 'coin',
         rawLines: completeLines,
@@ -421,13 +421,13 @@ function CoinShakePanel({
       return
     }
     if (state.lines.length === 0) {
-      trackEvent('coin-divination-start')
+      trackEvent('开始摇币起卦')
     }
     dispatch({ type: 'start' })
   }
 
   function reset() {
-    trackEvent('coin-divination-reset', { completed_lines: state.lines.length })
+    trackEvent('重置摇币起卦', { 已完成爻数: state.lines.length })
     setError(null)
     dispatch({ type: 'reset' })
   }
@@ -720,7 +720,7 @@ function GenerateBar({
   const { resolvedTimezone } = useSettings()
 
   function generate() {
-    trackEvent('divination-generate-click', { method })
+    trackDivinationEvent('点击生成排盘', method)
     const chart = generateChart({
       inputMethod: method,
       rawLines,
@@ -946,7 +946,7 @@ function TimePanel() {
   const { resolvedTimezone } = useSettings()
 
   function generate() {
-    trackEvent('divination-generate-click', { method: 'time' })
+    trackDivinationEvent('点击生成排盘', 'time')
     const when = new Date()
     const { rawLines } = deriveTimeSeed(when, resolvedTimezone)
     const chart = generateChart({

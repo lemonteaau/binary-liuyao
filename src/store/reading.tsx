@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { claimHexagramOrdinal } from '@/lib/hexagram-counter'
-import { trackEvent } from '@/lib/analytics'
+import { trackDivinationEvent } from '@/lib/analytics'
 import { isReadingRecord } from '@/lib/reading-storage'
 import {
   recordBookmarkPromptReading,
@@ -162,7 +162,7 @@ export function ReadingProvider({ children }: { children: ReactNode }) {
       saveCurrent(record)
       if (shouldCount) {
         recordBookmarkPromptReading()
-        trackEvent('divination-generate-success', { method: chart.inputMethod })
+        trackDivinationEvent('成功生成排盘', chart.inputMethod)
       }
       return record
     },

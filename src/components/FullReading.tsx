@@ -63,8 +63,8 @@ export function FullReading({
                 label="复制排盘"
                 getText={() => rawText}
                 className="full-reading-copy-button"
-                onCopied={() => trackEvent('chart-copy-success', {
-                  ai_instruction: hasAiInstruction,
+                onCopied={() => trackEvent('成功复制排盘', {
+                  是否包含AI指令: hasAiInstruction,
                 })}
               >
                 <CopyIcon />
