@@ -8,6 +8,7 @@ import { GeneratorPage } from '@/pages/GeneratorPage'
 import { ResultPage } from '@/pages/ResultPage'
 import { SettingsPage } from '@/pages/SettingsPage'
 import { AboutPage } from '@/pages/AboutPage'
+import { AiGuidePage } from '@/pages/AiGuidePage'
 import { ReadingProvider } from '@/store/reading'
 import { SettingsProvider, useDisplaySettings } from '@/store/settings'
 
@@ -119,6 +120,7 @@ function Shell() {
               <Route path="/" element={<GeneratorPage />} />
               <Route path="/result" element={<ResultPage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/ai-guide" element={<AiGuidePage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="*" element={<GeneratorPage />} />
             </Routes>
@@ -173,6 +175,11 @@ function routeMetadata(pathname: string): { title: string; description: string }
         title: '设置 - HEX//64 六爻排盘',
         description: '设置 HEX//64 六爻排盘的时区、字号、动效与排盘复制选项。',
       }
+    case '/ai-guide':
+      return {
+        title: '用 AI 解读六爻排盘 - HEX//64 教程',
+        description: '图文教程：在 ChatGPT 安装八讲六爻解读 Skill，把 HEX//64 生成的完整排盘交给 AI 分析。',
+      }
     case '/about':
       return {
         title: '关于 - HEX//64 六爻排盘',
@@ -197,6 +204,7 @@ function Header({ timezone }: { timezone: string }) {
       </Link>
       <nav className="app-nav flex items-center gap-1 text-[0.9375rem] tracking-[0.16em]">
         <HeaderNavLink to="/">起卦</HeaderNavLink>
+        <HeaderNavLink to="/ai-guide">AI解卦</HeaderNavLink>
         <HeaderNavLink to="/settings">设置</HeaderNavLink>
         <HeaderNavLink to="/about">关于</HeaderNavLink>
       </nav>

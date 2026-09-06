@@ -483,6 +483,379 @@ html[data-screen-fx="off"] .chroma {
   border: 1px solid var(--color-edge);
 }
 
+/* AI 解卦教程：把安装与使用流程排成一份可顺着读完的终端手册 */
+.ai-guide {
+  --guide-line: color-mix(in srgb, var(--color-signal) 42%, var(--color-edge));
+  max-width: 58rem;
+  margin-inline: auto;
+}
+
+.ai-guide a:not(.btn) {
+  margin-inline: 0.22em;
+  color: var(--color-signal);
+  text-underline-offset: 0.2em;
+}
+
+.ai-guide-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--color-edge-bright);
+  padding: clamp(1.4rem, 4vw, 3rem);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--color-signal) 5%, transparent) 1px, transparent 1px) 0 0 / 2rem 100%,
+    linear-gradient(color-mix(in srgb, var(--color-signal) 5%, transparent) 1px, transparent 1px) 0 0 / 100% 2rem,
+    radial-gradient(circle at 88% 18%, color-mix(in srgb, var(--color-signal) 13%, transparent), transparent 28%),
+    var(--color-panel);
+  box-shadow: inset 0 0 38px rgba(0, 0, 0, 0.42);
+}
+
+.ai-guide-hero::after {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-top: 1px solid var(--color-signal);
+  border-right: 1px solid var(--color-signal);
+  content: "";
+  opacity: 0.72;
+}
+
+.ai-guide-kicker {
+  margin: 0 0 0.55rem;
+  color: var(--color-signal);
+  font-size: 0.8125rem;
+  letter-spacing: 0.28em;
+}
+
+.ai-guide-hero h1 {
+  position: relative;
+  max-width: 10em;
+  margin: 0;
+  font-size: clamp(2rem, 6vw, 4.25rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: 0.08em;
+}
+
+.ai-guide-hero > p:not(.ai-guide-kicker) {
+  max-width: 43rem;
+  margin-top: 1.25rem;
+  color: var(--color-fog);
+}
+
+.ai-guide-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.ai-guide-step {
+  position: relative;
+  margin-bottom: 3.5rem;
+}
+
+.ai-guide-step::before {
+  position: absolute;
+  top: 3.6rem;
+  bottom: -3.5rem;
+  left: 1.5rem;
+  width: 1px;
+  background: linear-gradient(var(--guide-line), transparent);
+  content: "";
+}
+
+.ai-guide-step > header {
+  display: flex;
+  position: relative;
+  z-index: 1;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.15rem;
+}
+
+.ai-guide-step-number {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--color-signal);
+  background: var(--color-void);
+  color: var(--color-signal);
+  font-size: 1.125rem;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--color-signal) 12%, transparent);
+}
+
+.ai-guide-step > header p {
+  margin: 0 0 0.1rem;
+  color: var(--color-fog);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+}
+
+.ai-guide-step h2 {
+  margin: 0;
+  font-size: clamp(1.25rem, 3vw, 1.65rem);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.ai-guide-step-body {
+  margin-left: 4rem;
+}
+
+.ai-guide-step-body > p {
+  max-width: 48rem;
+  margin-block: 0 1rem;
+  color: var(--color-fog);
+}
+
+.ai-guide-step-body b {
+  color: var(--color-ink);
+  font-weight: 400;
+}
+
+.ai-guide-shot {
+  margin: 1.15rem 0 1.75rem;
+}
+
+.ai-guide-shot--compact {
+  width: min(100%, 30rem);
+}
+
+.ai-guide-shot--medium {
+  width: min(100%, 42rem);
+}
+
+.ai-guide-shot > div {
+  overflow: hidden;
+  border: 1px solid var(--color-edge-bright);
+  padding: clamp(0.25rem, 1vw, 0.55rem);
+  background: #020403;
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.32),
+    0 0 18px color-mix(in srgb, var(--color-signal) 6%, transparent);
+}
+
+.ai-guide-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.ai-guide-shot figcaption {
+  margin-top: 0.55rem;
+  color: var(--color-fog);
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+}
+
+.ai-guide-shot figcaption::before {
+  margin-right: 0.55rem;
+  color: var(--color-signal);
+  content: "└─";
+}
+
+.ai-guide-example,
+.ai-guide-note {
+  border-left: 2px solid var(--color-signal);
+  padding: 0.9rem 1rem;
+  background: color-mix(in srgb, var(--color-signal) 5%, var(--color-surface));
+}
+
+.ai-guide-quick-setup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 1rem;
+  border: 1px solid var(--color-edge-bright);
+  padding: 1rem;
+  background: color-mix(in srgb, var(--color-signal) 5%, var(--color-surface));
+}
+
+.ai-guide-quick-setup span {
+  color: var(--color-signal);
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+}
+
+.ai-guide-quick-setup p {
+  margin: 0.25rem 0 0;
+  color: var(--color-fog);
+  font-size: 0.9375rem;
+}
+
+.ai-guide-overwrite-confirm {
+  margin: -0.25rem 0 1rem;
+  border-left: 2px solid var(--color-flux);
+  padding: 0.9rem 1rem;
+  background: color-mix(in srgb, var(--color-flux) 6%, var(--color-surface));
+}
+
+.ai-guide-overwrite-confirm p {
+  margin: 0 0 0.75rem;
+  color: var(--color-ink);
+}
+
+.ai-guide-overwrite-confirm > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.ai-guide-overwrite-confirm .btn {
+  min-height: 2.5rem;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.ai-guide-example {
+  max-width: 44rem;
+  margin-bottom: 1rem;
+}
+
+.ai-guide-example span {
+  color: var(--color-signal);
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+}
+
+.ai-guide-example p {
+  margin: 0.35rem 0 0;
+}
+
+.ai-guide-step-body > .ai-guide-note {
+  max-width: 100%;
+  margin-top: 1.25rem;
+  color: var(--color-fog);
+  font-size: 0.9375rem;
+}
+
+.ai-guide-agent-install {
+  display: flex;
+  position: relative;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: -0.5rem 0 3.5rem 4rem;
+  border: 1px solid var(--color-edge-bright);
+  padding: clamp(1rem, 3vw, 1.5rem);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--color-signal) 7%, transparent), transparent 48%),
+    var(--color-panel);
+  box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.3);
+}
+
+.ai-guide-agent-install::before {
+  position: absolute;
+  top: 1.5rem;
+  left: -4rem;
+  width: 4rem;
+  height: 1px;
+  background: var(--guide-line);
+  content: "";
+}
+
+.ai-guide-agent-install--top {
+  margin: 1rem 0 2rem;
+}
+
+.ai-guide-agent-install--top::before {
+  display: none;
+}
+
+.ai-guide-agent-install-heading {
+  min-width: 0;
+}
+
+.ai-guide-agent-install-heading .ai-guide-kicker {
+  margin-bottom: 0.2rem;
+}
+
+.ai-guide-agent-install h2 {
+  margin: 0;
+  font-size: clamp(1.15rem, 3vw, 1.4rem);
+  letter-spacing: 0.08em;
+}
+
+.ai-guide-agent-copy {
+  min-height: 2.5rem;
+  flex: 0 0 auto;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.ai-guide-agent-install > .panel {
+  flex-basis: 100%;
+}
+
+.ai-guide-finish {
+  margin-bottom: 1rem;
+  border: 1px solid var(--color-signal);
+  padding: clamp(1.4rem, 4vw, 2.4rem);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-signal) 8%, transparent), transparent 55%);
+  box-shadow: 0 0 28px color-mix(in srgb, var(--color-signal) 8%, transparent);
+}
+
+.ai-guide-finish h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  letter-spacing: 0.12em;
+}
+
+.ai-guide-finish > p:not(.ai-guide-kicker) {
+  max-width: 44rem;
+  margin-block: 0.75rem 1.25rem;
+  color: var(--color-fog);
+}
+
+@media (max-width: 639px) {
+  .ai-guide {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ai-guide-hero {
+    margin-bottom: 2rem;
+  }
+
+  .ai-guide-step::before {
+    display: none;
+  }
+
+  .ai-guide-step-number {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .ai-guide-step-body {
+    margin-left: 0;
+  }
+
+  .ai-guide-agent-install {
+    margin-left: 0;
+  }
+
+  .ai-guide-agent-install--top {
+    order: 1;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .ai-guide-agent-install::before {
+    display: none;
+  }
+
+  .ai-guide-shot {
+    margin-inline: -0.25rem;
+  }
+}
+
 .ritual-guide {
   display: flex;
   align-items: center;
