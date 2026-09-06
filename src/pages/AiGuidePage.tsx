@@ -72,8 +72,8 @@ export function AiGuidePage() {
         <div className="ai-guide-agent-install-heading">
           <p className="ai-guide-kicker">CODE AGENT</p>
           <div className="ai-guide-agent-title-row">
-            <h2 id="agent-install-title">一键安装到</h2>
-            <div className="ai-guide-agent-logos" aria-label="支持 Codex、Claude Code 和 OpenCode">
+            <h2 id="agent-install-title">一键安装到Agent</h2>
+            <div className="ai-guide-agent-logos" aria-label="支持 Codex、Claude Code 和 OpenCode等Agents">
               <img className="ai-guide-agent-logo--monochrome" src="/agent-icons/codex.svg" alt="Codex" title="Codex" width="36" height="36" />
               <img src="/agent-icons/claude-code.svg" alt="Claude Code" title="Claude Code" width="36" height="36" />
               <img className="ai-guide-agent-logo--monochrome" src="/agent-icons/opencode.svg" alt="OpenCode" title="OpenCode" width="36" height="36" />
@@ -130,15 +130,7 @@ export function AiGuidePage() {
         <p className="ai-guide-note">
           ChatGPT 的 Skills 功能可能需要会员订阅，并且会受账号或工作区权限影响。
           如果暂时看不到 Plugins 或 Skills，也可以复制页面上方的安装指令，
-          尝试在 Codex、Claude Code、OpenCode 等支持 Agent Skills 的工具中安装和调用。
-          OpenAI 支持在 ChatGPT 中用 @ 明确选择 Skill。
-          <a
-            href="https://learn.chatgpt.com/zh-Hans/docs/skills-and-plugins"
-            target="_blank"
-            rel="noreferrer"
-          >
-            查看官方说明
-          </a>
+          尝试在 Codex、Claude Code、OpenCode 等工具中安装和调用。
         </p>
       </GuideStep>
 
@@ -206,6 +198,9 @@ export function AiGuidePage() {
         </div>
         <p>
           问题最好同时写清楚：<b>谁在问、问什么人或事、最关心的结果、时间范围</b>。
+          <br/>
+          部分问题，比如感情相关，最好写清楚<b>问题中所有涉及到的人的性别</b>。
+          <br/>
           比起“最近运势如何”，具体问题更容易得到可核对的分析。
         </p>
         <GuideShot
