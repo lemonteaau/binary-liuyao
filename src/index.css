@@ -259,8 +259,9 @@ body {
 
 .homepage-counter-number {
   display: inline-flex;
-  width: 5ch;
-  flex: 0 0 5ch;
+  min-width: 5ch;
+  flex: 0 0 auto;
+  padding-inline: 0.35em;
   justify-content: center;
   white-space: nowrap;
 }

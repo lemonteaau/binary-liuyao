@@ -267,18 +267,21 @@ function HomepageCounter() {
       aria-live="polite"
       aria-busy={status === 'loading'}
     >
-      <span className="inline-flex items-center align-middle whitespace-nowrap">
-        自上线以来共完成<strong
-          className="homepage-counter-number text-lg font-bold tabular-nums text-signal"
-          data-loading={status === 'loading'}
-          title={status === 'unavailable' ? '暂时无法获取起卦总数' : undefined}
-        >
-          {status === 'ready' && ordinal !== null
-            ? ordinal.toLocaleString('zh-CN')
-            : status === 'loading'
-              ? '···'
-              : '—'}
-        </strong>次起卦
+      <span className="inline-flex flex-wrap items-center justify-center align-middle whitespace-nowrap">
+        <span>自上线以来共完成</span>
+        <span className="inline-flex items-center">
+          <strong
+            className="homepage-counter-number text-lg font-bold tabular-nums text-signal"
+            data-loading={status === 'loading'}
+            title={status === 'unavailable' ? '暂时无法获取起卦总数' : undefined}
+          >
+            {status === 'ready' && ordinal !== null
+              ? ordinal.toLocaleString('zh-CN')
+              : status === 'loading'
+                ? '···'
+                : '—'}
+          </strong>次起卦
+        </span>
       </span>
     </p>
   )
