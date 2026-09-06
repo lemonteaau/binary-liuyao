@@ -33,6 +33,8 @@ describe('AI 解卦教程', () => {
 
   it('从导航进入后展示完整流程并可一键启用推荐设置', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined)
+    const track = vi.fn()
+    vi.stubGlobal('umami', { track })
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
       value: { writeText },
@@ -54,6 +56,8 @@ describe('AI 解卦教程', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '复制安装指令' }))
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(expect.stringContaining('https://github.com/lemonteaau/liuyao-eight-lesson-interpreter')))
+    expect(track).toHaveBeenCalledWith('agent-install-copy-click', undefined)
+    expect(track).toHaveBeenCalledWith('agent-install-copy-success', undefined)
 
     fireEvent.click(screen.getByRole('button', { name: '一键设置' }))
     await waitFor(() => expect(screen.getByRole('button', { name: '已设置 ✓' })).toBeTruthy())
@@ -61,9 +65,13 @@ describe('AI 解卦教程', () => {
       aiInstruction: true,
       aiInstructionPrompt: '请调用六爻skill，根据以上六爻排盘进行分析，要分析的问题是：',
     })
+    expect(track).toHaveBeenCalledWith('ai-copy-setup-click', { requires_confirmation: false })
+    expect(track).toHaveBeenCalledWith('ai-copy-setup-success', { source: 'direct' })
   })
 
   it('覆盖非默认提示词前要求确认', async () => {
+    const track = vi.fn()
+    vi.stubGlobal('umami', { track })
     localStorage.setItem(SETTINGS_KEY, JSON.stringify({
       animation: false,
       aiInstruction: true,
@@ -77,12 +85,20 @@ describe('AI 解卦教程', () => {
     fireEvent.click(screen.getByRole('button', { name: '一键设置' }))
     expect(screen.getByRole('alert').textContent).toContain('检测到已有自定义提示词')
     expect(JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? '{}').aiInstructionPrompt).toBe('保留我的自定义提示词')
+    expect(track).toHaveBeenCalledWith('ai-copy-setup-click', { requires_confirmation: true })
 
+    fireEvent.click(screen.getByRole('button', { name: '取消' }))
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(track).toHaveBeenCalledWith('ai-copy-overwrite-cancel', undefined)
+
+    fireEvent.click(screen.getByRole('button', { name: '一键设置' }))
     fireEvent.click(screen.getByRole('button', { name: '覆盖并启用' }))
     await waitFor(() => expect(screen.getByRole('button', { name: '已设置 ✓' })).toBeTruthy())
     expect(JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? '{}')).toMatchObject({
       aiInstruction: true,
       aiInstructionPrompt: '请调用六爻skill，根据以上六爻排盘进行分析，要分析的问题是：',
     })
+    expect(track).toHaveBeenCalledWith('ai-copy-overwrite-confirm', undefined)
+    expect(track).toHaveBeenCalledWith('ai-copy-setup-success', { source: 'overwrite' })
   })
 })

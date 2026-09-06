@@ -7,6 +7,7 @@ interface CopyButtonProps {
   getText: () => string
   variant?: 'primary' | 'default'
   className?: string
+  onCopyAttempt?: () => void
   onCopied?: () => void
   children?: ReactNode
 }
@@ -18,6 +19,7 @@ export function CopyButton({
   getText,
   variant = 'default',
   className,
+  onCopyAttempt,
   onCopied,
   children,
 }: CopyButtonProps) {
@@ -30,6 +32,7 @@ export function CopyButton({
   }, [])
 
   async function copy() {
+    onCopyAttempt?.()
     const text = getText()
     try {
       if (!navigator.clipboard?.writeText) throw new Error('no clipboard')

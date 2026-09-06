@@ -209,6 +209,7 @@ export function ResultPage() {
       <FullReading
         chart={chart}
         rawText={rawText}
+        hasAiInstruction={hasAiInstruction}
         sessionId={current.id}
         ordinal={current.ordinal}
       />

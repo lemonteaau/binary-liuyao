@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CopyButton } from '@/components/CopyButton'
 import { DEFAULT_AI_INSTRUCTION } from '@/formatters/rawText'
+import { trackEvent } from '@/lib/analytics'
 import { useSettings } from '@/store/settings'
 
 const SKILL_REPOSITORY =
@@ -29,10 +30,11 @@ export function AiGuidePage() {
   const isAiGuideConfigured = settings.aiInstruction
     && settings.aiInstructionPrompt === AI_PROMPT
 
-  function applyAiGuideSettings() {
+  function applyAiGuideSettings(source: 'direct' | 'overwrite') {
     setAiInstructionPrompt(AI_PROMPT)
     setAiInstruction(true)
     setConfirmOverwrite(false)
+    trackEvent('ai-copy-setup-success', { source })
   }
 
   function requestAiGuideSetup() {
@@ -41,12 +43,24 @@ export function AiGuidePage() {
       && currentPrompt !== DEFAULT_AI_INSTRUCTION
       && currentPrompt !== AI_PROMPT
 
+    trackEvent('ai-copy-setup-click', { requires_confirmation: hasCustomPrompt })
+
     if (hasCustomPrompt) {
       setConfirmOverwrite(true)
       return
     }
 
-    applyAiGuideSettings()
+    applyAiGuideSettings('direct')
+  }
+
+  function confirmAiGuideOverwrite() {
+    trackEvent('ai-copy-overwrite-confirm')
+    applyAiGuideSettings('overwrite')
+  }
+
+  function cancelAiGuideOverwrite() {
+    trackEvent('ai-copy-overwrite-cancel')
+    setConfirmOverwrite(false)
   }
 
   return (
@@ -84,6 +98,8 @@ export function AiGuidePage() {
           label="复制安装指令"
           getText={() => AGENT_INSTALL_PROMPT}
           className="ai-guide-agent-copy"
+          onCopyAttempt={() => trackEvent('agent-install-copy-click')}
+          onCopied={() => trackEvent('agent-install-copy-success')}
         />
       </section>
 
@@ -157,10 +173,10 @@ export function AiGuidePage() {
           <div className="ai-guide-overwrite-confirm" role="alert">
             <p>检测到已有自定义提示词。是否用教程推荐内容覆盖？</p>
             <div>
-              <button type="button" className="btn btn-primary" onClick={applyAiGuideSettings}>
+              <button type="button" className="btn btn-primary" onClick={confirmAiGuideOverwrite}>
                 覆盖并启用
               </button>
-              <button type="button" className="btn" onClick={() => setConfirmOverwrite(false)}>
+              <button type="button" className="btn" onClick={cancelAiGuideOverwrite}>
                 取消
               </button>
             </div>

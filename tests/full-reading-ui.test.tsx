@@ -79,12 +79,16 @@ describe('FullReading 显示模式与复制', () => {
 
   it('可切换为纯文字，并复制完整的排盘文本', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined)
+    const track = vi.fn()
+    vi.stubGlobal('umami', { track })
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
       value: { writeText },
     })
     const { chart, rawText } = testReading()
-    const { container } = render(<FullReading chart={chart} rawText={rawText} />)
+    const { container } = render(
+      <FullReading chart={chart} rawText={rawText} hasAiInstruction />,
+    )
 
     fireEvent.click(screen.getByRole('button', { name: '纯文字' }))
 
@@ -103,5 +107,6 @@ describe('FullReading 显示模式与复制', () => {
       expect(writeText).toHaveBeenCalledTimes(1)
     })
     expect(writeText).toHaveBeenCalledWith(rawText)
+    expect(track).toHaveBeenCalledWith('chart-copy-success', { ai_instruction: true })
   })
 })

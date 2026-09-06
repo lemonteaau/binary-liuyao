@@ -3,6 +3,7 @@ import { CopyButton } from '@/components/CopyButton'
 import { ShareImageButton } from '@/components/ShareImageButton'
 import { ZhouyiClassics } from '@/components/ZhouyiClassics'
 import { TRIGRAMS } from '@/data/trigrams'
+import { trackEvent } from '@/lib/analytics'
 import { cn } from '@/lib/cn'
 import { formatTimezoneWithOffset, parseGregorianToDate } from '@/lib/timezone-display'
 import type { ChartData, ChartLine, HexStateInfo, NajiaLine } from '@/types'
@@ -14,11 +15,13 @@ type ReadingMode = 'structured' | 'plain'
 export function FullReading({
   chart,
   rawText,
+  hasAiInstruction = false,
   sessionId,
   ordinal,
 }: {
   chart: ChartData
   rawText: string
+  hasAiInstruction?: boolean
   sessionId?: string
   ordinal?: number | null
 }) {
@@ -60,6 +63,9 @@ export function FullReading({
                 label="复制排盘"
                 getText={() => rawText}
                 className="full-reading-copy-button"
+                onCopied={() => trackEvent('chart-copy-success', {
+                  ai_instruction: hasAiInstruction,
+                })}
               >
                 <CopyIcon />
                 <span>复制排盘</span>

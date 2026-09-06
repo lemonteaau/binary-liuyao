@@ -30,6 +30,7 @@ import {
 } from '@/features/coin-shake/model'
 import type { CoinShakeAction, CoinShakeState } from '@/features/coin-shake/model'
 import type { HanziDerivation } from '@/features/hanzi/derive'
+import { trackEvent } from '@/lib/analytics'
 import { cn } from '@/lib/cn'
 import { getCurrentHexagramOrdinal } from '@/lib/hexagram-counter'
 import { scrollIntoViewOnMobile } from '@/lib/mobile-scroll'
@@ -120,6 +121,9 @@ export function GeneratorPage() {
   const selectMode = (nextMode: InputMethod) => {
     if (!mode && shouldAnimateGeneratorShift()) {
       previousHeadingTopRef.current = generatorHeadingRef.current?.getBoundingClientRect().top ?? null
+    }
+    if (mode !== nextMode) {
+      trackEvent('divination-method-select', { method: nextMode })
     }
     setMode(nextMode)
   }
@@ -322,6 +326,7 @@ function EntropyPanel() {
 
   function generate() {
     if (rolling) return
+    trackEvent('divination-generate-click', { method: 'entropy' })
     const lines = tossRawLines()
     const when = new Date()
     if (!settings.animation || !shouldAnimateGeneratorShift()) {
@@ -396,6 +401,7 @@ function CoinShakePanel({
     setError(null)
     if (state.phase === 'complete') {
       if (!completeLines) return
+      trackEvent('divination-generate-click', { method: 'coin' })
       const chart = generateChart({
         inputMethod: 'coin',
         rawLines: completeLines,
@@ -414,10 +420,14 @@ function CoinShakePanel({
       }
       return
     }
+    if (state.lines.length === 0) {
+      trackEvent('coin-divination-start')
+    }
     dispatch({ type: 'start' })
   }
 
   function reset() {
+    trackEvent('coin-divination-reset', { completed_lines: state.lines.length })
     setError(null)
     dispatch({ type: 'reset' })
   }
@@ -710,6 +720,7 @@ function GenerateBar({
   const { resolvedTimezone } = useSettings()
 
   function generate() {
+    trackEvent('divination-generate-click', { method })
     const chart = generateChart({
       inputMethod: method,
       rawLines,
@@ -935,6 +946,7 @@ function TimePanel() {
   const { resolvedTimezone } = useSettings()
 
   function generate() {
+    trackEvent('divination-generate-click', { method: 'time' })
     const when = new Date()
     const { rawLines } = deriveTimeSeed(when, resolvedTimezone)
     const chart = generateChart({
