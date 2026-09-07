@@ -96,7 +96,7 @@ export function FeedbackInvitation({ suppressed = false }: { suppressed?: boolea
       </button>
       <h2 id="feedback-invitation-title">用了一阵子，还顺手吗？</h2>
       <p>
-        如果有哪里让你困惑，或有什么很想要的功能，欢迎留下你的建议。
+        如果有哪里让你困惑，或者有很想要的功能，欢迎留下你的建议。
       </p>
       <div className="feedback-invitation-actions">
         <button type="button" className="feedback-invitation-later" onClick={closeInvitation}>
