@@ -161,7 +161,7 @@ function Shell() {
 }
 
 const DEFAULT_DESCRIPTION =
-  'HEX//64 是免费的在线六爻排盘工具，支持摇币、电脑、手动、卦名、数字、时间和汉字起卦，自动生成纳甲、六亲、六神、世应、伏神、卦身、神煞与四柱；所有计算均在浏览器本地完成。'
+  'HEX//64 是免费开源的在线六爻排盘工具，采用 MIT 许可证，源码公开，可自行部署。支持七种起卦方式及纳甲、六亲、六神、世应排盘；无需注册，排盘计算在浏览器本地完成。'
 
 function routeMetadata(pathname: string): { title: string; description: string } {
   switch (pathname) {
@@ -183,11 +183,11 @@ function routeMetadata(pathname: string): { title: string; description: string }
     case '/about':
       return {
         title: '关于 - HEX//64 六爻排盘',
-        description: '了解 HEX//64 在线六爻排盘的起卦算法、排盘内容、隐私保护与分享方式。',
+        description: '了解 HEX//64 免费开源六爻排盘工具：MIT 许可证、GitHub 源码、自行部署、起卦算法与本地计算隐私保护。',
       }
     default:
       return {
-        title: '六爻排盘｜免费在线起卦、纳甲装卦 - HEX//64',
+        title: '六爻排盘｜免费开源在线起卦、纳甲装卦 - HEX//64',
         description: DEFAULT_DESCRIPTION,
       }
   }

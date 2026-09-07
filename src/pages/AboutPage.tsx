@@ -31,6 +31,13 @@ export function AboutPage() {
 
       <Section tag="产品说明">
         <p className="mt-2">
+          HEX//64 是免费开源的六爻排盘工具，采用 MIT 许可证。你可以查看源码与排盘算法、修改代码，
+          也可以自行部署。源码见{' '}
+          <a className="text-signal underline underline-offset-4" href="https://github.com/lemonteaau/binary-liuyao" target="_blank" rel="noopener noreferrer">
+            GitHub 开源仓库
+          </a>。
+        </p>
+        <p className="mt-2">
           所有排盘计算均在浏览器本地完成。本应用不会将起卦内容、输入数字、汉字或卦象上传至任何服务器；
           仅使用自托管 Umami 进行匿名访问统计，且不统计分享链接中的片段参数。
         </p>
