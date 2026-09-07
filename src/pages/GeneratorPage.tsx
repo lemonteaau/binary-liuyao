@@ -650,11 +650,13 @@ export function LineEditor({ draft, setDraft }: LineEditorProps) {
         const mutating = draft[i]! >= 9 || draft[i] === 6
         return (
           <div key={i} className="flex items-center gap-2 sm:gap-3">
-            <span className="w-6 text-right text-[0.875rem] text-fog">L{i + 1}</span>
+            <span className="w-8 shrink-0 text-right text-[0.875rem] text-fog">
+              {['初爻', '二爻', '三爻', '四爻', '五爻', '六爻'][i]}
+            </span>
             <button
               type="button"
               onClick={() => toggleYang(i)}
-              className="flex h-9 flex-1 items-center gap-[14%] border border-edge bg-surface px-3 hover:border-edge-bright"
+              className="flex h-9 min-w-0 flex-1 items-center gap-[14%] border border-edge bg-surface px-3 transition-colors hover:border-edge-bright hover:bg-edge/30"
               aria-label={`第 ${i + 1} 爻：${yang ? '阳' : '阴'}，点击切换阴阳`}
             >
               {yang ? (
@@ -672,14 +674,16 @@ export function LineEditor({ draft, setDraft }: LineEditorProps) {
               aria-pressed={mutating}
               aria-label={`第 ${i + 1} 爻为${mutating ? '动爻' : '静爻'}，点击切换`}
               className={cn(
-                'w-16 border px-0 py-2 text-[0.875rem] tracking-[0.14em]',
-                mutating ? 'border-flux text-flux' : 'border-edge text-fog',
+                'relative flex h-9 w-20 shrink-0 items-center justify-center whitespace-nowrap border text-[0.875rem] leading-none transition-colors',
+                mutating
+                  ? 'border-flux bg-flux/10 text-flux hover:bg-flux/20 hover:border-flux/70'
+                  : 'border-edge bg-surface text-fog hover:border-edge-bright hover:bg-edge/30 hover:text-ink',
               )}
             >
-              {mutating ? '◉ 动爻' : '静爻'}
+              <span>{mutating ? '动爻' : '静爻'}</span>
             </button>
-            <span className="w-4 text-[0.9375rem] tabular-nums text-fog" aria-hidden="true">
-              {yang ? 1 : 0}
+            <span className="w-8 shrink-0 whitespace-nowrap text-[0.875rem] text-fog">
+              {mutating ? '老' : '少'}{yang ? '阳' : '阴'}
             </span>
           </div>
         )
@@ -691,7 +695,9 @@ export function LineEditor({ draft, setDraft }: LineEditorProps) {
 function ManualPanel({ draft, setDraft }: LineEditorProps) {
   return (
     <Panel tag="手动排卦">
-      <LineEditor draft={draft} setDraft={setDraft} />
+      <div className="mx-auto w-full md:max-w-lg">
+        <LineEditor draft={draft} setDraft={setDraft} />
+      </div>
       <div className="mt-4 flex gap-2">
         <button type="button" className="btn" onClick={() => setDraft(tossRawLines())}>
           随机填充
