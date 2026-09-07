@@ -187,7 +187,7 @@ function routeMetadata(pathname: string): { title: string; description: string }
       }
     default:
       return {
-        title: '六爻排盘｜免费开源在线起卦、纳甲装卦 - HEX//64',
+        title: '六爻排盘｜免费在线起卦、纳甲装卦 - HEX//64',
         description: DEFAULT_DESCRIPTION,
       }
   }
