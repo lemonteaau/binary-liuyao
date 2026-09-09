@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { claimHexagramOrdinal } from '@/lib/hexagram-counter'
+import { claimHexagramOrdinal, shouldClaimHexagramOrdinal } from '@/lib/hexagram-counter'
 import { trackDivinationEvent } from '@/lib/analytics'
 import { isReadingRecord } from '@/lib/reading-storage'
 import {
@@ -143,15 +143,16 @@ export function ReadingProvider({ children }: { children: ReactNode }) {
 
   const commitReading = useCallback(
     (chart: ChartData, rawLines: ReadingRecord['rawLines'], options: CommitReadingOptions = {}) => {
-      const shouldCount = !options.fromShareLink && chart.inputMethod !== 'link'
+      const isNewReading = !options.fromShareLink && chart.inputMethod !== 'link'
+      const shouldClaimCounter = isNewReading && shouldClaimHexagramOrdinal()
       const record: ReadingRecord = {
         id: options.readingId ?? makeId(),
         chart,
         rawLines,
         hanziSeed: options.hanziSeed,
         source: options.fromShareLink ? 'share-link' : undefined,
-        counterEventId: shouldCount ? crypto.randomUUID() : undefined,
-        ordinal: shouldCount ? null : options.ordinal,
+        counterEventId: shouldClaimCounter ? crypto.randomUUID() : undefined,
+        ordinal: shouldClaimCounter ? null : options.ordinal,
       }
       setCurrent(record)
       setHistory((prev) => {
@@ -160,7 +161,7 @@ export function ReadingProvider({ children }: { children: ReactNode }) {
         return next
       })
       saveCurrent(record)
-      if (shouldCount) {
+      if (isNewReading) {
         recordBookmarkPromptReading()
         trackDivinationEvent('成功生成排盘', chart.inputMethod)
       }
