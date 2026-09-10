@@ -97,22 +97,6 @@ function Shell() {
         incoming page immediately.
       */}
       <div key={location.key} className="crt-content">
-        <button
-          type="button"
-          className="skip-link"
-          onClick={() => {
-            window.setTimeout(() => {
-              const heading = document.querySelector<HTMLElement>('#main-content h1')
-                ?? document.getElementById('main-content')
-              if (!heading) return
-              heading.tabIndex = -1
-              heading.focus()
-              document.getElementById('main-content')?.scrollIntoView({ block: 'start' })
-            }, 0)
-          }}
-        >
-          跳到主要内容
-        </button>
         <div className="mx-auto flex min-h-full max-w-5xl flex-col px-4 sm:px-6">
           <Header timezone={resolvedTimezone} />
           <main id="main-content" tabIndex={-1} className="flex-1 pb-10">
@@ -187,7 +171,7 @@ function routeMetadata(pathname: string): { title: string; description: string }
       }
     default:
       return {
-        title: '六爻排盘｜免费在线起卦、纳甲装卦 - HEX//64',
+        title: '六爻排盘｜免费开源在线起卦、纳甲装卦 - HEX//64',
         description: DEFAULT_DESCRIPTION,
       }
   }

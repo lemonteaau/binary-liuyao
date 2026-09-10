@@ -187,26 +187,6 @@ body {
   background-clip: padding-box;
 }
 
-.skip-link {
-  position: absolute;
-  z-index: 9;
-  top: 0.75rem;
-  left: 50%;
-  transform: translate(-50%, -180%);
-  border: 1px solid var(--color-signal);
-  padding: 0.65rem 0.9rem;
-  background: var(--color-void);
-  color: var(--color-signal);
-  font: inherit;
-  text-decoration: none;
-  cursor: pointer;
-  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.skip-link:focus {
-  transform: translate(-50%, 0);
-}
-
 .app-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);

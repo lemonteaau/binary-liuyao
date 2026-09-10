@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { App } from '@/App'
 import { BootSequence, useBootOnce } from '@/components/BootSequence'
 import { FeedbackForm } from '@/components/FeedbackForm'
 import { LiveClock } from '@/components/LiveClock'
@@ -65,16 +64,6 @@ describe('异常状态恢复', () => {
     expect(JSON.parse(localStorage.getItem('hex64.history.v1')!)).toHaveLength(27)
   })
 
-  it('空结果页也能通过跳过导航按钮聚焦主标题', async () => {
-    localStorage.setItem('hex64.settings.v1', JSON.stringify({ animation: false }))
-    window.location.hash = '#/result'
-    render(<App />)
-    const scroll = vi.fn()
-    Object.defineProperty(document.getElementById('main-content'), 'scrollIntoView', { value: scroll })
-    fireEvent.click(screen.getByRole('button', { name: '跳到主要内容' }))
-    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1 })))
-    expect(scroll).toHaveBeenCalled()
-  })
 })
 
 describe('动效与后台计时', () => {
