@@ -45,15 +45,17 @@ export function AboutPage() {
             { name: '微信赞赏', file: 'wechat.jpg', width: 1152, height: 1152 },
             { name: '支付宝', file: 'alipay.jpg', width: 1708, height: 2125 },
           ].map(({ name, file, width, height }) => (
-            <figure key={file} className="relative z-1 mx-auto aspect-square w-full max-w-72 overflow-hidden rounded-sm border border-edge bg-surface p-3 sm:mx-0 sm:max-w-[22.5rem]">
-              <img
-                src={`${import.meta.env.BASE_URL}support/${file}`}
-                alt={`${name}赞赏码`}
-                width={width}
-                height={height}
-                loading="lazy"
-                className="h-full w-full object-contain"
-              />
+            <figure key={file} className="relative z-1 mx-auto aspect-square w-full max-w-72 overflow-hidden rounded-sm border border-edge bg-surface sm:mx-0 sm:max-w-[22.5rem]">
+              <div className="absolute inset-3">
+                <img
+                  src={`${import.meta.env.BASE_URL}support/${file}`}
+                  alt={`${name}赞赏码`}
+                  width={width}
+                  height={height}
+                  loading="lazy"
+                  className="block size-full object-contain"
+                />
+              </div>
             </figure>
           ))}
         </div>
