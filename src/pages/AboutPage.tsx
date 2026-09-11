@@ -38,7 +38,7 @@ export function AboutPage() {
       <Section tag="支持项目" id="support" sectionRef={supportSectionRef}>
         <h2 tabIndex={-1} className="text-lg font-bold tracking-[0.16em] text-ink">支持作者</h2>
         <p className="mt-2 text-fog">
-          如果 HEX//64 刚好帮到了你，可以酌情打赏，支持后续维护，工具将持续保持免费。
+          如果 HEX//64 有帮到你，可以酌情打赏。打赏将用于本站的后续运营和维护，工具将持续保持免费，感谢支持！
         </p>
         <div className="mt-4 grid max-w-[46.25rem] gap-5 sm:grid-cols-2">
           {[
