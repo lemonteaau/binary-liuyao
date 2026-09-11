@@ -166,3 +166,20 @@ npx wrangler d1 migrations apply hex64-counter --remote
 ## 开源协议
 
 本项目采用 [MIT License](LICENSE) 开源协议。
+
+## 支持作者
+
+如果 HEX//64 刚好帮到了你，可以酌情打赏，支持后续维护，工具将持续保持免费。
+
+<details>
+<summary>赞赏方式 · 微信 / 支付宝</summary>
+
+<p>可用微信或支付宝扫描对应的码；在手机上，也可以点击图片查看原图并保存，再从 App 相册中识别。</p>
+
+<p>微信赞赏</p>
+<a href="public/support/wechat.jpg"><img src="public/support/wechat.jpg" alt="微信赞赏码" width="288" /></a>
+
+<p>支付宝</p>
+<a href="public/support/alipay.jpg"><img src="public/support/alipay.jpg" alt="支付宝赞赏码" width="288" /></a>
+
+</details>

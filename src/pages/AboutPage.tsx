@@ -5,7 +5,9 @@ import { FeedbackForm } from '@/components/FeedbackForm'
 export function AboutPage() {
   const [searchParams] = useSearchParams()
   const feedbackSectionRef = useRef<HTMLElement>(null)
+  const supportSectionRef = useRef<HTMLElement>(null)
   const shouldFocusFeedback = searchParams.get('feedback') === '1'
+  const shouldFocusSupport = searchParams.get('support') === '1'
 
   useEffect(() => {
     if (!shouldFocusFeedback) return
@@ -15,9 +17,47 @@ export function AboutPage() {
     return () => window.cancelAnimationFrame(frame)
   }, [shouldFocusFeedback])
 
+  useEffect(() => {
+    if (!shouldFocusSupport) return
+    const frame = window.requestAnimationFrame(() => {
+      const section = supportSectionRef.current
+      if (!section) return
+      section.querySelector('h2')?.focus({ preventScroll: true })
+      section.scrollIntoView({
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+        block: 'start',
+      })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [shouldFocusSupport])
+
   return (
     <div className="pt-6 text-base leading-relaxed">
       <h1 className="mb-6 text-2xl font-bold tracking-[0.2em]">关于 HEX//64</h1>
+
+      <Section tag="支持项目" id="support" sectionRef={supportSectionRef}>
+        <h2 tabIndex={-1} className="text-lg font-bold tracking-[0.16em] text-ink">支持作者</h2>
+        <p className="mt-2 text-fog">
+          如果 HEX//64 刚好帮到了你，可以酌情打赏，支持后续维护，工具将持续保持免费。
+        </p>
+        <div className="mt-4 grid max-w-[46.25rem] gap-5 sm:grid-cols-2">
+          {[
+            { name: '微信赞赏', file: 'wechat.jpg', width: 1152, height: 1152 },
+            { name: '支付宝', file: 'alipay.jpg', width: 1708, height: 2125 },
+          ].map(({ name, file, width, height }) => (
+            <figure key={file} className="relative z-1 mx-auto aspect-square w-full max-w-72 overflow-hidden rounded-sm border border-edge bg-surface p-3 sm:mx-0 sm:max-w-[22.5rem]">
+              <img
+                src={`${import.meta.env.BASE_URL}support/${file}`}
+                alt={`${name}赞赏码`}
+                width={width}
+                height={height}
+                loading="lazy"
+                className="h-full w-full object-contain"
+              />
+            </figure>
+          ))}
+        </div>
+      </Section>
 
       <Section tag="反馈" id="feedback" sectionRef={feedbackSectionRef}>
         <div className="mb-4 max-w-2xl">
@@ -62,7 +102,7 @@ export function AboutPage() {
             <dt className="text-signal">电脑起卦</dt>
             <dd className="text-fog">
               每爻通过 <code>crypto.getRandomValues()</code> 生成三枚虚拟铜钱，自然得到
-              老阴 1/8 · 少阳 3/8 · 少阴 3/8 · 老阳 1/8 的概率。核心随机逻辑不使用 Math.random()。
+              老阴 1/8 · 少阳 3/8 · 少阴 3/8 · 老阳 1/8 的概率。
             </dd>
           </div>
           <div>
@@ -75,15 +115,15 @@ export function AboutPage() {
           <div>
             <dt className="text-signal">数字起卦</dt>
             <dd className="text-fog">
-              上卦 = A mod 8 · 下卦 = B mod 8 · 动爻 = C mod 6。余数 0 取坤卦 / 上爻。
-              两数时动爻 = (A+B) mod 6；单数按位自左向右切成三组（余数从左到右依次多一位）。
+              上卦 = A ➗ 8 · 下卦 = B ➗ 8 · 动爻 = C ➗ 6。余数 0 取坤卦 / 上爻。
+              两数时动爻 = (A+B) ➗ 6；单数按位自左向右切成三组（余数从左到右依次多一位）。
             </dd>
           </div>
           <div>
             <dt className="text-signal">时间起卦</dt>
             <dd className="text-fog">
-              梅花式：上卦 = (农历年支数 + 月 + 日) mod 8；下卦 = (上式和 + 时支数) mod 8；
-              动爻 = 总和 mod 6。年支数 子=1…亥=12，时支数同。闰月按本月数。
+              梅花式：上卦 = (农历年支数 + 月 + 日) ➗ 8；下卦 = (上式和 + 时支数) ➗ 8；
+              动爻 = 总和 ➗ 6。年支数 子=1…亥=12，时支数同。闰月按本月数。
             </dd>
           </div>
           <div>
@@ -117,7 +157,7 @@ export function AboutPage() {
       <Section tag="分享链接">
         <p className="text-fog">
           分享链接会在 URL Hash 中保存卦象、原起卦时间、时区、起卦方式与排盘编号，打开后可还原本次排盘；
-          Hash 不会随页面请求发送至服务器。旧版分享链接仍可打开，其历法信息会按查看者本地时刻计算。
+        旧版分享链接仍可打开，其历法信息会按查看者本地时刻计算。
         </p>
       </Section>
     </div>
