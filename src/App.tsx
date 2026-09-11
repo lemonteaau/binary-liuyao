@@ -4,6 +4,7 @@ import { BookmarkInvitation } from '@/components/BookmarkInvitation'
 import { BootSequence, useBootOnce } from '@/components/BootSequence'
 import { FeedbackInvitation } from '@/components/FeedbackInvitation'
 import { LiveClock } from '@/components/LiveClock'
+import { trackEvent } from '@/lib/analytics'
 import { GeneratorPage } from '@/pages/GeneratorPage'
 import { ResultPage } from '@/pages/ResultPage'
 import { SettingsPage } from '@/pages/SettingsPage'
@@ -131,7 +132,8 @@ function Shell() {
             </div>
             <Link
               to="/about?support=1"
-              className="inline-flex min-h-11 items-center text-fog no-underline transition-colors hover:text-signal"
+              onClick={() => trackEvent('点击支持作者', { 入口: '页尾' })}
+              className="inline-flex min-h-11 items-center rounded-sm border border-signal/40 bg-signal/5 px-4 font-bold text-signal no-underline transition-colors hover:border-signal hover:bg-signal/10 focus-visible:border-signal focus-visible:bg-signal/10"
             >
               支持作者
             </Link>
