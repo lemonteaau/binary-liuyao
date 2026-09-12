@@ -7,7 +7,7 @@ import pngDataUrl from '../public/og-liuyao.png?inline'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from '@/App'
-import { CANONICAL_URL, routeMetadata, updatePageMetadata } from '@/lib/seo'
+import { CANONICAL_URL, PUBLIC_ROUTES, canonicalUrl, robotsContent, routeMetadata, updatePageMetadata } from '@/lib/seo'
 
 const parseHtml = () => new DOMParser().parseFromString(html, 'text/html')
 
@@ -35,7 +35,7 @@ function expectMetadata(pathname: string) {
   }
 }
 
-describe('SEO and hash-route compatibility', () => {
+describe('SEO and path-route compatibility', () => {
   it('serves complete, consistent homepage metadata before JavaScript executes', () => {
     expectMetadata('/')
     expect(document.querySelectorAll('link[rel="canonical"]')).toHaveLength(1)
@@ -44,7 +44,7 @@ describe('SEO and hash-route compatibility', () => {
 
     const xml = new DOMParser().parseFromString(sitemap, 'application/xml')
     expect(xml.querySelector('parsererror')).toBeNull()
-    expect(Array.from(xml.querySelectorAll('loc'), (node) => node.textContent)).toEqual([CANONICAL_URL])
+    expect(Array.from(xml.querySelectorAll('loc'), (node) => node.textContent)).toEqual(PUBLIC_ROUTES.map(canonicalUrl))
     expect(robots).toContain(`Sitemap: ${CANONICAL_URL}sitemap.xml`)
     expect(robots).not.toMatch(/^Disallow:\s*\/$/m)
   })
@@ -87,8 +87,8 @@ describe('SEO and hash-route compatibility', () => {
       expect(document.body.innerHTML).toBe(originalBody)
       expect(window.location.href).toBe(originalUrl)
       expect(document.head.innerHTML).not.toContain('secret-reading')
-      expect(document.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe(CANONICAL_URL)
-      expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).not.toContain('noindex')
+      expect(document.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe(canonicalUrl(route))
+      expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe(robotsContent(route))
       expect(document.querySelectorAll('meta[property="og:title"]')).toHaveLength(1)
     }
     document.body.innerHTML = ''
@@ -100,10 +100,10 @@ describe('SEO and hash-route compatibility', () => {
     render(<App />)
     expectMetadata('/')
     fireEvent.click(screen.getByRole('link', { name: '[设置]' }))
-    await waitFor(() => expect(window.location.hash).toBe('#/settings'))
+    await waitFor(() => expect(window.location.pathname).toBe('/settings'))
     expectMetadata('/settings')
     fireEvent.click(screen.getByRole('link', { name: '[起卦]' }))
-    await waitFor(() => expect(window.location.hash).toBe('#/'))
+    await waitFor(() => expect(window.location.pathname).toBe('/'))
     expectMetadata('/')
     expect(screen.getByRole('heading', { name: '选择起卦方式' })).toBeTruthy()
   })

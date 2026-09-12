@@ -51,7 +51,7 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
 /** 每个浏览器会话只播一次；动画关闭时直接跳过 */
 export function useBootOnce(enabled: boolean): { booting: boolean; finish: () => void } {
   const [booting, setBooting] = useState(() => {
-    if (!enabled) return false
+    if (!enabled || typeof window === 'undefined') return false
     if (typeof window.matchMedia === 'function'
       && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false
     try {

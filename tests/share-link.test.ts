@@ -15,7 +15,9 @@ describe('分享链接', () => {
       readingId: 'A1B2C3',
       ordinal: 864,
     }))
-    const parsed = parseShareLink(new URLSearchParams(url.hash.split('?')[1]))
+    expect(url.pathname).toBe('/app/result')
+    expect(url.search).toBe('')
+    const parsed = parseShareLink(new URLSearchParams(url.hash.slice(1)))
 
     expect(parsed).toMatchObject({
       primary: original.primary.bits,

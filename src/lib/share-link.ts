@@ -27,7 +27,7 @@ export interface ShareLinkMetadata {
   ordinal?: number | null
 }
 
-/** Build a hash-route URL that can reproduce the original chart exactly. */
+/** Build a path-route URL with private data in the fragment that can reproduce the original chart exactly. */
 export function buildShareUrl(
   chart: ChartData,
   baseUrl: string,
@@ -49,7 +49,9 @@ export function buildShareUrl(
     params.set('o', String(metadata.ordinal))
   }
 
-  return `${baseUrl}#/result?${params.toString()}`
+  const url = new URL('result', baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`)
+  url.hash = params.toString()
+  return url.toString()
 }
 
 export function parseShareLink(params: URLSearchParams): ShareLinkData | null {

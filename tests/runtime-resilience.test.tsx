@@ -12,7 +12,7 @@ afterEach(() => {
   cleanup()
   localStorage.clear()
   sessionStorage.clear()
-  window.location.hash = ''
+  window.history.replaceState(null, '', '/')
   vi.useRealTimers()
   vi.restoreAllMocks()
   vi.unstubAllGlobals()

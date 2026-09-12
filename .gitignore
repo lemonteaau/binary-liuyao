@@ -5,3 +5,4 @@ dist-ssr
 coverage
 .DS_Store
 *.log
+.wrangler

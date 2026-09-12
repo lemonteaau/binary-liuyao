@@ -10,7 +10,7 @@ afterEach(() => {
   cleanup()
   localStorage.clear()
   sessionStorage.clear()
-  window.location.hash = ''
+  window.history.replaceState(null, '', '/')
   vi.restoreAllMocks()
   vi.unstubAllGlobals()
 })
@@ -45,7 +45,7 @@ describe('起卦页 Umami 事件', () => {
     fireEvent.click(screen.getByRole('button', { name: /手动排卦/ }))
     fireEvent.click(screen.getByRole('button', { name: '生成排盘 →' }))
 
-    await waitFor(() => expect(window.location.hash).toBe('#/result'))
+    await waitFor(() => expect(window.location.pathname).toBe('/result'))
     expect(track).toHaveBeenCalledWith('点击生成排盘', { 起卦方式: '手动排卦' })
     expect(track).toHaveBeenCalledWith('成功生成排盘', { 起卦方式: '手动排卦' })
   })

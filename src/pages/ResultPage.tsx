@@ -23,7 +23,7 @@ export function ResultPage() {
   const { current, commitReading } = useReading()
   const { resolvedTimezone, settings } = useSettings()
 
-  const linkParams = useMemo(() => parseShareLink(new URLSearchParams(location.search)), [location.search])
+  const linkParams = useMemo(() => parseShareLink(new URLSearchParams(location.hash.slice(1))), [location.hash])
   const restoredLink = useMemo(() => {
     if (!linkParams) return null
     const rawLines = rawLinesFromBits(linkParams.primary, linkParams.mask)
@@ -87,7 +87,7 @@ export function ResultPage() {
   const shareUrl = () => {
     return buildShareUrl(
       chart,
-      `${window.location.origin}${window.location.pathname}`,
+      new URL(import.meta.env.BASE_URL, window.location.origin).href,
       { readingId: current.id, ordinal: current.ordinal },
     )
   }

@@ -10,7 +10,7 @@ afterEach(() => {
   cleanup()
   localStorage.clear()
   sessionStorage.clear()
-  window.location.hash = ''
+  window.history.replaceState(null, '', '/')
   delete (HTMLElement.prototype as Partial<HTMLElement>).scrollIntoView
   vi.restoreAllMocks()
   vi.unstubAllGlobals()
@@ -37,7 +37,7 @@ describe('路由切换滚动复位', () => {
     }
     fireEvent.click(screen.getByRole('button', { name: '六爻已完成，生成排盘' }))
 
-    await waitFor(() => expect(window.location.hash).toBe('#/result'))
+    await waitFor(() => expect(window.location.pathname).toBe('/result'))
     const resultScroller = container.querySelector<HTMLElement>('.crt-content')!
 
     expect(resultScroller).not.toBe(generatorScroller)

@@ -1,12 +1,27 @@
-// Hash routes share one indexable document. Never use a fragment or reading
-// parameters as a canonical URL, or toggle document-wide noindex by hash route.
 export const CANONICAL_URL = 'https://liuyao.lemontea.xyz/'
+export const PUBLIC_ROUTES = ['/', '/ai-guide', '/about'] as const
+export const APP_ROUTES = [...PUBLIC_ROUTES, '/settings', '/result'] as const
+
+export function normalizePagePath(pathname: string): string {
+  return pathname.replace(/\/+$/, '').toLowerCase() || '/'
+}
+
+export function canonicalUrl(pathname: string): string {
+  const path = normalizePagePath(pathname)
+  return new URL(APP_ROUTES.some((route) => route === path) ? path.slice(1) : '', CANONICAL_URL).href
+}
+
+export function robotsContent(pathname: string): string {
+  return PUBLIC_ROUTES.some((route) => route === normalizePagePath(pathname))
+    ? 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'
+    : 'noindex,follow'
+}
 
 const DEFAULT_DESCRIPTION =
   'HEX//64 是免费开源的在线六爻排盘工具，采用 MIT 许可证，源码公开，可自行部署。支持七种起卦方式及纳甲、六亲、六神、世应排盘；无需注册，排盘计算在浏览器本地完成。'
 
 export function routeMetadata(pathname: string): { title: string; description: string } {
-  switch (pathname) {
+  switch (normalizePagePath(pathname)) {
     case '/result':
       return {
         title: '六爻排盘结果 - HEX//64',
@@ -36,12 +51,14 @@ export function routeMetadata(pathname: string): { title: string; description: s
 }
 
 /** Update only the document head; never include reading inputs or URL parameters. */
-export function updatePageMetadata(pathname: string): void {
+export function updatePageMetadata(pathname: string, document: Document = window.document): void {
   const metadata = routeMetadata(pathname)
   document.title = metadata.title
 
   const tags: Record<string, string> = {
     'meta[name="description"]': metadata.description,
+    'meta[name="robots"]': robotsContent(pathname),
+    'meta[property="og:url"]': canonicalUrl(pathname),
     'meta[property="og:title"]': metadata.title,
     'meta[property="og:description"]': metadata.description,
     'meta[name="twitter:title"]': metadata.title,
@@ -50,5 +67,34 @@ export function updatePageMetadata(pathname: string): void {
 
   for (const [selector, content] of Object.entries(tags)) {
     document.querySelector<HTMLMetaElement>(selector)?.setAttribute('content', content)
+  }
+
+  for (const link of document.querySelectorAll<HTMLLinkElement>('link[rel="canonical"], link[rel="alternate"][hreflang]')) {
+    link.setAttribute('href', canonicalUrl(pathname))
+  }
+
+  const script = document.querySelector<HTMLScriptElement>('script[type="application/ld+json"]')
+  if (script?.textContent) {
+    const schema = JSON.parse(script.textContent)
+    // Keep the homepage/app graph stable and replace only the active subpage.
+    schema['@graph'] = schema['@graph'].filter((node: Record<string, unknown>) =>
+      node['@type'] !== 'AboutPage' &&
+      (node['@type'] !== 'WebPage' || node['@id'] === `${CANONICAL_URL}#webpage`),
+    )
+    const canonical = canonicalUrl(pathname)
+    if (canonical !== CANONICAL_URL) {
+      schema['@graph'].push({
+        '@type': normalizePagePath(pathname) === '/about' ? 'AboutPage' : 'WebPage',
+        '@id': `${canonical}#webpage`,
+        url: canonical,
+        name: metadata.title,
+        description: metadata.description,
+        inLanguage: 'zh-CN',
+        isPartOf: { '@id': `${CANONICAL_URL}#website` },
+        about: { '@id': `${CANONICAL_URL}#app` },
+        primaryImageOfPage: { '@id': `${CANONICAL_URL}#primaryimage` },
+      })
+    }
+    script.textContent = JSON.stringify(schema).replace(/</g, '\\u003c')
   }
 }

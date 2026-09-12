@@ -120,6 +120,7 @@ export function BookmarkInvitation({
 }
 
 function detectPlatform(): { mobile: boolean; ios: boolean } {
+  if (typeof navigator === 'undefined') return { mobile: false, ios: false }
   const userAgent = navigator.userAgent
   const ios = /iPhone|iPad|iPod/i.test(userAgent) ||
     (/Macintosh/i.test(userAgent) && navigator.maxTouchPoints > 1)

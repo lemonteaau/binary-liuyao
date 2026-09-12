@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { HashRouter, Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
+import { BrowserRouter, Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { BookmarkInvitation } from '@/components/BookmarkInvitation'
 import { BootSequence, useBootOnce } from '@/components/BootSequence'
 import { FeedbackInvitation } from '@/components/FeedbackInvitation'
+import { LegacyRouteRedirect } from '@/components/LegacyRouteRedirect'
 import { LiveClock } from '@/components/LiveClock'
 import { trackEvent } from '@/lib/analytics'
 import { updatePageMetadata } from '@/lib/seo'
@@ -18,9 +19,10 @@ export function App() {
   return (
     <SettingsProvider>
       <ReadingProvider>
-        <HashRouter>
+        <BrowserRouter basename={import.meta.env.BASE_URL}>
+          <LegacyRouteRedirect />
           <Shell />
-        </HashRouter>
+        </BrowserRouter>
       </ReadingProvider>
     </SettingsProvider>
   )
@@ -55,7 +57,7 @@ export function CrtFx() {
   )
 }
 
-function Shell() {
+export function Shell() {
   const { animation, resolvedTimezone } = useDisplaySettings()
   const { booting, finish } = useBootOnce(animation)
   const location = useLocation()
