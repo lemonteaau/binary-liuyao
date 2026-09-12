@@ -66,13 +66,13 @@ function formatTimestampIn(tz: string): string {
 export function LiveClock({ timezone, className }: LiveClockProps) {
   const now = useVisibleClock(timezone, formatIn)
 
-  return <span className={className}>{now}</span>
+  return <span className={className} data-nosnippet="">{now}</span>
 }
 
 export function LiveTimestamp({ timezone, className }: LiveClockProps) {
   const now = useVisibleClock(timezone, formatTimestampIn)
 
-  return <span className={className}>{now}</span>
+  return <span className={className} data-nosnippet="">{now}</span>
 }
 
 function useVisibleClock(timezone: string, format: (timezone: string) => string): string {

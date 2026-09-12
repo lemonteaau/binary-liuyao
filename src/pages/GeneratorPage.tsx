@@ -271,7 +271,7 @@ function HomepageCounter() {
       aria-live="polite"
       aria-busy={status === 'loading'}
     >
-      <span className="inline-flex flex-wrap items-center justify-center align-middle whitespace-nowrap">
+      <span data-nosnippet="" className="inline-flex flex-wrap items-center justify-center align-middle whitespace-nowrap">
         <span>自上线以来共完成</span>
         <span className="inline-flex items-center">
           <strong

@@ -35,7 +35,7 @@ export function AboutPage() {
     <div className="pt-6 text-base leading-relaxed">
       <h1 className="mb-6 text-2xl font-bold tracking-[0.2em]">关于 HEX//64</h1>
 
-      <Section tag="支持项目" id="support" sectionRef={supportSectionRef}>
+      <Section excludeFromSnippet tag="支持项目" id="support" sectionRef={supportSectionRef}>
         <h2 tabIndex={-1} className="text-lg font-bold tracking-[0.16em] text-ink">支持作者</h2>
         <p className="mt-2 text-fog">
           如果 HEX//64 有帮到你，可以酌情打赏。打赏将用于本站的后续运营和维护，工具将持续保持免费，感谢支持！
@@ -61,7 +61,7 @@ export function AboutPage() {
         </div>
       </Section>
 
-      <Section tag="反馈" id="feedback" sectionRef={feedbackSectionRef}>
+      <Section excludeFromSnippet tag="反馈" id="feedback" sectionRef={feedbackSectionRef}>
         <div className="mb-4 max-w-2xl">
           <h2 className="text-lg font-bold tracking-[0.16em] text-ink">写给作者</h2>
         </div>
@@ -171,14 +171,16 @@ function Section({
   children,
   id,
   sectionRef,
+  excludeFromSnippet = false,
 }: {
   tag: string
   children: React.ReactNode
   id?: string
   sectionRef?: React.Ref<HTMLElement>
+  excludeFromSnippet?: boolean
 }) {
   return (
-    <section ref={sectionRef} id={id} className="panel mb-4 scroll-mt-4 p-4 sm:p-5">
+    <section ref={sectionRef} id={id} data-nosnippet={excludeFromSnippet ? '' : undefined} className="panel mb-4 scroll-mt-4 p-4 sm:p-5">
       <span className="panel-tag">{tag}</span>
       {children}
     </section>
