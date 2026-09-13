@@ -377,6 +377,15 @@ html:not([data-screen-fx="off"]) .crt-content {
   }
 }
 
+/* Firefox's full-width translucent sweep is expensive on high-DPI displays.
+   Update this decorative band at 30 Hz (255 steps / 8.5 s), independently of
+   the display refresh rate. Keep the original path, colors and cycle length. */
+@supports (-moz-appearance: none) {
+  .fx-roll {
+    animation-timing-function: steps(255, end);
+  }
+}
+
 /* 暗角 + 玻璃反光 */
 .fx-vignette {
   background:
