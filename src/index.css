@@ -195,6 +195,20 @@ html[data-motion="off"] .support-link-orbit {
     0 0 26px color-mix(in srgb, var(--color-signal) 7%, transparent);
 }
 
+@media (max-width: 767px) {
+  .crt-room,
+  .crt-bezel {
+    padding: 0;
+    background: var(--color-void);
+  }
+
+  .crt-bezel,
+  .crt-screen {
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
 /* 屏幕内容：内部滚动，覆盖层固定在玻璃上不随内容滚动 */
 .crt-content {
   position: absolute;
@@ -235,8 +249,28 @@ html[data-motion="off"] .support-link-orbit {
 }
 
 .app-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
   justify-self: start;
   white-space: nowrap;
+}
+
+.app-logo-taiji {
+  display: block;
+  /* Keep both 4-unit eyes on whole pixels when rendering the 32-unit SVG. */
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.footer-pixel-heart {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-left: 0.5rem;
+  vertical-align: -2px;
+  color: var(--color-signal);
 }
 
 .app-nav {
@@ -1489,20 +1523,29 @@ html[data-motion="off"] .feedback-invitation {
 
 @media (max-width: 767px) {
   .tile {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "title icon";
+    align-content: center;
+    align-items: center;
+    min-height: 0;
     padding-inline: 0.875rem;
   }
 
-  .tile-index {
-    visibility: hidden;
+  .tile-index,
+  .tile-description {
+    display: none;
   }
 
-  .tile-description {
-    font-size: 0.8125rem;
-    line-height: 1.35;
-    letter-spacing: 0.03em;
-    white-space: nowrap;
-    text-wrap: nowrap;
+  .tile-head {
+    grid-area: icon;
   }
+
+  .tile-title {
+    grid-area: title;
+    margin-top: 0;
+  }
+
 }
 
 .settings-row {

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { BrowserRouter, Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
+import { TaijiIcon } from '@/components/TaijiIcon'
 import { BookmarkInvitation } from '@/components/BookmarkInvitation'
 import { BootSequence, useBootOnce } from '@/components/BootSequence'
 import { FeedbackInvitation } from '@/components/FeedbackInvitation'
@@ -111,7 +112,19 @@ export function Shell() {
           </main>
           <footer className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-edge py-3 text-[0.875rem] leading-none tracking-[0.18em] text-fog">
             <div className="flex min-h-11 items-center gap-3">
-              <span>By lemontea, with ❤️</span>
+              <span>
+                By lemontea, with
+                <svg
+                  className="footer-pixel-heart"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  shapeRendering="crispEdges"
+                  role="img"
+                  aria-label="爱心"
+                >
+                  <path d="M3 2H6V3H7V4H9V3H10V2H13V3H14V4H15V8H14V10H12V12H10V14H9V15H7V14H6V12H4V10H2V8H1V4H2V3H3Z" />
+                </svg>
+              </span>
               <a
                 href="https://github.com/lemonteaau/binary-liuyao"
                 target="_blank"
@@ -178,7 +191,8 @@ function Header({ timezone }: { timezone: string }) {
         to="/"
         className="app-logo chroma text-lg font-bold tracking-[0.28em] text-signal no-underline"
       >
-        HEX//64
+        <TaijiIcon />
+        <span>HEX//64</span>
       </Link>
       <nav className="app-nav flex items-center gap-1 text-[0.9375rem] tracking-[0.16em]">
         <HeaderNavLink to="/">起卦</HeaderNavLink>

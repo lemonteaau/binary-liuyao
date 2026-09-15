@@ -10,8 +10,13 @@
   "theme_color": "#040807",
   "icons": [
     {
-      "src": "/favicon.png",
-      "sizes": "256x256",
+      "src": "/icon-192.png?v=taiji",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png?v=taiji",
+      "sizes": "512x512",
       "type": "image/png"
     }
   ]
