@@ -1488,33 +1488,20 @@ html[data-motion="off"] .feedback-invitation {
 }
 
 @media (max-width: 767px) {
-  .mode-grid .tile {
-    min-height: 4rem;
-    flex-direction: row;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 0.5rem;
+  .tile {
+    padding-inline: 0.875rem;
   }
 
-  .mode-grid .tile-index,
-  .mode-grid .tile-description {
-    display: none;
+  .tile-index {
+    visibility: hidden;
   }
 
-  .mode-grid .tile-head {
-    flex-shrink: 0;
-  }
-
-  .mode-grid .tile-mode-icon {
-    width: 1.5rem;
-    height: 1.5rem;
-  }
-
-  .mode-grid .tile-title {
-    margin-top: 0;
-    font-size: 0.875rem;
-    letter-spacing: 0.04em;
+  .tile-description {
+    font-size: 0.8125rem;
+    line-height: 1.35;
+    letter-spacing: 0.03em;
     white-space: nowrap;
+    text-wrap: nowrap;
   }
 }
 
