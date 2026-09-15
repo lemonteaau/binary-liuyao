@@ -132,8 +132,11 @@ export function Shell() {
             <Link
               to="/about?support=1"
               onClick={() => trackEvent('点击支持作者', { 入口: '页尾' })}
-              className="inline-flex min-h-11 items-center rounded-sm border border-signal/40 bg-signal/5 px-4 font-bold text-signal no-underline transition-colors hover:border-signal hover:bg-signal/10 focus-visible:border-signal focus-visible:bg-signal/10"
+              className="support-link relative inline-flex min-h-11 items-center rounded-sm border border-signal/40 bg-signal/5 px-4 font-bold text-signal no-underline transition-colors hover:border-signal hover:bg-signal/10 focus-visible:border-signal focus-visible:bg-signal/10"
             >
+              <svg className="support-link-orbit" aria-hidden="true" focusable="false">
+                <rect x="0.5" y="0.5" rx="2" pathLength="100" />
+              </svg>
               支持作者
             </Link>
           </footer>

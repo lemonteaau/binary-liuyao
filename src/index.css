@@ -78,6 +78,46 @@ body {
   outline-offset: 2px;
 }
 
+.support-link-orbit {
+  position: absolute;
+  inset: -1px;
+  width: calc(100% + 2px);
+  height: calc(100% + 2px);
+  overflow: visible;
+  pointer-events: none;
+  fill: none;
+  stroke: var(--color-signal);
+  stroke-width: 1.5px;
+  opacity: 0.65;
+  filter:
+    drop-shadow(0 0 2px color-mix(in srgb, var(--color-signal) 55%, transparent))
+    drop-shadow(0 0 5px color-mix(in srgb, var(--color-signal) 25%, transparent));
+}
+
+.support-link-orbit rect {
+  width: calc(100% - 1px);
+  height: calc(100% - 1px);
+  stroke-linecap: round;
+  stroke-dasharray: 20 30;
+  animation: support-border-orbit 9s linear infinite;
+}
+
+@keyframes support-border-orbit {
+  to {
+    stroke-dashoffset: -100;
+  }
+}
+
+html[data-motion="off"] .support-link-orbit {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .support-link-orbit {
+    display: none;
+  }
+}
+
 /* ---------------------------------- */
 /* CRT 外壳：房间 / 塑料边框 / 玻璃屏   */
 /* ---------------------------------- */
