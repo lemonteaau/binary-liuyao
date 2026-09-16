@@ -10,7 +10,6 @@ import { trigramKeyByRemainder } from '@/features/number/derive'
 import type { HanziSeed } from '@/features/hanzi/derive'
 import { formatRawText } from '@/formatters/rawText'
 import { buildShareUrl, parseShareLink } from '@/lib/share-link'
-import { formatTimezoneWithOffset, parseGregorianToDate } from '@/lib/timezone-display'
 import type { LineValue } from '@/types'
 import { INPUT_METHOD_LABELS_UI, useReading } from '@/store/reading'
 import { useSettings } from '@/store/settings'
@@ -159,53 +158,6 @@ export function ResultPage() {
         </div>
       </div>
 
-      <section className="panel mt-4 p-4 sm:p-5">
-        <span className="panel-tag">元数据</span>
-        <dl className="grid grid-cols-1 gap-x-8 gap-y-2 text-[0.9375rem] sm:grid-cols-2 lg:grid-cols-3">
-          <Meta label="时间戳" value={chart.calendar.gregorian} />
-          <Meta
-            label="时区"
-            value={formatTimezoneWithOffset(
-              chart.calendar.timezone,
-              chart.calendar.utcOffset,
-              parseGregorianToDate(chart.calendar.gregorian, chart.calendar.utcOffset),
-            )}
-          />
-          <Meta label="农历" value={chart.calendar.lunarText} />
-          <Meta
-            label="四柱"
-            value={`${chart.calendar.ganzhi.year} / ${chart.calendar.ganzhi.month} / ${chart.calendar.ganzhi.day} / ${chart.calendar.ganzhi.hour}`}
-          />
-          <Meta label="旬空" value={chart.calendar.xunKong.join('')} />
-          <Meta label="卦身" value={`${chart.guaShen.branch}${chart.guaShen.onHexagram ? '' : ' // 未上卦'}`} />
-        </dl>
-        {chart.shensha.some((s) => s.branches.length > 0) && (
-          <details className="mt-3">
-            <summary className="cursor-pointer text-[0.875rem] tracking-[0.2em] text-fog hover:text-signal">
-              神煞 [{chart.shensha.filter((s) => s.branches.length > 0).length}]
-            </summary>
-            <p className="mt-2 leading-relaxed text-fog">
-              {chart.shensha
-                .filter((s) => s.branches.length > 0)
-                .map((s) => `${s.name}—${s.branches.join('')}`)
-                .join(' · ')}
-            </p>
-          </details>
-        )}
-        {chart.fuShen.length > 0 && (
-          <details className="mt-2">
-            <summary className="cursor-pointer text-[0.875rem] tracking-[0.2em] text-fog hover:text-signal">
-              伏神 [{chart.fuShen.length}]
-            </summary>
-            <p className="mt-2 leading-relaxed text-fog">
-              {chart.fuShen
-                .map((f) => `${f.relation}${f.najia.stem}${f.najia.branch}${f.najia.element} @L${f.index + 1}`)
-                .join(' · ')}
-            </p>
-          </details>
-        )}
-      </section>
-
       <FullReading
         chart={chart}
         rawText={rawText}
@@ -349,15 +301,6 @@ function StatePanel(props: {
         </p>
       </div>
     </section>
-  )
-}
-
-function Meta({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex min-w-0 gap-2">
-      <dt className="shrink-0 text-fog">{label}</dt>
-      <dd className="min-w-0 break-all tabular-nums">{value}</dd>
-    </div>
   )
 }
 
