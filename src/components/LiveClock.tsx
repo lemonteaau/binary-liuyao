@@ -76,7 +76,7 @@ export function LiveTimestamp({ timezone, className }: LiveClockProps) {
 }
 
 function useVisibleClock(timezone: string, format: (timezone: string) => string): string {
-  const [now, setNow] = useState(() => format(timezone))
+  const [now, setNow] = useState(() => typeof window === 'undefined' ? '—' : format(timezone))
 
   useEffect(() => {
     let timer: ReturnType<typeof setInterval> | undefined

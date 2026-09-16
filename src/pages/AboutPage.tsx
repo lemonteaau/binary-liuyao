@@ -73,6 +73,10 @@ export function AboutPage() {
 
       <Section tag="产品说明">
         <p className="mt-2">
+          HEX//64 是无广告的在线六爻排盘工具，没有弹窗广告，适合专注起卦、排盘与学习研究。
+          绿色使用：无需下载安装、无捆绑、无需注册，手机和电脑浏览器直接打开即可使用。
+        </p>
+        <p className="mt-2">
           HEX//64 是免费开源的六爻排盘工具，采用 MIT 许可证。你可以查看源码与排盘算法、修改代码，
           也可以自行部署。源码见{' '}
           <a className="text-signal underline underline-offset-4" href="https://github.com/lemonteaau/binary-liuyao" target="_blank" rel="noopener noreferrer">

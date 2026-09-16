@@ -1,7 +1,7 @@
 {
   "name": "HEX//64 六爻排盘",
   "short_name": "六爻排盘",
-  "description": "免费开源的在线六爻起卦与排盘工具，MIT 许可，支持自行部署",
+  "description": "免费开源、无广告的在线六爻排盘工具，无需下载安装、无需注册，排盘本地计算，MIT 许可，支持自行部署",
   "lang": "zh-CN",
   "start_url": "/",
   "scope": "/",

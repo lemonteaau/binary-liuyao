@@ -135,6 +135,9 @@ export function GeneratorPage() {
     >
       <div ref={generatorHeadingRef} className="generator-heading">
         <h1 className="text-2xl font-bold tracking-[0.2em]">选择起卦方式</h1>
+        <p className="mt-2 text-sm leading-relaxed text-fog">
+          免费开源 · 无广告 · 绿色 · 无需下载安装
+        </p>
       </div>
 
       <div className="mode-grid" role="group" aria-label="起卦方式">

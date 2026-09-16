@@ -89,8 +89,11 @@ describe('旧地址迁移与数据兼容', () => {
     expect(window.location.pathname).toBe('/ai-guide')
     expect(window.location.hash).toBe('')
     await act(async () => { window.history.back() })
-    await waitFor(() => expect(window.location.pathname).toBe('/settings'))
-    expect(screen.getByRole('link', { name: '[设置]' }).getAttribute('aria-current')).toBe('page')
+    // History updates the URL before React commits the corresponding view.
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/settings')
+      expect(screen.getByRole('link', { name: '[设置]' }).getAttribute('aria-current')).toBe('page')
+    })
     await act(async () => { window.history.forward() })
     await waitFor(() => expect(screen.getByRole('heading', { name: 'AI解卦教程' })).toBeTruthy())
   })

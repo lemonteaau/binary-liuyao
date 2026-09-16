@@ -21,10 +21,15 @@
 
 构建末尾的 `scripts/prerender.mjs` 复用现有 React 页面生成：
 
+- `index.html`：首页现有的七种起卦方式、简短说明和可抓取导航链接。
 - `about.html`、`ai-guide.html`：独立元信息及真实页面正文。
 - `settings.html`、`result.html`：独立元信息与 noindex；用户设置和排盘仍在浏览器初始化，不写入静态 HTML。
 
-首页继续使用现有客户端启动流程。公开页的静态内容加载后，由客户端按现有设置、启动动画和本地历史初始化；不将构建机状态写入用户存储。
+三个公开页都将真实页面内容写入 `#root`，不再依赖 `noscript` 介绍，也不向爬虫提供单独的文案版本。功能说明与本地计算说明仍位于关于页，教程仍位于 AI 教程页；首页静态导航直接链接到这两个页面。
+
+客户端继续使用原有 createRoot 启动流程，按用户设置、启动动画和本地历史初始化，不使用静态默认值覆盖用户存储。启用 JavaScript 时，在首次 React 提交前暂缓显示预渲染容器，避免默认首页先闪现再播放启动动画或切换字号；客户端在 layout effect 中恢复显示。禁用 JavaScript 时静态页面直接可见；应用脚本加载失败时，4 秒后恢复静态内容，导航仍可访问，起卦交互需要 JavaScript。所有访问者使用同一份 HTML，不根据 User-Agent 区分内容。
+
+静态时钟使用占位符，不输出构建时间或构建机时区。设置页和排盘页继续只提供元信息，不预渲染用户设置、历史或排盘数据。
 
 Cloudflare Pages 将 `/about` 匹配到 `about.html`，并将 `/about.html` 规范化为 `/about`。不增加顶层 404.html 或全局重写，保留既有 SPA 回退和 `/api/*`、`/x/*` Functions。资源基路径默认 `/`，避免深层路径刷新时误请求 `/about/assets/...`。
 
@@ -44,6 +49,10 @@ npm run build
 npm run lint
 npm test
 ```
+
+首页预渲染回归使用 `scripts/test-prerender-browser.py --url <新版本本地预览地址> --baseline <改动前本地预览地址>`，需要 Python Playwright 和 Pillow。两个地址均使用生产构建的 Vite preview，接口和统计请求由测试模拟。
+
+本地验证（2026-09-16）：生产构建、Lint、190 项测试通过。Chromium 禁用 JavaScript 时可读取首页七种起卦方式并访问关于／教程页；三个公开页在 1280×900、390×844 下与本次预渲染改动前的截图完全一致（保留此前已确认的 SEO 文案）。七种方式按钮可交互，已保存的大字号设置保持不变；延迟脚本时无默认页面闪现，启动动画正常；阻断应用脚本后可恢复静态正文与导航。此次未部署，也未验证线上重新抓取、收录或推荐排名。
 
 浏览器回归需 Python Playwright。先在项目目录启动本地 Pages，再运行：
 
