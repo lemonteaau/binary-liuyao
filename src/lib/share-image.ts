@@ -11,6 +11,8 @@ const WIDTH = 1080
 const MIN_HEIGHT = 1920
 const PAD = 54
 const CONTENT_WIDTH = WIDTH - PAD * 2
+const METADATA_HEIGHT = 282
+const METADATA_LINE_HEIGHT = 32
 const CLASSICS_Y = 1580
 const SECTION_GAP = 26
 const CLASSIC_CARD_GAP = 28
@@ -287,10 +289,12 @@ function renderShareImage(ctx: CanvasRenderingContext2D, model: ShareImageModel)
   strokeLine(ctx, PAD, 148, WIDTH - PAD, 148, COLORS.edgeBright)
 
   drawSummary(ctx, model, 174)
+  const metadataExtraHeight = measureMetadata(ctx, model).height - METADATA_HEIGHT
   drawMetadata(ctx, model, 516)
-  drawMatrix(ctx, model, 824)
-  const classicsHeight = drawClassics(ctx, model.classics, CLASSICS_Y)
-  const shenshaY = CLASSICS_Y + classicsHeight + SECTION_GAP
+  drawMatrix(ctx, model, 824 + metadataExtraHeight)
+  const classicsY = CLASSICS_Y + metadataExtraHeight
+  const classicsHeight = drawClassics(ctx, model.classics, classicsY)
+  const shenshaY = classicsY + classicsHeight + SECTION_GAP
   drawShensha(ctx, model, shenshaY)
   drawFooter(ctx, model, shenshaY + SHENSHA_HEIGHT + SECTION_GAP)
 }
@@ -367,18 +371,37 @@ function drawHexagram(
   }
 }
 
+function measureMetadata(ctx: CanvasRenderingContext2D, model: ShareImageModel) {
+  setFont(ctx, 25)
+  const timezone = model.metadata.find((item) => item.label === '时区')?.value ?? ''
+  const timezoneLines = wrapText(ctx, timezone, CONTENT_WIDTH - 48 - 104)
+  return {
+    timezoneLines,
+    height: METADATA_HEIGHT + (timezoneLines.length - 1) * METADATA_LINE_HEIGHT,
+  }
+}
+
 function drawMetadata(ctx: CanvasRenderingContext2D, model: ShareImageModel, y: number): void {
-  drawPanel(ctx, PAD, y, CONTENT_WIDTH, 282, '历法与元数据')
+  const { timezoneLines, height } = measureMetadata(ctx, model)
+  drawPanel(ctx, PAD, y, CONTENT_WIDTH, height, '历法与元数据')
   const colWidth = CONTENT_WIDTH / 2
   const byLabel = new Map(model.metadata.map((item) => [item.label, item.value]))
   const halfWidth = colWidth - 36
   drawMetadataItem(ctx, '起卦方式', byLabel.get('起卦方式') ?? '', PAD + 24, y + 76, halfWidth)
   drawMetadataItem(ctx, '公历', byLabel.get('公历') ?? '', PAD + colWidth + 24, y + 76, halfWidth)
   drawMetadataItem(ctx, '农历', byLabel.get('农历') ?? '', PAD + 24, y + 126, halfWidth)
-  drawMetadataItem(ctx, '时区', byLabel.get('时区') ?? '', PAD + colWidth + 24, y + 126, halfWidth)
-  drawMetadataItem(ctx, '干支', byLabel.get('干支') ?? '', PAD + 24, y + 176, CONTENT_WIDTH - 48)
-  drawMetadataItem(ctx, '旬空', byLabel.get('旬空') ?? '', PAD + 24, y + 226, halfWidth)
-  drawMetadataItem(ctx, '卦身', byLabel.get('卦身') ?? '', PAD + colWidth + 24, y + 226, halfWidth)
+  drawMetadataItem(ctx, '卦身', byLabel.get('卦身') ?? '', PAD + colWidth + 24, y + 126, halfWidth)
+  drawMetadataItem(ctx, '干支', byLabel.get('干支') ?? '', PAD + 24, y + 176, CONTENT_WIDTH - 248)
+  drawMetadataItem(ctx, '旬空', byLabel.get('旬空') ?? '', PAD + CONTENT_WIDTH - 200, y + 176, 176)
+  setFont(ctx, 21)
+  ctx.fillStyle = COLORS.fog
+  ctx.fillText('时区', PAD + 24, y + 226)
+  setFont(ctx, 25)
+  ctx.fillStyle = COLORS.ink
+  timezoneLines.forEach((line, index) => {
+    // Omit Canvas maxWidth: it horizontally distorts long text instead of wrapping.
+    ctx.fillText(line, PAD + 128, y + 224 + index * METADATA_LINE_HEIGHT)
+  })
 }
 
 function drawMetadataItem(
@@ -492,6 +515,7 @@ function calculateShareImageHeight(
 ): number {
   const classicsHeight = measureClassicsHeight(ctx, model.classics)
   const contentHeight = CLASSICS_Y
+    + measureMetadata(ctx, model).height - METADATA_HEIGHT
     + classicsHeight
     + SECTION_GAP
     + SHENSHA_HEIGHT
