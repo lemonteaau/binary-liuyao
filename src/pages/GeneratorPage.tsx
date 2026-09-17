@@ -134,7 +134,7 @@ export function GeneratorPage() {
       className={cn('generator-page pt-6', !mode && 'generator-page-idle')}
     >
       <div ref={generatorHeadingRef} className="generator-heading">
-        <h1 className="text-2xl font-bold tracking-[0.2em]">选择起卦方式</h1>
+        <h1 className="text-2xl font-bold tracking-[0.2em]">六爻排盘</h1>
       </div>
 
       <div className="mode-grid" role="group" aria-label="起卦方式">

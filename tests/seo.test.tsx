@@ -105,6 +105,6 @@ describe('SEO and path-route compatibility', () => {
     fireEvent.click(screen.getByRole('link', { name: '[起卦]' }))
     await waitFor(() => expect(window.location.pathname).toBe('/'))
     expectMetadata('/')
-    expect(screen.getByRole('heading', { name: '选择起卦方式' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: '六爻排盘' })).toBeTruthy()
   })
 })

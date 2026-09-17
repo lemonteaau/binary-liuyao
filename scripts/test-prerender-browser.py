@@ -58,7 +58,7 @@ with sync_playwright() as p:
     assert response.status == 200
     assert '<div id="root"></div>' not in response.text()
     assert '<noscript>' not in response.text()
-    expect(page.get_by_role('heading', name='选择起卦方式')).to_be_visible()
+    expect(page.get_by_role('heading', name='六爻排盘')).to_be_visible()
     for mode in modes:
         expect(page.get_by_role('button', name=re.compile(mode))).to_be_visible()
     page.get_by_role('link', name='[关于]').click()
@@ -106,12 +106,12 @@ with sync_playwright() as p:
     page = new_page(ctx)
     page.goto(base, wait_until='commit')
     page.locator('#root[data-prerendered] h1').wait_for(state='attached')
-    expect(page.get_by_role('heading', name='选择起卦方式')).to_be_hidden()
+    expect(page.get_by_role('heading', name='六爻排盘')).to_be_hidden()
     ctx.unroute('**/assets/*.js')
     for route in pending:
         route.continue_()
     expect(page.get_by_role('button', name='系统正在启动，跳过启动动画')).to_be_visible()
-    expect(page.get_by_role('heading', name='选择起卦方式')).to_be_visible()
+    expect(page.get_by_role('heading', name='六爻排盘')).to_be_visible()
     assert page.evaluate("sessionStorage.getItem('hex64.booted')") == '1'
     assert not page.evaluate("document.documentElement.hasAttribute('data-app-loading')")
     ctx.close()
@@ -121,7 +121,7 @@ with sync_playwright() as p:
     ctx.route('**/assets/*.js', lambda route: route.abort())
     page = new_page(ctx)
     page.goto(base)
-    expect(page.get_by_role('heading', name='选择起卦方式')).to_be_visible(timeout=6000)
+    expect(page.get_by_role('heading', name='六爻排盘')).to_be_visible(timeout=6000)
     page.get_by_role('link', name='[关于]').click()
     expect(page.get_by_role('heading', name='关于 HEX//64')).to_be_visible(timeout=6000)
     ctx.close()

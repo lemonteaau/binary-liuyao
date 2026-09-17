@@ -8,7 +8,7 @@ describe('public HTML without a browser', () => {
     for (const mode of ['摇币起卦', '电脑起卦', '手动排卦', '卦名起卦', '数字起卦', '时间起卦', '汉字起卦']) {
       expect(html).toContain(mode)
     }
-    expect(html).toMatch(/<h1[^>]*>选择起卦方式<\/h1>/)
+    expect(html).toMatch(/<h1[^>]*>六爻排盘<\/h1>/)
     for (const href of ['/about', '/ai-guide']) {
       expect(html).toContain(`href="${href}"`)
     }

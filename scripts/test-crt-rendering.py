@@ -81,7 +81,7 @@ with sync_playwright() as p:
         assert page.locator('.crt-content').evaluate('(e)=>e.scrollTop>0')
         compare('about-scrolled')
         page.get_by_role('link', name='[起卦]', exact=True).click()
-        expect(page.get_by_role('heading', name='选择起卦方式')).to_be_visible()
+        expect(page.get_by_role('heading', name='六爻排盘')).to_be_visible()
         assert page.locator('.crt-content').evaluate('(e)=>e.scrollTop===0')
         # Keep actual coin animations enabled while completing a reading.
         page.get_by_role('button', name='01 摇币起卦').click()
