@@ -33,7 +33,7 @@ import type { HanziDerivation } from '@/features/hanzi/derive'
 import { trackDivinationEvent, trackEvent } from '@/lib/analytics'
 import { cn } from '@/lib/cn'
 import { getCurrentHexagramOrdinal } from '@/lib/hexagram-counter'
-import { scrollIntoViewOnMobile } from '@/lib/mobile-scroll'
+import { scrollIntoViewIfNeeded } from '@/lib/interaction-scroll'
 import { formatTimezone } from '@/lib/timezone-display'
 import { useReading } from '@/store/reading'
 import { useSettings } from '@/store/settings'
@@ -110,10 +110,21 @@ export function GeneratorPage() {
 
   useEffect(() => {
     if (!mode) return
-    const frame = window.requestAnimationFrame(() => {
-      scrollIntoViewOnMobile(activePanelRef.current)
-    })
-    return () => window.cancelAnimationFrame(frame)
+    let cancelled = false
+    let frame: number | undefined
+    const scheduleScroll = () => {
+      if (cancelled) return
+      frame = window.requestAnimationFrame(() => {
+        scrollIntoViewIfNeeded(activePanelRef.current)
+      })
+    }
+    const animation = shiftAnimationRef.current
+    if (animation) void animation.finished.then(scheduleScroll, scheduleScroll)
+    else scheduleScroll()
+    return () => {
+      cancelled = true
+      if (frame !== undefined) window.cancelAnimationFrame(frame)
+    }
   }, [mode])
 
   useEffect(() => () => shiftAnimationRef.current?.cancel(), [])
@@ -762,7 +773,7 @@ function HexNamePanel({ draft, setDraft }: LineEditorProps) {
     if (followupFrameRef.current !== null) window.cancelAnimationFrame(followupFrameRef.current)
     followupFrameRef.current = window.requestAnimationFrame(() => {
       followupFrameRef.current = null
-      scrollIntoViewOnMobile(followupRef.current)
+      scrollIntoViewIfNeeded(followupRef.current)
     })
   }
 
