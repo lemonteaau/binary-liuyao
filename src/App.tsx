@@ -4,6 +4,7 @@ import { TaijiIcon } from '@/components/TaijiIcon'
 import { BookmarkInvitation } from '@/components/BookmarkInvitation'
 import { BootSequence, useBootOnce } from '@/components/BootSequence'
 import { FeedbackInvitation } from '@/components/FeedbackInvitation'
+import { HomepageGuide } from '@/components/HomepageGuide'
 import { LegacyRouteRedirect } from '@/components/LegacyRouteRedirect'
 import { LiveClock } from '@/components/LiveClock'
 import { trackEvent } from '@/lib/analytics'
@@ -102,7 +103,7 @@ export function Shell() {
           <Header timezone={resolvedTimezone} />
           <main id="main-content" tabIndex={-1} className="flex-1 pb-10">
             <Routes>
-              <Route path="/" element={<GeneratorPage />} />
+              <Route path="/" element={<><GeneratorPage /><HomepageGuide /></>} />
               <Route path="/result" element={<ResultPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/ai-guide" element={<AiGuidePage />} />

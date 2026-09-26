@@ -1,0 +1,137 @@
+/* 首页说明：位于首屏之下，选择起卦方式后隐藏，不干扰起卦流程 */
+.homepage-guide {
+  margin-top: 3.5rem;
+  color: var(--color-fog);
+  line-height: 1.75;
+}
+
+.generator-page:not(.generator-page-idle) + .homepage-guide {
+  display: none;
+}
+
+.homepage-guide-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--color-ink);
+}
+
+.homepage-guide-title::before {
+  content: "//";
+  color: var(--color-signal);
+  letter-spacing: 0;
+}
+
+.homepage-guide-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--color-edge);
+}
+
+.homepage-guide-lead {
+  max-width: 40rem;
+}
+
+.homepage-guide-grid {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1.5rem 0 3rem;
+}
+
+.homepage-guide-card {
+  border: 1px solid var(--color-edge);
+  padding: 0.9rem 1rem;
+  background: var(--color-panel);
+}
+
+.homepage-guide-card h3 {
+  margin-bottom: 0.35rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--color-signal);
+}
+
+.homepage-guide-card p {
+  font-size: 0.9375rem;
+}
+
+.homepage-guide-faq details {
+  border-bottom: 1px solid var(--color-edge);
+}
+
+.homepage-guide-faq summary {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--color-ink);
+  cursor: pointer;
+  list-style: none;
+}
+
+.homepage-guide-faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.homepage-guide-faq summary::after {
+  content: "+";
+  color: var(--color-signal);
+}
+
+.homepage-guide-faq details[open] summary::after {
+  content: "−";
+}
+
+.homepage-guide-faq summary:focus-visible {
+  outline: 1px solid var(--color-signal);
+  outline-offset: 2px;
+}
+
+.homepage-guide-faq details p {
+  padding-bottom: 0.9rem;
+  font-size: 0.9375rem;
+}
+
+.homepage-guide a {
+  color: var(--color-signal);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+@media (min-width: 768px) {
+  .homepage-guide-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* 首屏保持原样：起卦区占满原先 main 的可用高度（页头、页脚含 1px 边框与 main 底部留白），
+   说明从原页脚的位置开始，需下滑才可见 */
+.crt-content:has(.generator-page-idle + .homepage-guide) {
+  container-type: size;
+}
+
+.generator-page-idle:has(+ .homepage-guide) {
+  align-content: start;
+  min-height: calc(100cqh - 11.5rem - 2px);
+}
+
+/* 窄屏页头为两行：多出标志行与行距 */
+@media (max-width: 639px) {
+  .generator-page-idle:has(+ .homepage-guide) {
+    min-height: calc(100cqh - 12.15rem - 34px);
+  }
+}
+
+/* 桌面端首页原本在首屏垂直居中 */
+@media (min-width: 1024px) and (min-height: 760px) {
+  .generator-page-idle:has(+ .homepage-guide) {
+    align-content: center;
+  }
+}
