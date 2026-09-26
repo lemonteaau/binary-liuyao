@@ -61,8 +61,9 @@
   font-size: 0.9375rem;
 }
 
-.homepage-guide-faq details {
-  border-bottom: 1px solid var(--color-edge);
+/* 只在问答之间分隔，避免最后一条下边框与页脚上边框看起来像一条空问答 */
+.homepage-guide-faq details + details {
+  border-top: 1px solid var(--color-edge);
 }
 
 .homepage-guide-faq summary {
