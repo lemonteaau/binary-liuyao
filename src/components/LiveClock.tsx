@@ -10,7 +10,6 @@ interface FormatterCache {
   formatter: Intl.DateTimeFormat | null
 }
 
-let clockFormatterCache: FormatterCache | null = null
 let timestampFormatterCache: FormatterCache | null = null
 
 function cachedFormatter(
@@ -28,18 +27,6 @@ function cachedFormatter(
   } catch {
     return { timezone, formatter: null }
   }
-}
-
-function formatIn(tz: string): string {
-  clockFormatterCache = cachedFormatter(clockFormatterCache, tz, 'en-GB', {
-    timeZone: tz,
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hourCycle: 'h23',
-  })
-  return clockFormatterCache.formatter?.format(new Date())
-    ?? new Date().toLocaleTimeString()
 }
 
 function formatTimestampIn(tz: string): string {
@@ -61,12 +48,6 @@ function formatTimestampIn(tz: string): string {
   } catch {
     return new Date().toISOString().replace('T', ' ').slice(0, 19)
   }
-}
-
-export function LiveClock({ timezone, className }: LiveClockProps) {
-  const now = useVisibleClock(timezone, formatIn)
-
-  return <span className={className} data-nosnippet="">{now}</span>
 }
 
 export function LiveTimestamp({ timezone, className }: LiveClockProps) {

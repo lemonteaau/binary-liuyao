@@ -3,7 +3,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { BootSequence, useBootOnce } from '@/components/BootSequence'
 import { FeedbackForm } from '@/components/FeedbackForm'
-import { LiveClock } from '@/components/LiveClock'
+import { LiveTimestamp } from '@/components/LiveClock'
 import { generateChart } from '@/engine'
 import { ReadingProvider, useReading } from '@/store/reading'
 import { SettingsProvider, useSettings } from '@/store/settings'
@@ -84,19 +84,19 @@ describe('动效与后台计时', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-09-05T06:00:00Z'))
     const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible')
-    const view = render(<LiveClock timezone="UTC" />)
-    expect(view.container.textContent).toBe('06:00:00')
+    const view = render(<LiveTimestamp timezone="UTC" />)
+    expect(view.container.textContent).toBe('2026-09-05 06:00:00')
     expect(vi.getTimerCount()).toBe(1)
     visibility.mockReturnValue('hidden')
     fireEvent(document, new Event('visibilitychange'))
     expect(vi.getTimerCount()).toBe(0)
     act(() => vi.advanceTimersByTime(60_000))
-    expect(view.container.textContent).toBe('06:00:00')
+    expect(view.container.textContent).toBe('2026-09-05 06:00:00')
     visibility.mockReturnValue('visible')
     fireEvent(document, new Event('visibilitychange'))
-    expect(view.container.textContent).toBe('06:01:00')
-    view.rerender(<LiveClock timezone="Asia/Shanghai" />)
-    expect(view.container.textContent).toBe('14:01:00')
+    expect(view.container.textContent).toBe('2026-09-05 06:01:00')
+    view.rerender(<LiveTimestamp timezone="Asia/Shanghai" />)
+    expect(view.container.textContent).toBe('2026-09-05 14:01:00')
     view.unmount()
     expect(vi.getTimerCount()).toBe(0)
   })

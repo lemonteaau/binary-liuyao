@@ -30,7 +30,7 @@
 
 客户端继续使用原有 createRoot 启动流程，按用户设置、启动动画和本地历史初始化，不使用静态默认值覆盖用户存储。启用 JavaScript 时，在首次 React 提交前暂缓显示预渲染容器，避免默认首页先闪现再播放启动动画或切换字号；客户端在 layout effect 中恢复显示。禁用 JavaScript 时静态页面直接可见；应用脚本加载失败时，4 秒后恢复静态内容，导航仍可访问，起卦交互需要 JavaScript。所有访问者使用同一份 HTML，不根据 User-Agent 区分内容。
 
-静态时钟使用占位符，不输出构建时间或构建机时区。设置页和排盘页继续只提供元信息，不预渲染用户设置、历史或排盘数据。
+设置页和排盘页继续只提供元信息，不预渲染用户设置、历史或排盘数据。
 
 Cloudflare Pages 将 `/about` 匹配到 `about.html`，并将 `/about.html` 规范化为 `/about`。存在顶层 `404.html` 后 Pages 不再做 SPA 回退：所有应用路由都已预渲染为同名 HTML，`/api/*`、`/x/*` 仍由 Functions 处理。新增应用路由时必须同时加入 `APP_ROUTES`，否则会返回 404。资源基路径默认 `/`，避免深层路径刷新时误请求 `/about/assets/...`。
 
@@ -45,7 +45,7 @@ Cloudflare Pages 将 `/about` 匹配到 `about.html`，并将 `/about.html` 规�
 - Bing 使用 IndexNow：密钥文件位于 `public/<密钥>.txt`。生产部署完成后运行 `node scripts/indexnow.mjs`，提交 sitemap 中的全部地址。
 - 首页标题保留“六爻排盘”“在线起卦”“纳甲装卦”等核心词；描述避免重复堆砌同义卖点（Bing 建议约 150 字符以内的完整描述）。
 - 查询参数和分享片段不进入 canonical、结构化数据或统计 URL。统计过滤器继续兼容旧 Hash 和新路径。
-- 时钟、累计起卦数、打赏和反馈区保留 data-nosnippet，不影响可见内容或交互。
+- 累计起卦数、打赏和反馈区保留 data-nosnippet，不影响可见内容或交互。
 
 ## 验证
 

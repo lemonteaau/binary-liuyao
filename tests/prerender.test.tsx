@@ -15,7 +15,7 @@ describe('public HTML without a browser', () => {
     expect(html).not.toContain('系统正在启动，跳过启动动画')
     expect(html).toMatch(/<h2[^>]*>免费在线六爻排盘<\/h2>/)
     expect(html).toContain('<summary>起卦内容会上传到服务器吗？</summary>')
-    expect(html).toMatch(/class="app-clock[^>]*>—<\/span>/)
+    expect(html).toContain('href="/about?support=1"')
   })
 
   it('keeps product details and the guide in their existing public pages', () => {

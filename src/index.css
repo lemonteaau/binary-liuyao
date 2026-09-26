@@ -324,9 +324,8 @@ html[data-motion="off"] .support-link-orbit {
   transform: translateY(1px);
 }
 
-.app-clock {
+.app-header-support {
   justify-self: end;
-  white-space: nowrap;
 }
 
 .homepage-counter-number {
@@ -360,7 +359,7 @@ html[data-motion="off"] .homepage-counter-number[data-loading="true"] {
 @media (max-width: 639px) {
   .app-header {
     grid-template-areas:
-      "logo clock"
+      "logo support"
       "nav nav";
     grid-template-columns: minmax(0, 1fr) auto;
     row-gap: 0.65rem;
@@ -374,8 +373,8 @@ html[data-motion="off"] .homepage-counter-number[data-loading="true"] {
     grid-area: nav;
   }
 
-  .app-clock {
-    grid-area: clock;
+  .app-header-support {
+    grid-area: support;
   }
 }
 

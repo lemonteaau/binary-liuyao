@@ -6,7 +6,6 @@ import { BootSequence, useBootOnce } from '@/components/BootSequence'
 import { FeedbackInvitation } from '@/components/FeedbackInvitation'
 import { HomepageGuide } from '@/components/HomepageGuide'
 import { LegacyRouteRedirect } from '@/components/LegacyRouteRedirect'
-import { LiveClock } from '@/components/LiveClock'
 import { trackEvent } from '@/lib/analytics'
 import { updatePageMetadata } from '@/lib/seo'
 import { GeneratorPage } from '@/pages/GeneratorPage'
@@ -60,7 +59,7 @@ export function CrtFx() {
 }
 
 export function Shell() {
-  const { animation, resolvedTimezone } = useDisplaySettings()
+  const { animation } = useDisplaySettings()
   const { booting, finish } = useBootOnce(animation)
   const location = useLocation()
   const feedbackCooldownTimerRef = useRef<number>(0)
@@ -100,7 +99,7 @@ export function Shell() {
       */}
       <div key={location.key} className="crt-content">
         <div className="mx-auto flex min-h-full max-w-5xl flex-col px-4 sm:px-6">
-          <Header timezone={resolvedTimezone} />
+          <Header />
           <main id="main-content" tabIndex={-1} className="flex-1 pb-10">
             <Routes>
               <Route path="/" element={<><GeneratorPage /><HomepageGuide /></>} />
@@ -143,16 +142,6 @@ export function Shell() {
                 </svg>
               </a>
             </div>
-            <Link
-              to="/about?support=1"
-              onClick={() => trackEvent('点击支持作者', { 入口: '页尾' })}
-              className="support-link relative inline-flex min-h-11 items-center rounded-sm border border-signal/40 bg-signal/5 px-4 font-bold text-signal no-underline transition-colors hover:border-signal hover:bg-signal/10 focus-visible:border-signal focus-visible:bg-signal/10"
-            >
-              <svg className="support-link-orbit" aria-hidden="true" focusable="false">
-                <rect x="0.5" y="0.5" rx="2" pathLength="100" />
-              </svg>
-              支持作者
-            </Link>
           </footer>
         </div>
       </div>
@@ -168,7 +157,7 @@ export function Shell() {
   )
 }
 
-function Header({ timezone }: { timezone: string }) {
+function Header() {
   const [showGuideBadge, setShowGuideBadge] = useState(() => {
     try {
       return localStorage.getItem('hex64.ai-guide.seen') !== '1'
@@ -201,11 +190,16 @@ function Header({ timezone }: { timezone: string }) {
         <HeaderNavLink to="/settings">设置</HeaderNavLink>
         <HeaderNavLink to="/about">关于</HeaderNavLink>
       </nav>
-      <LiveClock
-        key={timezone}
-        timezone={timezone}
-        className="app-clock text-[0.9375rem] tabular-nums tracking-[0.14em] text-fog"
-      />
+      <Link
+        to="/about?support=1"
+        onClick={() => trackEvent('点击支持作者', { 入口: '页头' })}
+        className="app-header-support support-link relative inline-flex h-8 items-center rounded-sm border border-signal/40 bg-signal/5 px-3 text-[0.875rem] font-bold tracking-[0.14em] whitespace-nowrap text-signal no-underline transition-colors hover:border-signal hover:bg-signal/10 focus-visible:border-signal focus-visible:bg-signal/10"
+      >
+        <svg className="support-link-orbit" aria-hidden="true" focusable="false">
+          <rect x="0.5" y="0.5" rx="2" pathLength="100" />
+        </svg>
+        支持作者
+      </Link>
     </header>
   )
 }
