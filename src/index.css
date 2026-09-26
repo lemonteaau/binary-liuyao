@@ -1620,17 +1620,46 @@ html[data-motion="off"] .feedback-invitation {
   content: "";
 }
 
-.coin-console:hover,
-.coin-console[data-shaking="true"] {
+.coin-console:hover {
   border-color: var(--coin-light);
   box-shadow: 0 0 24px rgba(189, 116, 55, 0.22);
 }
 
+/* 边框辉光按摇动频率（2.4 Hz）起伏 */
+.coin-console[data-phase="shaking"] {
+  border-color: var(--coin-light);
+  animation: coin-console-rumble 417ms ease-in-out infinite;
+}
+
+.coin-console[data-phase="landing"] {
+  border-color: color-mix(in srgb, var(--color-signal) 55%, var(--color-edge));
+}
+
+.coin-console[data-phase="complete"] {
+  border-color: var(--color-signal);
+  box-shadow: 0 0 26px color-mix(in srgb, var(--color-signal) 16%, transparent);
+}
+
+@keyframes coin-console-rumble {
+  0%,
+  100% {
+    box-shadow: 0 0 16px rgba(189, 116, 55, 0.16);
+  }
+  50% {
+    box-shadow:
+      0 0 30px rgba(240, 189, 103, 0.3),
+      inset 0 0 22px rgba(240, 189, 103, 0.06);
+  }
+}
+
 .coin-console-head,
 .coin-console-action {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
   letter-spacing: 0.16em;
@@ -1641,14 +1670,89 @@ html[data-motion="off"] .feedback-invitation {
   color: var(--color-fog);
 }
 
+.coin-console-tag {
+  display: inline-flex;
+  min-width: 7.5em;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5em;
+}
+
+.coin-console[data-phase="shaking"] .coin-console-tag {
+  color: var(--coin-light);
+}
+
+.coin-console[data-phase="shaking"] .coin-console-tag::before {
+  width: 6px;
+  height: 6px;
+  background: var(--coin-light);
+  box-shadow: 0 0 6px var(--coin-light);
+  content: "";
+  animation: coin-blink 417ms steps(2, jump-none) infinite;
+}
+
+.coin-console[data-phase="landing"] .coin-console-tag,
+.coin-console[data-phase="complete"] .coin-console-tag {
+  color: var(--color-signal);
+}
+
+.coin-progress {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.coin-progress > span {
+  width: 0.7rem;
+  height: 0.32rem;
+  border: 1px solid var(--color-edge-bright);
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.coin-progress > span[data-state="active"] {
+  border-color: var(--coin-light);
+  background: color-mix(in srgb, var(--coin-light) 35%, transparent);
+  animation: coin-blink 834ms steps(2, jump-none) infinite;
+}
+
+.coin-progress > span[data-state="done"] {
+  border-color: var(--color-signal);
+  background: var(--color-signal);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--color-signal) 60%, transparent);
+}
+
+.coin-progress > span[data-state="done"][data-fresh="true"] {
+  animation: coin-segment-arrive 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes coin-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes coin-segment-arrive {
+  0% {
+    transform: scale(1, 2.6);
+    background: #fff;
+    box-shadow: 0 0 14px var(--color-signal);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 .coin-console-action {
   justify-content: center;
+  overflow: hidden;
   border-top: 1px solid var(--color-edge);
   color: var(--color-signal);
   font-size: 1.0625rem;
 }
 
-.coin-console[data-shaking="true"] .coin-console-action {
+.coin-console[data-phase="shaking"] .coin-console-action {
   color: var(--coin-light);
 }
 
@@ -1658,240 +1762,344 @@ html[data-motion="off"] .feedback-invitation {
   color: var(--color-signal);
 }
 
-.coin-stage {
-  --coin-gap: clamp(8px, 2.6vw, 28px);
-  --coin-size: clamp(58px, 9vw, 112px);
-  display: flex;
-  flex: 1;
-  align-items: center;
-  justify-content: center;
-  gap: var(--coin-gap);
-  padding: 2rem clamp(0.5rem, 2vw, 1rem);
-  perspective: 720px;
-}
-
-.coin-unit {
-  --coin-drift: -7px;
-  --coin-return: 1px;
-  --coin-lean: -4deg;
-  --coin-lean-opposite: 5deg;
-  --coin-lean-bounce: 2deg;
-  --coin-entry-x: calc(var(--coin-size) + var(--coin-gap));
-  --coin-entry-rotate: -10deg;
-  --coin-entry-overshoot: -5px;
-  --coin-exit-rotate: 0.8deg;
-  display: flex;
-  min-width: var(--coin-size);
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.coin-unit:nth-child(2) {
-  --coin-drift: 5px;
-  --coin-return: -1px;
-  --coin-lean: 3deg;
-  --coin-lean-opposite: -4deg;
-  --coin-lean-bounce: -2deg;
-  --coin-entry-x: 0px;
-  --coin-entry-rotate: 4deg;
-  --coin-entry-overshoot: 0px;
-  --coin-exit-rotate: -0.3deg;
-}
-
-.coin-unit:nth-child(3) {
-  --coin-drift: -3px;
-  --coin-return: 1px;
-  --coin-lean: -2deg;
-  --coin-lean-opposite: 3deg;
-  --coin-lean-bounce: 1deg;
-  --coin-entry-x: calc((var(--coin-size) + var(--coin-gap)) * -1);
-  --coin-entry-rotate: 12deg;
-  --coin-entry-overshoot: 5px;
-  --coin-exit-rotate: -1deg;
-}
-
-.coin-stage[data-pristine="true"] .coin-unit {
-  animation: coin-spread-in 1700ms cubic-bezier(0.2, 0.76, 0.24, 1) both;
-}
-
-.coin-stage[data-pristine="true"] .coin-unit:nth-child(1) {
-  z-index: 1;
-}
-
-.coin-stage[data-pristine="true"] .coin-unit:nth-child(2) {
-  z-index: 3;
-}
-
-.coin-stage[data-pristine="true"] .coin-unit:nth-child(3) {
-  z-index: 2;
-}
-
-.coin-flight,
-.pixel-coin {
-  position: relative;
-  display: block;
-  width: clamp(58px, 9vw, 112px);
-  aspect-ratio: 1;
-}
-
-.coin-flight {
-  transform: translate3d(0, 0, 0);
-}
-
-.pixel-coin {
-  transform-style: preserve-3d;
-}
-
-.coin-unit[data-face="tails"] .pixel-coin {
-  transform: rotateY(180deg);
-}
-
-.coin-unit:is([data-face="heads"], [data-face="tails"]) .coin-flight {
-  animation: coin-land 160ms cubic-bezier(0.16, 0.78, 0.22, 1) both;
-}
-
-.coin-unit[data-face="heads"] .pixel-coin {
-  animation: coin-settle-heads 160ms cubic-bezier(0.16, 0.78, 0.22, 1) both;
-}
-
-.coin-unit[data-face="tails"] .pixel-coin {
-  animation: coin-settle-tails 160ms cubic-bezier(0.16, 0.78, 0.22, 1) both;
-}
-
-.coin-side {
+.coin-console-action-ready::after {
   position: absolute;
   inset: 0;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  background-position: left center;
-  background-repeat: no-repeat;
-  background-size: 200% 100%;
-  filter: drop-shadow(0 7px 5px rgba(0, 0, 0, 0.48));
-  image-rendering: pixelated;
+  background: linear-gradient(
+    100deg,
+    transparent 35%,
+    color-mix(in srgb, var(--color-signal) 22%, transparent) 50%,
+    transparent 65%
+  );
+  content: "";
+  pointer-events: none;
+  transform: translateX(-100%);
+  animation: coin-cta-sheen 3s cubic-bezier(0.45, 0, 0.2, 1) 1.2s infinite;
 }
 
-.coin-side-tails {
-  transform: rotateY(180deg);
-  background-position: right center;
+@keyframes coin-cta-sheen {
+  0% {
+    transform: translateX(-100%);
+  }
+  50%,
+  100% {
+    transform: translateX(100%);
+  }
 }
 
-.coin-face-caption {
-  min-height: 1.25rem;
+/* ---------------------------------- */
+/* 舞台：canvas 绘制铜钱，DOM 叠加读数   */
+/* ---------------------------------- */
+
+.coin-stage {
+  position: relative;
+  display: block;
+  flex: 1;
+  min-height: 12rem;
+}
+
+.coin-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.coin-readout {
+  position: absolute;
+  top: calc(var(--coin-rest-y, 44%) + var(--coin-radius, 3rem) + 0.5rem);
+  left: var(--slot, 50%);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3em;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--coin-light) 38%, transparent);
+  background: rgba(4, 8, 7, 0.55);
   color: var(--coin-light);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
+  letter-spacing: 0.1em;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 6px) scale(0.55);
+  transition:
+    opacity 140ms ease,
+    transform 420ms cubic-bezier(0.34, 1.7, 0.64, 1);
+}
+
+.coin-readout[data-on="true"] {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+.coin-readout[data-face="tails"] {
+  border-color: color-mix(in srgb, var(--color-fog) 40%, transparent);
+  color: var(--color-ink);
+}
+
+.coin-readout-score {
+  color: var(--color-fog);
+  font-size: 0.75rem;
+}
+
+.coin-tally {
+  position: absolute;
+  bottom: 0.7rem;
+  left: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--color-fog);
+  font-size: 0.8125rem;
   letter-spacing: 0.12em;
+  pointer-events: none;
+  transform: translateX(-50%);
+  white-space: nowrap;
 }
 
-.coin-console[data-shaking="true"] .coin-flight {
-  animation: coin-flight 1080ms linear infinite;
-  will-change: transform;
+.coin-tally-sum {
+  display: inline-flex;
+  gap: 0.6em;
+  white-space: pre;
 }
 
-.coin-console[data-shaking="true"] .pixel-coin {
-  animation: coin-spin 1080ms linear infinite;
-  will-change: transform;
+.coin-tally-sum > span,
+.coin-tally-glyph,
+.coin-tally-name {
+  opacity: 0;
+  transition:
+    opacity 120ms ease,
+    transform 360ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.coin-console[data-shaking="true"]
-  .coin-unit:nth-child(2)
-  :is(.coin-flight, .pixel-coin) {
-  animation-delay: -410ms;
-  animation-duration: 980ms;
+.coin-tally-sum > span {
+  transform: translateY(5px);
+  transition-delay: calc(var(--i) * 70ms);
 }
 
-.coin-console[data-shaking="true"]
-  .coin-unit:nth-child(3)
-  :is(.coin-flight, .pixel-coin) {
-  animation-delay: -730ms;
-  animation-duration: 1140ms;
+.coin-tally-glyph {
+  display: inline-flex;
+  width: 3.25rem;
+  height: 0.5rem;
+  justify-content: space-between;
+  transform: scaleX(0);
+  transition-delay: 260ms;
 }
 
-@keyframes coin-spread-in {
-  0%,
-  24% {
-    transform: translate3d(var(--coin-entry-x), 8px, 0)
-      rotate(var(--coin-entry-rotate)) scale(0.92);
-    filter: brightness(0.82);
-  }
-  72% {
-    transform: translate3d(var(--coin-entry-overshoot), -2px, 0)
-      rotate(var(--coin-exit-rotate)) scale(1.025);
-    filter: brightness(1.12);
-  }
-  100% {
-    transform: translate3d(0, 0, 0) rotate(0) scale(1);
-    filter: brightness(1);
-  }
+.coin-tally-name {
+  color: var(--color-ink);
+  transform: translateX(-6px);
+  transition-delay: 340ms;
 }
 
-@keyframes coin-flight {
+.coin-tally[data-on="true"] :is(.coin-tally-sum > span, .coin-tally-glyph, .coin-tally-name) {
+  opacity: 1;
+  transform: none;
+}
+
+.coin-tally[data-on="false"] :is(.coin-tally-sum > span, .coin-tally-glyph, .coin-tally-name) {
+  transition-delay: 0ms;
+}
+
+.coin-tally-bar {
+  height: 100%;
+  flex: 1;
+  background: var(--color-ink);
+  box-shadow:
+    0 0 6px color-mix(in srgb, var(--color-ink) 45%, transparent),
+    0 0 14px color-mix(in srgb, var(--color-signal) 20%, transparent);
+}
+
+.coin-tally-bar:not(:only-child) {
+  flex: 0 0 43%;
+}
+
+.coin-tally[data-mutating="true"] .coin-tally-name {
+  color: var(--color-flux);
+}
+
+.coin-tally[data-mutating="true"] .coin-tally-bar {
+  background: var(--color-flux);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-flux) 55%, transparent);
+}
+
+/* 动爻：爻线在阴阳之间闪变一瞬，示意“将变” */
+.coin-tally[data-on="true"][data-mutating="true"] .coin-tally-glyph {
+  animation: coin-tally-glitch 520ms steps(1, end) 380ms 2;
+}
+
+@keyframes coin-tally-glitch {
   0% {
-    transform: translate3d(0, 3px, 0) rotateZ(var(--coin-lean));
-    animation-timing-function: cubic-bezier(0.18, 0.72, 0.3, 1);
+    transform: translateX(2px);
+    filter: hue-rotate(160deg) brightness(1.6);
   }
-  44% {
-    transform: translate3d(var(--coin-drift), -38px, 28px)
-      rotateZ(var(--coin-lean-opposite));
-    animation-timing-function: cubic-bezier(0.58, 0, 0.86, 0.38);
+  20% {
+    transform: translateX(-2px) scaleY(1.6);
   }
-  78% {
-    transform: translate3d(0, 2px, 0) rotateZ(var(--coin-lean));
-    animation-timing-function: cubic-bezier(0.18, 0.72, 0.28, 1);
+  40% {
+    transform: none;
+    filter: none;
   }
-  88% {
-    transform: translate3d(var(--coin-return), -7px, 8px)
-      rotateZ(var(--coin-lean-bounce));
-    animation-timing-function: cubic-bezier(0.55, 0, 0.82, 0.42);
+  60% {
+    transform: translateX(1px) scaleX(0.94);
+    opacity: 0.55;
   }
+  80%,
   100% {
-    transform: translate3d(0, 3px, 0) rotateZ(var(--coin-lean));
+    transform: none;
+    opacity: 1;
   }
 }
 
-@keyframes coin-spin {
-  0% {
-    transform: rotateX(8deg) rotateY(0deg);
-  }
-  35% {
-    transform: rotateX(-7deg) rotateY(252deg);
-  }
-  70% {
-    transform: rotateX(10deg) rotateY(504deg);
-  }
-  100% {
-    transform: rotateX(8deg) rotateY(720deg);
-  }
+/* ---------------------------------- */
+/* 六爻完成：卦象在舞台中央成形         */
+/* ---------------------------------- */
+
+.coin-finale {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1rem, 4vw, 2rem);
+  background: radial-gradient(
+    closest-side,
+    rgba(4, 8, 7, 0.9),
+    rgba(4, 8, 7, 0.55) 72%,
+    rgba(4, 8, 7, 0.2)
+  );
+  pointer-events: none;
+  animation: coin-finale-in 480ms ease-out both;
 }
 
-@keyframes coin-land {
-  0% {
-    transform: translate3d(0, -5px, 6px) scale(0.97);
-  }
-  62% {
-    transform: translate3d(0, 2px, 0) scale(1.015);
-  }
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-}
-
-@keyframes coin-settle-heads {
+@keyframes coin-finale-in {
   from {
-    transform: rotateX(4deg) rotateY(-16deg);
-  }
-  to {
-    transform: rotateX(0) rotateY(0);
+    opacity: 0;
   }
 }
 
-@keyframes coin-settle-tails {
-  from {
-    transform: rotateX(4deg) rotateY(164deg);
+.coin-finale-glyph {
+  display: flex;
+  width: clamp(4rem, 12vw, 5.5rem);
+  flex-direction: column;
+  gap: clamp(4px, 1vw, 6px);
+}
+
+.coin-finale-line {
+  display: flex;
+  height: clamp(6px, 1.4vw, 9px);
+  justify-content: space-between;
+  animation: coin-finale-line 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(120ms + var(--i) * 70ms);
+}
+
+@keyframes coin-finale-line {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scaleX(0.2);
+    filter: brightness(2.4);
   }
-  to {
-    transform: rotateX(0) rotateY(180deg);
+  60% {
+    opacity: 1;
   }
+  100% {
+    transform: none;
+    filter: none;
+  }
+}
+
+.coin-finale-bar {
+  height: 100%;
+  flex: 1;
+  background: var(--color-ink);
+  box-shadow:
+    0 0 6px color-mix(in srgb, var(--color-ink) 40%, transparent),
+    0 0 16px color-mix(in srgb, var(--color-signal) 18%, transparent);
+}
+
+.coin-finale-bar:not(:only-child) {
+  flex: 0 0 43%;
+}
+
+.coin-finale-line[data-mutating="true"] .coin-finale-bar {
+  background: var(--color-flux);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-flux) 50%, transparent);
+}
+
+.coin-finale-names {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  gap: 0.4rem 0.8rem;
+  animation: coin-finale-in 360ms ease-out 320ms both;
+}
+
+.coin-finale-label {
+  color: var(--color-fog);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+}
+
+.coin-finale-name {
+  color: var(--color-signal);
+  font-size: clamp(1.1rem, 2.6vw, 1.45rem);
+  letter-spacing: 0.18em;
+  text-shadow:
+    -0.045em 0 rgba(255, 60, 90, 0.35),
+    0.045em 0 rgba(60, 225, 255, 0.32),
+    0 0 14px color-mix(in srgb, var(--color-signal) 45%, transparent);
+}
+
+.coin-finale-name-changed {
+  color: var(--color-ink);
+  font-size: clamp(0.95rem, 2vw, 1.1rem);
+}
+
+/* ---------------------------------- */
+/* 爻线飞入记录                        */
+/* ---------------------------------- */
+
+.coin-ghost-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.coin-ghost {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  height: 10px;
+  margin-top: -5px;
+  justify-content: space-between;
+  transform-origin: center;
+  will-change: transform, width, opacity;
+}
+
+.coin-ghost-bar {
+  height: 100%;
+  flex: 1;
+  background: var(--color-ink);
+  box-shadow:
+    0 0 10px color-mix(in srgb, var(--color-ink) 55%, transparent),
+    0 0 24px color-mix(in srgb, var(--color-signal) 40%, transparent);
+}
+
+.coin-ghost[data-yang="false"] .coin-ghost-bar {
+  flex: 0 0 43%;
+}
+
+.coin-ghost[data-mutating="true"] .coin-ghost-bar {
+  background: var(--color-flux);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--color-flux) 60%, transparent);
+}
+
+.coin-ghost-trail .coin-ghost-bar {
+  box-shadow: none;
 }
 
 .coin-record {
@@ -1900,6 +2108,7 @@ html[data-motion="off"] .feedback-invitation {
 }
 
 .coin-record-row {
+  position: relative;
   display: flex;
   min-height: 2.9rem;
   align-items: center;
@@ -1909,6 +2118,16 @@ html[data-motion="off"] .feedback-invitation {
   transition:
     border-color 140ms ease,
     background 140ms ease;
+}
+
+.coin-record-row::after {
+  position: absolute;
+  inset: -1px;
+  border: 1px solid var(--color-signal);
+  background: color-mix(in srgb, var(--color-signal) 14%, transparent);
+  content: "";
+  opacity: 0;
+  pointer-events: none;
 }
 
 .coin-record-row[data-current="true"] {
@@ -1921,21 +2140,103 @@ html[data-motion="off"] .feedback-invitation {
   box-shadow: 0 0 12px color-mix(in srgb, var(--color-flux) 45%, transparent);
 }
 
+.coin-record-row[data-fresh="true"]::after {
+  animation: coin-record-flash 900ms ease-out both;
+}
+
+.coin-record-row[data-fresh="true"] .coin-record-glyph {
+  animation: coin-record-glyph-in 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes coin-record-flash {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes coin-record-glyph-in {
+  0% {
+    transform: scaleX(0.35);
+    filter: brightness(2.6);
+  }
+  100% {
+    transform: none;
+    filter: none;
+  }
+}
+
+/* 六爻齐备：自初爻向上扫过一道光 */
+.coin-record[data-celebrate="true"] .coin-record-row::after {
+  animation: coin-record-sweep 640ms ease-out both;
+  animation-delay: calc(760ms + var(--row) * 80ms);
+}
+
+.coin-record[data-celebrate="true"] .coin-record-row .hex-bar {
+  animation: coin-record-pulse 700ms ease-out both;
+  animation-delay: calc(760ms + var(--row) * 80ms);
+}
+
+@keyframes coin-record-sweep {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes coin-record-pulse {
+  25% {
+    filter: brightness(1.9);
+    box-shadow:
+      0 0 12px color-mix(in srgb, var(--color-ink) 60%, transparent),
+      0 0 26px color-mix(in srgb, var(--color-signal) 45%, transparent);
+  }
+}
+
+/* 全局规则只缩短时长；这里的交错延迟也要清零，否则元素会先隐藏一段时间 */
+html[data-motion="off"] :is(.coin-console, .coin-record) :is(*, *::before, *::after) {
+  animation-delay: 0s !important;
+  transition-delay: 0s !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(.coin-console, .coin-record) :is(*, *::before, *::after) {
+    animation-delay: 0s !important;
+    transition-delay: 0s !important;
+  }
+}
+
 @media (max-width: 767px) {
   .coin-layout {
     gap: 0.55rem;
   }
 
   .coin-console {
-    min-height: 15rem;
+    min-height: 16.5rem;
   }
 
   .coin-console-head,
   .coin-console-action {
+    gap: 0.5rem;
     padding: 0.45rem 0.65rem;
     font-size: 0.75rem;
     line-height: 1.2;
     letter-spacing: 0.12em;
+  }
+
+  .coin-console-tag {
+    min-width: 0;
+  }
+
+  .coin-progress > span {
+    width: 0.55rem;
   }
 
   .coin-console-action {
@@ -1943,22 +2244,24 @@ html[data-motion="off"] .feedback-invitation {
   }
 
   .coin-stage {
-    --coin-size: 54px;
-    padding: 0.35rem 0.4rem;
+    min-height: 10rem;
   }
 
-  .coin-flight,
-  .pixel-coin {
-    width: var(--coin-size);
-  }
-
-  .coin-unit {
-    gap: 0.35rem;
-  }
-
-  .coin-face-caption {
-    min-height: 1rem;
+  .coin-readout {
+    top: calc(var(--coin-rest-y, 44%) + var(--coin-radius, 2.4rem) + 0.3rem);
+    padding: 0 0.35rem;
     font-size: 0.75rem;
+  }
+
+  .coin-tally {
+    bottom: 0.45rem;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .coin-tally-glyph {
+    width: 2.6rem;
+    height: 0.42rem;
   }
 
   .coin-status-row {

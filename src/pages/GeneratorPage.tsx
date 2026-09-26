@@ -1,21 +1,26 @@
-import { useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react'
-import type { Dispatch, SetStateAction } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react'
+import type { CSSProperties, Dispatch, RefObject, SetStateAction } from 'react'
 import { Clock } from '@phosphor-icons/react/dist/icons/Clock'
 import { CoinVertical } from '@phosphor-icons/react/dist/icons/CoinVertical'
 import { HandPalm } from '@phosphor-icons/react/dist/icons/HandPalm'
 import { Monitor } from '@phosphor-icons/react/dist/icons/Monitor'
 import { useLocation, useNavigate } from 'react-router-dom'
-import coinFacesUrl from '@/assets/coin-faces.webp'
+import { CoinTossStage } from '@/components/CoinTossStage'
+import type { CoinStageHandle } from '@/components/CoinTossStage'
 import { LiveTimestamp } from '@/components/LiveClock'
+import { ScrambleText } from '@/components/ScrambleText'
 import { generateChart } from '@/engine'
 import {
   lineIsMutating,
   lineIsYang,
+  rawLinesToMutationMask,
+  rawLinesToPrimaryBits,
+  resultBitsOf,
   scoreCoinToss,
   tossCoins,
   tossRawLines,
 } from '@/engine/binary'
-import type { CoinScore } from '@/engine/binary'
+import type { CoinToss } from '@/engine/binary'
 import { hexagramByBits } from '@/data/hexagrams'
 import {
   rawLinesFromNumbers,
@@ -28,12 +33,15 @@ import {
   completeRawLinesOf,
   createCoinShakeState,
 } from '@/features/coin-shake/model'
-import type { CoinShakeAction, CoinShakeState } from '@/features/coin-shake/model'
+import type { CoinShakeAction, CoinShakeState, CompleteRawLines } from '@/features/coin-shake/model'
+import { flyLine } from '@/features/coin-shake/line-flight'
+import type { LineFlight } from '@/features/coin-shake/line-flight'
 import type { HanziDerivation } from '@/features/hanzi/derive'
 import { trackDivinationEvent, trackEvent } from '@/lib/analytics'
 import { cn } from '@/lib/cn'
 import { getCurrentHexagramOrdinal } from '@/lib/hexagram-counter'
 import { scrollIntoViewIfNeeded } from '@/lib/interaction-scroll'
+import { motionEnabled } from '@/lib/motion'
 import { formatTimezone } from '@/lib/timezone-display'
 import { useReading } from '@/store/reading'
 import { useSettings } from '@/store/settings'
@@ -54,7 +62,8 @@ const MODES: Array<{ id: InputMethod; title: string; sub: string }> = [
 
 const COIN_LINE_NAMES = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'] as const
 const GENERATOR_SHIFT_DURATION_MS = 520
-const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
+/** 三枚铜钱落定后停顿片刻，再把爻线送进记录 */
+const LINE_TRANSFER_DELAY_MS = 520
 
 export function GeneratorPage() {
   const location = useLocation()
@@ -80,7 +89,7 @@ export function GeneratorPage() {
     previousHeadingTopRef.current = null
     const page = generatorPageRef.current
     const heading = generatorHeadingRef.current
-    if (previousTop === null || !page || !heading || !shouldAnimateGeneratorShift()) return
+    if (previousTop === null || !page || !heading || !motionEnabled()) return
 
     const deltaY = previousTop - heading.getBoundingClientRect().top
     if (Math.abs(deltaY) < 1 || typeof page.animate !== 'function') return
@@ -130,7 +139,7 @@ export function GeneratorPage() {
   useEffect(() => () => shiftAnimationRef.current?.cancel(), [])
 
   const selectMode = (nextMode: InputMethod) => {
-    if (!mode && shouldAnimateGeneratorShift()) {
+    if (!mode && motionEnabled()) {
       previousHeadingTopRef.current = generatorHeadingRef.current?.getBoundingClientRect().top ?? null
     }
     if (mode !== nextMode) {
@@ -201,12 +210,6 @@ export function GeneratorPage() {
       </div>
     </div>
   )
-}
-
-function shouldAnimateGeneratorShift(): boolean {
-  if (document.documentElement.dataset.motion === 'off') return false
-  return typeof window.matchMedia !== 'function'
-    || !window.matchMedia(REDUCED_MOTION_QUERY).matches
 }
 
 function ModeIcon({ mode }: { mode: InputMethod }) {
@@ -340,7 +343,7 @@ function EntropyPanel() {
     trackDivinationEvent('点击生成排盘', 'entropy')
     const lines = tossRawLines()
     const when = new Date()
-    if (!settings.animation || !shouldAnimateGeneratorShift()) {
+    if (!settings.animation || !motionEnabled()) {
       finish(lines, when)
       return
     }
@@ -388,6 +391,12 @@ function EntropyPanel() {
   )
 }
 
+interface CoinReadout {
+  coins: CoinToss
+  settled: readonly boolean[]
+  tally: boolean
+}
+
 function CoinShakePanel({
   state,
   dispatch,
@@ -402,15 +411,85 @@ function CoinShakePanel({
   const navigate = useNavigate()
   const { commitReading } = useReading()
   const { resolvedTimezone } = useSettings()
+  const stageRef = useRef<CoinStageHandle>(null)
+  const ghostLayerRef = useRef<HTMLDivElement>(null)
+  const tallyGlyphRef = useRef<HTMLSpanElement>(null)
+  const recordGlyphRefs = useRef<Array<HTMLSpanElement | null>>([])
+  const transferTimerRef = useRef<number | null>(null)
+  const flightRef = useRef<LineFlight | null>(null)
+  // 采样结果立即写入状态；画面上的爻要等铜钱落定、爻线飞入记录后才显示
+  const [revealed, setRevealed] = useState(state.lines.length)
+  const [landing, setLanding] = useState(false)
+  const [arrived, setArrived] = useState<number | null>(null)
+  const [readout, setReadout] = useState<CoinReadout | null>(() =>
+    state.coins && state.phase !== 'shaking'
+      ? { coins: state.coins, settled: [true, true, true], tally: true }
+      : null,
+  )
+  const [intro] = useState(() => state.phase === 'ready' && state.lines.length === 0)
+
   const completeLines = completeRawLinesOf(state)
   const shaking = state.phase === 'shaking'
-  const nextLineIndex = Math.min(state.lines.length, 5)
-  const nextLineName = COIN_LINE_NAMES[nextLineIndex]
+  const complete = state.phase === 'complete'
+  const finale = complete && revealed === 6
+  const nextLineName = COIN_LINE_NAMES[Math.min(state.lines.length, 5)]
   const settledValue = state.coins ? scoreCoinToss(state.coins) : null
+
+  const cancelTransfer = useCallback(() => {
+    if (transferTimerRef.current !== null) window.clearTimeout(transferTimerRef.current)
+    transferTimerRef.current = null
+    flightRef.current?.cancel()
+    flightRef.current = null
+  }, [])
+
+  useEffect(() => cancelTransfer, [cancelTransfer])
+
+  function arrive(lineIndex: number) {
+    flightRef.current = null
+    setRevealed((count) => Math.max(count, lineIndex + 1))
+    setArrived(lineIndex)
+  }
+
+  function flushReveal() {
+    cancelTransfer()
+    if (revealed < state.lines.length) arrive(state.lines.length - 1)
+  }
+
+  function transferLine(lineIndex: number, value: LineValue) {
+    setLanding(false)
+    setReadout((current) => current && { ...current, tally: true })
+    if (!motionEnabled()) {
+      arrive(lineIndex)
+      return
+    }
+    transferTimerRef.current = window.setTimeout(() => {
+      transferTimerRef.current = null
+      const layer = ghostLayerRef.current
+      const from = tallyGlyphRef.current
+      const to = recordGlyphRefs.current[lineIndex]
+      const flight = layer && from && to ? flyLine(layer, from, to, value) : null
+      if (!flight) {
+        arrive(lineIndex)
+        return
+      }
+      flightRef.current = flight
+      flight.arrived.then(
+        () => {
+          if (flightRef.current === flight) arrive(lineIndex)
+        },
+        () => undefined,
+      )
+    }, LINE_TRANSFER_DELAY_MS)
+  }
 
   function toggleShake() {
     setError(null)
-    if (state.phase === 'complete') {
+    if (landing) {
+      stageRef.current?.skip()
+      flushReveal()
+      return
+    }
+    if (complete) {
       if (!completeLines) return
       trackDivinationEvent('点击生成排盘', 'coin')
       const chart = generateChart({
@@ -424,38 +503,69 @@ function CoinShakePanel({
       return
     }
     if (shaking) {
+      let coins: CoinToss
       try {
-        dispatch({ type: 'stop', coins: tossCoins(), when: new Date() })
+        coins = tossCoins()
       } catch {
         setError('随机数生成器不可用，未记录本轮结果。')
+        return
       }
+      const lineIndex = state.lines.length
+      dispatch({ type: 'stop', coins, when: new Date() })
+      setLanding(true)
+      setArrived(null)
+      setReadout({ coins, settled: [false, false, false], tally: false })
+      stageRef.current?.release(coins, {
+        onSettle: (index) =>
+          setReadout((current) =>
+            current?.coins === coins
+              ? { ...current, settled: current.settled.map((done, i) => done || i === index) }
+              : current,
+          ),
+        onAllSettled: () => transferLine(lineIndex, scoreCoinToss(coins)),
+      })
       return
     }
+    flushReveal()
     if (state.lines.length === 0) {
       trackEvent('开始摇币起卦')
     }
+    setReadout(null)
     dispatch({ type: 'start' })
+    stageRef.current?.startShake()
   }
 
   function reset() {
     trackEvent('重置摇币起卦', { 已完成爻数: state.lines.length })
     setError(null)
+    cancelTransfer()
+    setRevealed(0)
+    setLanding(false)
+    setArrived(null)
+    setReadout(null)
     dispatch({ type: 'reset' })
+    stageRef.current?.reset()
   }
 
-  const actionLabel = state.phase === 'complete'
-    ? '六爻已完成，生成排盘'
-    : shaking
-      ? `点击停止并记录${nextLineName}`
-      : `点击开始摇动${nextLineName}`
+  const actionLabel = landing
+    ? '铜钱落定中，点击跳过'
+    : complete
+      ? '六爻已完成，生成排盘'
+      : shaking
+        ? `点击停止并记录${nextLineName}`
+        : `点击开始摇动${nextLineName}`
 
-  const statusText = state.phase === 'complete'
-    ? '六爻已完成，再次点击铜钱生成排盘。'
-    : shaking
-      ? `${nextLineName}摇动中，停止时采样三枚铜钱。`
-      : settledValue
-        ? `本轮为${lineValueText(settledValue)}。已完成 ${state.lines.length}/6。`
-        : '点击铜钱开始，第一轮从初爻起。'
+  const statusText = landing
+    ? `${COIN_LINE_NAMES[state.lines.length - 1]}的三枚铜钱正在落定。`
+    : complete
+      ? '六爻已完成，再次点击铜钱生成排盘。'
+      : shaking
+        ? `${nextLineName}摇动中，停止时采样三枚铜钱。`
+        : settledValue
+          ? `本轮为${lineValueText(settledValue)}。已完成 ${state.lines.length}/6。`
+          : '点击铜钱开始，第一轮从初爻起。'
+
+  const consolePhase = landing ? 'landing' : shaking ? 'shaking' : complete ? 'complete' : 'standby'
 
   return (
     <>
@@ -463,41 +573,46 @@ function CoinShakePanel({
         <RitualGuide>
           一事一问。静心默念后，从初爻开始摇动三枚铜钱。
         </RitualGuide>
-        <div className="coin-layout grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(20rem,0.85fr)]">
+        <div className="coin-layout relative grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(20rem,0.85fr)]">
           <div className="coin-operation">
             <button
               type="button"
               className="coin-console"
-              data-shaking={shaking}
+              data-phase={consolePhase}
               onClick={toggleShake}
               aria-label={actionLabel}
               aria-pressed={shaking}
-              aria-busy={shaking}
+              aria-busy={shaking || landing}
             >
               <span className="coin-console-head">
-                <span>ROUND {Math.min(state.lines.length + 1, 6)} / 6</span>
-                <span>{shaking ? 'IN MOTION' : state.phase === 'complete' ? 'COMPLETE' : 'STANDBY'}</span>
+                <span>ROUND {landing ? state.lines.length : Math.min(state.lines.length + 1, 6)} / 6</span>
+                <CoinProgress
+                  revealed={revealed}
+                  cast={state.lines.length}
+                  shaking={shaking}
+                  arrived={arrived}
+                />
+                <span className="coin-console-tag">
+                  {landing ? 'LANDING' : shaking ? 'IN MOTION' : complete ? 'COMPLETE' : 'STANDBY'}
+                </span>
               </span>
-              <span
-                className="coin-stage"
-                data-pristine={state.phase === 'ready' && state.lines.length === 0 && !state.coins}
-                aria-hidden="true"
+              <CoinTossStage
+                ref={stageRef}
+                faces={state.coins}
+                shaking={shaking}
+                intro={intro}
+                dim={finale}
               >
-                {[0, 1, 2].map((index) => (
-                  <PixelCoin
-                    key={index}
-                    score={state.coins?.[index]}
-                    shaking={shaking}
-                  />
-                ))}
-              </span>
+                <CoinReadouts readout={finale ? null : readout} glyphRef={tallyGlyphRef} />
+                {finale && completeLines && <CoinFinale lines={completeLines} />}
+              </CoinTossStage>
               <span
                 className={cn(
                   'coin-console-action',
-                  state.phase === 'complete' ? 'coin-console-action-ready' : null,
+                  complete && !landing ? 'coin-console-action-ready' : null,
                 )}
               >
-                {state.phase === 'complete' ? (
+                {complete && !landing ? (
                   <>
                     <span>六爻已完成</span>
                     <span>生成排盘 →</span>
@@ -518,7 +633,14 @@ function CoinShakePanel({
             )}
           </div>
 
-          <CoinLineRecord lines={state.lines} shaking={shaking} />
+          <CoinLineRecord
+            lines={state.lines}
+            revealed={revealed}
+            shaking={shaking}
+            arrived={arrived}
+            glyphRefs={recordGlyphRefs}
+          />
+          <div ref={ghostLayerRef} className="coin-ghost-layer" aria-hidden="true" />
         </div>
 
         <div className="coin-panel-footer mt-3 flex justify-end border-t border-edge pt-3">
@@ -548,46 +670,171 @@ function CoinShakePanel({
   )
 }
 
-function PixelCoin({ score, shaking }: { score?: CoinScore; shaking: boolean }) {
-  const face = shaking ? 'shaking' : score === 3 ? 'heads' : score === 2 ? 'tails' : 'neutral'
-  const caption = score === 3 ? '正' : score === 2 ? '反' : '·'
-
+function CoinProgress({
+  revealed,
+  cast,
+  shaking,
+  arrived,
+}: {
+  revealed: number
+  cast: number
+  shaking: boolean
+  arrived: number | null
+}) {
   return (
-    <span className="coin-unit" data-face={face}>
-      <span className="coin-flight">
-        <span className="pixel-coin">
-          <span
-            className="coin-side coin-side-heads"
-            style={{ backgroundImage: `url("${coinFacesUrl}")` }}
-          />
-          <span
-            className="coin-side coin-side-tails"
-            style={{ backgroundImage: `url("${coinFacesUrl}")` }}
-          />
-        </span>
-      </span>
-      <span className="coin-face-caption">{caption}</span>
+    <span className="coin-progress" aria-hidden="true">
+      {[0, 1, 2, 3, 4, 5].map((index) => (
+        <span
+          key={index}
+          data-state={
+            index < revealed
+              ? 'done'
+              : index < cast || (shaking && index === cast)
+                ? 'active'
+                : 'idle'
+          }
+          data-fresh={index === arrived}
+        />
+      ))}
     </span>
   )
 }
 
-function CoinLineRecord({ lines, shaking }: { lines: readonly LineValue[]; shaking: boolean }) {
+function LineGlyph({ value, className }: { value: LineValue; className: string }) {
   return (
-    <section className="coin-record" aria-label="六次摇币记录">
+    <>
+      <span className={className} />
+      {!lineIsYang(value) && <span className={className} />}
+    </>
+  )
+}
+
+function CoinReadouts({
+  readout,
+  glyphRef,
+}: {
+  readout: CoinReadout | null
+  glyphRef: RefObject<HTMLSpanElement | null>
+}) {
+  const value = readout ? scoreCoinToss(readout.coins) : null
+  return (
+    <>
+      {[0, 1, 2].map((index) => {
+        const score = readout?.coins[index]
+        return (
+          <span
+            key={index}
+            className="coin-readout"
+            style={{ '--slot': `var(--coin-slot-${index})` } as CSSProperties}
+            data-on={Boolean(readout?.settled[index])}
+            data-face={score === 3 ? 'heads' : 'tails'}
+          >
+            <span className="coin-readout-face">{score === 3 ? '正' : '反'}</span>
+            <span className="coin-readout-score">{score ?? ''}</span>
+          </span>
+        )
+      })}
+      <span
+        className="coin-tally"
+        data-on={Boolean(readout?.tally)}
+        data-mutating={value ? lineIsMutating(value) : false}
+      >
+        <span className="coin-tally-sum">
+          {readout?.coins.map((score, index) => (
+            <span key={index} style={{ '--i': index } as CSSProperties}>
+              {index > 0 ? `+ ${score}` : score}
+            </span>
+          ))}
+          <span className="text-ink" style={{ '--i': 3 } as CSSProperties}>= {value}</span>
+        </span>
+        <span
+          ref={glyphRef}
+          className="coin-tally-glyph"
+          data-yang={value ? lineIsYang(value) : true}
+        >
+          {value && <LineGlyph value={value} className="coin-tally-bar" />}
+        </span>
+        <span className="coin-tally-name">{value ? lineValueText(value) : ''}</span>
+      </span>
+    </>
+  )
+}
+
+function CoinFinale({ lines }: { lines: CompleteRawLines }) {
+  const primaryBits = rawLinesToPrimaryBits(lines)
+  const mask = rawLinesToMutationMask(lines)
+  const primary = hexagramByBits(primaryBits)
+  const changed = mask ? hexagramByBits(resultBitsOf(primaryBits, mask)) : null
+
+  return (
+    <span className="coin-finale">
+      <span className="coin-finale-glyph">
+        {[5, 4, 3, 2, 1, 0].map((index) => {
+          const value = lines[index]!
+          return (
+            <span
+              key={index}
+              className="coin-finale-line"
+              data-mutating={lineIsMutating(value)}
+              style={{ '--i': index } as CSSProperties}
+            >
+              <LineGlyph value={value} className="coin-finale-bar" />
+            </span>
+          )
+        })}
+      </span>
+      <span className="coin-finale-names">
+        <span className="coin-finale-label">本卦</span>
+        <ScrambleText className="coin-finale-name" text={primary?.chineseName ?? ''} delay={380} />
+        {changed && (
+          <>
+            <span className="coin-finale-label">之卦</span>
+            <ScrambleText
+              className="coin-finale-name coin-finale-name-changed"
+              text={changed.chineseName}
+              delay={560}
+            />
+          </>
+        )}
+      </span>
+    </span>
+  )
+}
+
+function CoinLineRecord({
+  lines,
+  revealed,
+  shaking,
+  arrived,
+  glyphRefs,
+}: {
+  lines: readonly LineValue[]
+  revealed: number
+  shaking: boolean
+  arrived: number | null
+  glyphRefs: RefObject<Array<HTMLSpanElement | null>>
+}) {
+  return (
+    <section
+      className="coin-record"
+      aria-label="六次摇币记录"
+      data-celebrate={revealed === 6 && arrived === 5}
+    >
       <div className="coin-record-head flex items-center justify-between border-b border-edge px-3 py-2 text-[0.875rem] tracking-[0.16em] text-fog">
         <span>爻序记录</span>
         <span>自下而上</span>
       </div>
       <div className="coin-record-list flex flex-col gap-1 p-3">
         {[5, 4, 3, 2, 1, 0].map((index) => {
-          const value = lines[index]
-          const current = index === lines.length && lines.length < 6
+          const value = index < revealed ? lines[index] : undefined
+          const current = index === revealed && revealed < 6
           const yang = value ? lineIsYang(value) : false
           const mutating = value ? lineIsMutating(value) : false
+          const fresh = value !== undefined && index === arrived
           const slotText = value
             ? lineValueText(value)
             : current
-              ? shaking ? '摇动中' : '下一爻'
+              ? shaking ? '摇动中' : index < lines.length ? '落定中' : '下一爻'
               : '未记录'
 
           return (
@@ -596,9 +843,16 @@ function CoinLineRecord({ lines, shaking }: { lines: readonly LineValue[]; shaki
               className="coin-record-row"
               data-current={current}
               data-mutating={mutating}
+              data-fresh={fresh}
+              style={{ '--row': index } as CSSProperties}
             >
               <span className="w-7 shrink-0 text-[0.875rem] text-fog">L{index + 1}</span>
-              <span className="flex flex-1 items-center gap-[14%]">
+              <span
+                ref={(element) => {
+                  glyphRefs.current[index] = element
+                }}
+                className="coin-record-glyph flex flex-1 items-center gap-[14%]"
+              >
                 {value ? (
                   yang ? (
                     <span className="hex-bar w-full" />
@@ -616,7 +870,7 @@ function CoinLineRecord({ lines, shaking }: { lines: readonly LineValue[]; shaki
                 'coin-record-value w-28 shrink-0 text-right text-[0.875rem]',
                 value ? mutating ? 'text-flux' : 'text-ink' : current ? 'text-signal' : 'text-fog',
               )}>
-                {slotText}
+                {fresh ? <ScrambleText text={slotText} duration={420} /> : slotText}
               </span>
             </div>
           )
