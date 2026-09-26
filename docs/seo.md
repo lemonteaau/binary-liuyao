@@ -24,6 +24,7 @@
 - `index.html`：首页现有的七种起卦方式、简短说明和可抓取导航链接。
 - `about.html`、`ai-guide.html`：独立元信息及真实页面正文。
 - `settings.html`、`result.html`：独立元信息与 noindex；用户设置和排盘仍在浏览器初始化，不写入静态 HTML。
+- `404.html`：noindex 元信息。Pages 对未知路径返回 404 状态，避免软 404；访问者仍由客户端兜底路由看到起卦页。
 
 三个公开页都将真实页面内容写入 `#root`，不再依赖 `noscript` 介绍，也不向爬虫提供单独的文案版本。功能说明与本地计算说明仍位于关于页，教程仍位于 AI 教程页；首页静态导航直接链接到这两个页面。
 
@@ -31,7 +32,7 @@
 
 静态时钟使用占位符，不输出构建时间或构建机时区。设置页和排盘页继续只提供元信息，不预渲染用户设置、历史或排盘数据。
 
-Cloudflare Pages 将 `/about` 匹配到 `about.html`，并将 `/about.html` 规范化为 `/about`。不增加顶层 404.html 或全局重写，保留既有 SPA 回退和 `/api/*`、`/x/*` Functions。资源基路径默认 `/`，避免深层路径刷新时误请求 `/about/assets/...`。
+Cloudflare Pages 将 `/about` 匹配到 `about.html`，并将 `/about.html` 规范化为 `/about`。存在顶层 `404.html` 后 Pages 不再做 SPA 回退：所有应用路由都已预渲染为同名 HTML，`/api/*`、`/x/*` 仍由 Functions 处理。新增应用路由时必须同时加入 `APP_ROUTES`，否则会返回 404。资源基路径默认 `/`，避免深层路径刷新时误请求 `/about/assets/...`。
 
 自行托管时，服务器需要支持 `.html` 无扩展名匹配或 SPA 回退；子目录部署需同时设置 Vite base 与服务器的挂载路径。不要直接把新版本复制到不支持路径回退的文件服务器后假定所有无扩展名地址可用。
 
@@ -39,6 +40,10 @@ Cloudflare Pages 将 `/about` 匹配到 `about.html`，并将 `/about.html` 规�
 
 - 首页、教程、关于页各有 canonical、Open Graph URL、标题、描述和 JSON-LD；运行时和构建时共用 src/lib/seo.ts。
 - sitemap 只列 `/`、`/ai-guide`、`/about`。设置、结果和未知路径使用 noindex,follow。
+- sitemap 的 `lastmod` 手动维护：公开页正文或元信息有实质改动时更新对应日期。
+- `_headers` 对 `*.pages.dev`（含预览部署）返回 `X-Robots-Tag: noindex`，只让自定义域名进入搜索结果。
+- Bing 使用 IndexNow：密钥文件位于 `public/<密钥>.txt`。生产部署完成后运行 `node scripts/indexnow.mjs`，提交 sitemap 中的全部地址。
+- 首页标题保留“六爻排盘”“在线起卦”“纳甲装卦”等核心词；描述避免重复堆砌同义卖点（Bing 建议约 150 字符以内的完整描述）。
 - 查询参数和分享片段不进入 canonical、结构化数据或统计 URL。统计过滤器继续兼容旧 Hash 和新路径。
 - 时钟、累计起卦数、打赏和反馈区保留 data-nosnippet，不影响可见内容或交互。
 

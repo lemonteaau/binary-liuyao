@@ -28,6 +28,13 @@ try {
     await writeFile(resolve(output, route === '/' ? 'index.html' : `${route.slice(1)}.html`), dom.serialize())
     dom.window.close()
   }
+  // Unknown paths get a real 404 status from Pages instead of a soft-404 copy of
+  // the homepage. Visitors still get the generator: the client router's
+  // fallback route renders it, and the page stays noindex.
+  const notFound = new JSDOM(template)
+  updatePageMetadata('/404', notFound.window.document)
+  await writeFile(resolve(output, '404.html'), notFound.serialize())
+  notFound.window.close()
 } finally {
   await server.close()
 }

@@ -5,7 +5,7 @@ export function TaijiIcon() {
     <img
       className="app-logo-taiji"
       src={taijiIcon}
-      alt=""
+      alt="HEX//64 太极标志"
       aria-hidden="true"
     />
   )
