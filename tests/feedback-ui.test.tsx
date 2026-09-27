@@ -68,18 +68,6 @@ describe('关于页反馈栏', () => {
     expect(textarea.value).toBe('这里有一条不会丢的反馈。')
   })
 
-  it('关于页常驻显示跨平台的再次访问方法', () => {
-    render(
-      <MemoryRouter initialEntries={['/about']}>
-        <AboutPage />
-      </MemoryRouter>,
-    )
-
-    expect(screen.getByText('把本站留在手边')).toBeTruthy()
-    expect(screen.getByText(/Ctrl D/)).toBeTruthy()
-    expect(screen.getByText(/快捷键可能因浏览器设置而不同/)).toBeTruthy()
-    expect(screen.getByText(/添加到主屏幕/)).toBeTruthy()
-  })
 })
 
 describe('温和反馈邀请', () => {

@@ -1287,8 +1287,7 @@ html[data-screen-fx="off"] .chroma {
   text-transform: uppercase;
 }
 
-.bookmark-invitation kbd,
-.bookmark-help kbd {
+.bookmark-invitation kbd {
   display: inline-block;
   margin-inline: 0.18rem;
   border: 1px solid color-mix(in srgb, var(--color-fog) 45%, var(--color-edge));
