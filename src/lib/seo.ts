@@ -33,9 +33,16 @@ function guaMetadata(kingWenNumber: number): { title: string; description: strin
 }
 
 export function routeMetadata(pathname: string): { title: string; description: string } {
-  const kingWenNumber = guaNumberFromPath(normalizePagePath(pathname))
+  const path = normalizePagePath(pathname)
+  const kingWenNumber = guaNumberFromPath(path)
   if (kingWenNumber !== null) return guaMetadata(kingWenNumber)
-  switch (normalizePagePath(pathname)) {
+  if (!APP_ROUTES.includes(path)) {
+    return {
+      title: '页面不存在 - HEX//64',
+      description: '找不到这个页面。可以回到 HEX//64 起卦页，或查看六十四卦列表。',
+    }
+  }
+  switch (path) {
     case '/result':
       return {
         title: '六爻排盘结果 - HEX//64',

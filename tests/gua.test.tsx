@@ -59,9 +59,10 @@ describe('六十四卦静态页', () => {
       expect(robotsContent(path)).toMatch(/^index,/)
       expect(canonicalUrl(path)).toBe(`https://liuyao.lemontea.xyz${path}`)
     }
-    for (const path of ['/gua/0', '/gua/65']) {
+    for (const path of ['/gua/0', '/gua/65', '/gua/222']) {
       expect(robotsContent(path)).toBe('noindex,follow')
       expect(canonicalUrl(path)).toBe('https://liuyao.lemontea.xyz/')
+      expect(routeMetadata(path).title).toBe('页面不存在 - HEX//64')
     }
   })
 
@@ -75,5 +76,16 @@ describe('六十四卦静态页', () => {
     }
     const index = renderPublicPage('/gua')
     for (const number of GUA_NUMBERS) expect(index).toContain(`href="/gua/${number}"`)
+  })
+
+  it('无效卦号显示 404 页面，而不是起卦页', () => {
+    for (const path of ['/gua/222', '/gua/0', '/gua/65']) {
+      const html = renderPublicPage(path)
+      expect(html).toMatch(/<h1[^>]*>页面不存在<\/h1>/)
+      expect(html).toContain('卦号应为 1–64')
+      expect(html).toContain('href="/gua"')
+      expect(html).not.toMatch(/<h1[^>]*>六爻排盘<\/h1>/)
+      expect(html).not.toContain('摇币起卦')
+    }
   })
 })

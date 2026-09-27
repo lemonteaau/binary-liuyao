@@ -107,4 +107,37 @@ describe('SEO and path-route compatibility', () => {
     expectMetadata('/')
     expect(screen.getByRole('heading', { name: '六爻排盘' })).toBeTruthy()
   })
+
+  it('gives unknown paths not-found metadata while keeping the homepage metadata for /', () => {
+    for (const route of ['/foo', '/gua/222', '/gua/0', '/404']) {
+      expect(routeMetadata(route).title).toBe('页面不存在 - HEX//64')
+      expect(robotsContent(route)).toBe('noindex,follow')
+      expect(canonicalUrl(route)).toBe(CANONICAL_URL)
+    }
+    expect(routeMetadata('/').title).toContain('六爻排盘')
+    expect(routeMetadata('/').title).not.toBe(routeMetadata('/foo').title)
+    expect(routeMetadata('/settings').title).toBe('设置 - HEX//64 六爻排盘')
+  })
+
+  it('renders the not-found page in place for unknown paths without redirecting', async () => {
+    localStorage.setItem('hex64.settings.v1', JSON.stringify({ animation: false }))
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline in test')))
+    for (const path of ['/gua/222', '/foo']) {
+      window.history.replaceState(null, '', path)
+      render(<App />)
+      expect(screen.getByRole('heading', { name: '页面不存在' })).toBeTruthy()
+      expect(screen.queryByRole('heading', { name: '六爻排盘' })).toBeNull()
+      expect(window.location.pathname).toBe(path)
+      expectMetadata(path)
+      expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex,follow')
+      expect(Boolean(screen.queryByText(/卦号应为 1–64/))).toBe(path.startsWith('/gua/'))
+      cleanup()
+    }
+    window.history.replaceState(null, '', '/foo')
+    render(<App />)
+    fireEvent.click(screen.getByRole('link', { name: '→ 回到起卦' }))
+    await waitFor(() => expect(window.location.pathname).toBe('/'))
+    expect(screen.getByRole('heading', { name: '六爻排盘' })).toBeTruthy()
+    expectMetadata('/')
+  })
 })

@@ -32,10 +32,13 @@ try {
     dom.window.close()
   }
   // Unknown paths get a real 404 status from Pages instead of a soft-404 copy of
-  // the homepage. Visitors still get the generator: the client router's
-  // fallback route renders it, and the page stays noindex.
+  // the homepage, with the not-found page prerendered so it reads without JS.
   const notFound = new JSDOM(template)
-  updatePageMetadata('/404', notFound.window.document)
+  const notFoundDocument = notFound.window.document
+  updatePageMetadata('/404', notFoundDocument)
+  notFoundDocument.getElementById('root').innerHTML = renderPublicPage('/404')
+  notFoundDocument.getElementById('root').setAttribute('data-prerendered', '')
+  notFoundDocument.querySelector('noscript')?.remove()
   await writeFile(resolve(output, '404.html'), notFound.serialize())
   notFound.window.close()
 } finally {

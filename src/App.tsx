@@ -15,6 +15,7 @@ import { AboutPage } from '@/pages/AboutPage'
 import { AiGuidePage } from '@/pages/AiGuidePage'
 import { GuaDetailPage, GuaIndexPage } from '@/pages/GuaPage'
 import { HistoryPage } from '@/pages/HistoryPage'
+import { NotFoundPage } from '@/pages/NotFoundPage'
 import { ReadingProvider } from '@/store/reading'
 import { SettingsProvider, useDisplaySettings } from '@/store/settings'
 
@@ -112,7 +113,7 @@ export function Shell() {
               <Route path="/about" element={<AboutPage />} />
               <Route path="/gua" element={<GuaIndexPage />} />
               <Route path="/gua/:number" element={<GuaDetailPage />} />
-              <Route path="*" element={<GeneratorPage />} />
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </main>
           <footer className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-edge py-3 text-[0.875rem] leading-none tracking-[0.18em] text-fog">

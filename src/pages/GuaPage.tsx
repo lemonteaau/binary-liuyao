@@ -4,7 +4,7 @@ import { HexagramClassic } from '@/components/ZhouyiClassics'
 import { TRIGRAMS, type TrigramKey } from '@/data/trigrams'
 import { placementOf } from '@/engine/hexagrams'
 import { GUA_INDEX_PATH, guaNumberFromPath, guaPath, guaProfile, palaceGroups, palaceRankLabel } from '@/lib/gua'
-import { GeneratorPage } from '@/pages/GeneratorPage'
+import { NotFoundPage } from '@/pages/NotFoundPage'
 import type { HexagramRecord } from '@/types'
 
 const LINE_NAMES = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'] as const
@@ -60,8 +60,8 @@ export function GuaIndexPage() {
 export function GuaDetailPage() {
   const { number = '' } = useParams()
   const kingWenNumber = guaNumberFromPath(`${GUA_INDEX_PATH}/${number}`)
-  // 与未知路径一致：客户端兜底为起卦页，页面本身由 robots 标记为 noindex。
-  if (kingWenNumber === null) return <GeneratorPage />
+  // 与未知路径一致：显示 404 页面，服务器端同样返回 404 状态。
+  if (kingWenNumber === null) return <NotFoundPage />
   return <GuaDetail kingWenNumber={kingWenNumber} />
 }
 

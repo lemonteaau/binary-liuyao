@@ -26,4 +26,16 @@ describe('public HTML without a browser', () => {
     expect(guide).toContain('<article')
     expect(guide).toContain('AI解卦教程')
   })
+
+  it('renders a not-found page for unknown paths instead of the generator', () => {
+    for (const path of ['/foo', '/404']) {
+      const html = renderPublicPage(path)
+      expect(html).toMatch(/<h1[^>]*>页面不存在<\/h1>/)
+      expect(html).toContain('href="/"')
+      expect(html).toContain('href="/gua"')
+      expect(html).not.toContain('卦号应为')
+      expect(html).not.toMatch(/<h1[^>]*>六爻排盘<\/h1>/)
+      expect(html).not.toContain('摇币起卦')
+    }
+  })
 })
