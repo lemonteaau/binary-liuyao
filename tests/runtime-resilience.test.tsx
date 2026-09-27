@@ -5,7 +5,7 @@ import { BootSequence, useBootOnce } from '@/components/BootSequence'
 import { FeedbackForm } from '@/components/FeedbackForm'
 import { LiveTimestamp } from '@/components/LiveClock'
 import { generateChart } from '@/engine'
-import { ReadingProvider, useReading } from '@/store/reading'
+import { HISTORY_LIMIT, ReadingProvider, useReading } from '@/store/reading'
 import { SettingsProvider, useSettings } from '@/store/settings'
 
 afterEach(() => {
@@ -48,10 +48,10 @@ describe('异常状态恢复', () => {
     expect(() => new Intl.DateTimeFormat('en', { timeZone: settings.resolvedTimezone })).not.toThrow()
   })
 
-  it('历史损坏条目被跳过，正常记录保留且恢复不超过 20 条', () => {
+  it('历史损坏条目被跳过，正常记录保留且恢复不超过上限', () => {
     const rawLines = [7, 8, 7, 8, 7, 8] as const
     const chart = generateChart({ inputMethod: 'manual', rawLines })
-    const records = Array.from({ length: 25 }, (_, index) => ({
+    const records = Array.from({ length: HISTORY_LIMIT + 5 }, (_, index) => ({
       id: index.toString(16).toUpperCase().padStart(6, '0'), rawLines, chart,
     }))
     localStorage.setItem('hex64.current.v1', '{}')
@@ -59,9 +59,9 @@ describe('异常状态恢复', () => {
     render(<ReadingProvider><ReadingProbe /></ReadingProvider>)
     const restored = JSON.parse(screen.getByRole('status').textContent!)
     expect(restored.current).toBeNull()
-    expect(restored.history).toEqual(records.slice(0, 20))
+    expect(restored.history).toEqual(records.slice(0, HISTORY_LIMIT))
     // 加载阶段不覆盖存储，仍能手动恢复原始数据。
-    expect(JSON.parse(localStorage.getItem('hex64.history.v1')!)).toHaveLength(27)
+    expect(JSON.parse(localStorage.getItem('hex64.history.v1')!)).toHaveLength(HISTORY_LIMIT + 7)
   })
 
 })

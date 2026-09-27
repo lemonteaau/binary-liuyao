@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { CopyButton } from '@/components/CopyButton'
 import { FullReading } from '@/components/FullReading'
 import { HexLines } from '@/components/HexLines'
+import { ReadingNotesPanel } from '@/components/ReadingNotesPanel'
+import { SupportNudge } from '@/components/SupportNudge'
 import { generateChart } from '@/engine'
 import { bitsToString } from '@/engine/binary'
 import { TRIGRAMS } from '@/data/trigrams'
@@ -10,6 +12,7 @@ import { trigramKeyByRemainder } from '@/features/number/derive'
 import type { HanziSeed } from '@/features/hanzi/derive'
 import { formatRawText } from '@/formatters/rawText'
 import { buildShareUrl, parseShareLink } from '@/lib/share-link'
+import { isFreshReading, milestoneForReading } from '@/lib/support-nudge'
 import type { LineValue } from '@/types'
 import { INPUT_METHOD_LABELS_UI, useReading } from '@/store/reading'
 import { useSettings } from '@/store/settings'
@@ -75,6 +78,7 @@ export function ResultPage() {
   const rawText = formatRawText(chart, {
     includeAiInstruction: settings.aiInstruction,
     aiInstructionPrompt: settings.aiInstructionPrompt,
+    includeSource: settings.includeSource,
   })
   const hasAiInstruction = settings.aiInstruction && settings.aiInstructionPrompt.trim().length > 0
   const isLinkMode = chart.inputMethod === 'link' || linkParams !== null
@@ -82,6 +86,9 @@ export function ResultPage() {
     linkParams?.when && linkParams.timezone && linkParams.inputMethod,
   )
   const hasMutation = chart.mutationMask !== 0
+  // 起卦序号与里程碑提示只跟随刚完成的新排盘，从历史或分享链接打开时不出现
+  const fresh = isFreshReading(current)
+  const milestone = fresh ? milestoneForReading(current.id) : null
 
   const shareUrl = () => {
     return buildShareUrl(
@@ -166,6 +173,8 @@ export function ResultPage() {
         ordinal={current.ordinal}
       />
 
+      <ReadingNotesPanel key={current.id} record={current} />
+
       <section className="panel mt-4 p-4 sm:p-5">
         <span className="panel-tag">操作</span>
         <div className="flex flex-wrap gap-2">
@@ -180,6 +189,9 @@ export function ResultPage() {
           <button type="button" className="btn" onClick={() => navigate('/')}>
             [ 再起一卦 ]
           </button>
+          <Link to="/history" className="btn no-underline">
+            [ 历史记录 ]
+          </Link>
         </div>
         <p className="mt-3 text-[0.875rem] leading-relaxed text-fog">
           上方「复制排盘」输出适用于 AI 或六爻使用者。
@@ -206,6 +218,16 @@ export function ResultPage() {
             </span>
           )}
         </p>
+      )}
+
+      {milestone !== null ? (
+        <SupportNudge key={current.id} kind="milestone" occurrence={current.id} className="mt-3 text-center">
+          这是你在 HEX//64 排的第 {milestone} 卦。如果它一直有用，欢迎支持本站继续免费、无广告。
+        </SupportNudge>
+      ) : fresh && typeof current.ordinal === 'number' && (
+        <SupportNudge key={current.id} kind="ordinal" occurrence={current.id} className="mt-3 text-center">
+          HEX//64 不接广告，服务器与域名费用靠打赏维持。
+        </SupportNudge>
       )}
     </div>
   )

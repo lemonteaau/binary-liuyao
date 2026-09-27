@@ -378,6 +378,25 @@ html[data-motion="off"] .homepage-counter-number[data-loading="true"] {
   }
 }
 
+/* 五个导航项在窄屏手机上收紧字距与内边距，避免溢出 */
+@media (max-width: 419px) {
+  .app-nav {
+    justify-self: stretch;
+    justify-content: space-between;
+    letter-spacing: 0.06em;
+  }
+
+  .app-nav-link {
+    padding-inline: 0.25rem;
+  }
+}
+
+@media (max-width: 359px) {
+  .app-nav {
+    letter-spacing: 0;
+  }
+}
+
 /* 荧光粉辉光：文字按自身颜色发光 */
 html:not([data-screen-fx="off"]) .crt-content {
   text-shadow:
@@ -1570,6 +1589,104 @@ html[data-motion="off"] .feedback-invitation {
     align-items: flex-start;
     gap: 0.75rem;
   }
+}
+
+.support-nudge {
+  font-size: 0.875rem;
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+  color: var(--color-fog);
+}
+
+.support-nudge-link {
+  margin-left: 0.35em;
+  color: var(--color-signal);
+  white-space: nowrap;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.history-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.history-item {
+  display: flex;
+  align-items: stretch;
+}
+
+.history-item-main {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 0.35rem;
+  padding: 0.875rem 1rem;
+  text-align: left;
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.history-item-main:hover,
+.history-item-main:focus-visible {
+  background: color-mix(in srgb, var(--color-signal) 6%, transparent);
+}
+
+.history-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  font-size: 0.8125rem;
+  letter-spacing: 0.14em;
+  color: var(--color-fog);
+}
+
+.history-item-badge {
+  border: 1px solid color-mix(in srgb, var(--color-signal) 45%, transparent);
+  padding: 0 0.4rem;
+  color: var(--color-signal);
+}
+
+.history-item-hex {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.history-item-question {
+  overflow: hidden;
+  font-size: 0.9375rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-item-question.is-empty {
+  color: var(--color-fog);
+  opacity: 0.7;
+}
+
+.history-item-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-left: 1px solid var(--color-edge);
+}
+
+.history-item-action {
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  font-size: 0.875rem;
+  letter-spacing: 0.14em;
+  color: var(--color-fog);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.history-item-action:hover,
+.history-item-action:focus-visible {
+  color: var(--color-signal);
 }
 
 .generator-scroll-target {

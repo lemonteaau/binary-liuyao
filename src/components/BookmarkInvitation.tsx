@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { BookmarkSimple } from '@phosphor-icons/react'
 import { useLocation } from 'react-router-dom'
+import { IS_DEV_SERVER } from '@/lib/dev-server'
 import {
   BOOKMARK_PROMPT_STATE_CHANGED_EVENT,
   BOOKMARK_PROMPT_STORAGE_KEY,
@@ -67,7 +68,8 @@ export function BookmarkInvitation({
   }, [])
 
   const shouldShow =
-    (platform.mobile && triggerReady && !loadBookmarkPromptState().dismissed) ||
+    // 本地开发时不自动弹出，需要调试样式时用 ?bookmark-preview=1
+    (!IS_DEV_SERVER && platform.mobile && triggerReady && !loadBookmarkPromptState().dismissed) ||
     (isLocalPreview && !previewDismissed)
 
   useEffect(() => {

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CopyButton } from '@/components/CopyButton'
+import { SupportNudge } from '@/components/SupportNudge'
 import { DEFAULT_AI_INSTRUCTION } from '@/formatters/rawText'
 import { trackEvent } from '@/lib/analytics'
 import { useSettings } from '@/store/settings'
@@ -241,6 +242,9 @@ export function AiGuidePage() {
           AI 会先给出不含术语的总结，再展开判断。六爻解读只是工具，适合用来整理思路，
           不应也不能替代医疗、法律、财务或人身安全等方面的专业意见。
         </p>
+        <SupportNudge kind="ai-guide" occurrence="finish">
+          教程对你有帮助的话，欢迎支持作者，让本站保持免费、无广告。
+        </SupportNudge>
         <Link className="btn btn-primary" to="/">
           返回起卦
         </Link>

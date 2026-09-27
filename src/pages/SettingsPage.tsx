@@ -1,5 +1,7 @@
 import { memo } from 'react'
 import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
+import { RAW_TEXT_SOURCE_LINE } from '@/formatters/rawText'
 import { formatTimezone, timezoneOptionLabel } from '@/lib/timezone-display'
 import { useSettings } from '@/store/settings'
 import type { FontSize } from '@/store/settings'
@@ -71,6 +73,7 @@ export function SettingsPage() {
     setFontSize,
     setAiInstruction,
     setAiInstructionPrompt,
+    setIncludeSource,
     setAnimation,
     setScreenFx,
   } = useSettings()
@@ -180,6 +183,33 @@ export function SettingsPage() {
           自动保存在当前浏览器中，网站更新不会覆盖。留空时不附加任何提示词。
           {saveStatus === 'error' && ' 浏览器当前无法写入本地存储，请检查隐私设置。'}
         </p>
+        <div className="mt-2 border-t border-edge pt-2">
+          <SettingRow
+            title="注明排盘来源"
+            description={`复制排盘时在卦爻之后附上一行“${RAW_TEXT_SOURCE_LINE}”，方便日后找回本站。`}
+          >
+            <div className="flex shrink-0 gap-1" role="group" aria-label="注明排盘来源开关">
+              <ToggleBtn active={settings.includeSource} onClick={() => setIncludeSource(true)}>
+                开
+              </ToggleBtn>
+              <ToggleBtn active={!settings.includeSource} onClick={() => setIncludeSource(false)}>
+                关
+              </ToggleBtn>
+            </div>
+          </SettingRow>
+        </div>
+      </section>
+
+      <section className="panel mt-4 p-4 sm:p-5">
+        <span className="panel-tag">排盘记录</span>
+        <SettingRow
+          title="历史排盘"
+          description="查看最近的排盘、所问之事与应验备注，并可导出为备份文件。记录只保存在当前浏览器。"
+        >
+          <Link to="/history" className="btn shrink-0 no-underline">
+            [ 打开记录 ]
+          </Link>
+        </SettingRow>
       </section>
 
     </div>

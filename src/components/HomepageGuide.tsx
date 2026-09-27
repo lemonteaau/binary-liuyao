@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { trackEvent } from '@/lib/analytics'
+import { recordSupportClick } from '@/lib/support-nudge'
 import './homepage-guide.css'
 
 const HIGHLIGHTS = [
@@ -41,7 +41,7 @@ export function HomepageGuide() {
           <summary>六爻排盘是免费的吗？</summary>
           <p>
             完全免费，没有广告，也不需要注册账号，源码以 MIT 许可证公开在<a href="https://github.com/lemonteaau/binary-liuyao" target="_blank" rel="noopener noreferrer">GitHub</a>。{''}
-            如果它帮到了你，欢迎<Link to="/about?support=1" onClick={() => trackEvent('点击支持作者', { 入口: '首页问答' })}>打赏作者</Link>，帮助本站持续保持免费、无广告的运营。
+            如果它帮到了你，欢迎<Link to="/about?support=1" onClick={() => recordSupportClick('首页问答')}>打赏作者</Link>，帮助本站持续保持免费、无广告的运营。
           </p>
         </details>
         <details>

@@ -12,6 +12,9 @@
 <p>支付宝</p>
 <a href="public/support/alipay.jpg"><img src="public/support/alipay.jpg" alt="支付宝赞赏码" width="288" /></a>
 
+<p>海外用户</p>
+<a href="https://buymeacoffee.com/lemonteaau">Buy Me a Coffee</a>
+
 ## 本地运行
 
 ```bash

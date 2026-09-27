@@ -1,6 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { FeedbackForm } from '@/components/FeedbackForm'
+import { trackEvent } from '@/lib/analytics'
+import { markSupportIntent } from '@/lib/support-nudge'
+
+const BUY_ME_A_COFFEE_URL = 'https://buymeacoffee.com/lemonteaau'
 
 export function AboutPage() {
   const [searchParams] = useSearchParams()
@@ -58,6 +62,26 @@ export function AboutPage() {
               </div>
             </figure>
           ))}
+        </div>
+        <p className="mt-3 text-[0.875rem] text-fog">
+          手机上：{['长按保存', '微信/支付宝扫一扫', '从相册选取'].map((step, index) => (
+            <span key={step} className="whitespace-nowrap">{index > 0 && ' → '}{step}</span>
+          ))}
+        </p>
+        <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-edge pt-4">
+          <a
+            className="btn no-underline"
+            href={BUY_ME_A_COFFEE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => {
+              trackEvent('点击打赏方式', { 方式: 'Buy Me a Coffee' })
+              markSupportIntent()
+            }}
+          >
+            [ Buy Me a Coffee ↗ ]
+          </a>
+          <span className="text-[0.875rem] text-fog">海外用户可用银行卡或 Apple Pay / Google Pay 支付。</span>
         </div>
       </Section>
 

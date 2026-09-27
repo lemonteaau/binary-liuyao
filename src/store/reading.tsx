@@ -2,7 +2,13 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ReactNode } from 'react'
 import { claimHexagramOrdinal, shouldClaimHexagramOrdinal } from '@/lib/hexagram-counter'
 import { trackDivinationEvent } from '@/lib/analytics'
-import { isReadingRecord } from '@/lib/reading-storage'
+import { mergeHistory } from '@/lib/history-backup'
+import {
+  isReadingRecord,
+  READING_OUTCOME_MAX_LENGTH,
+  READING_QUESTION_MAX_LENGTH,
+} from '@/lib/reading-storage'
+import { recordSupportNudgeReading, syncSupportNudgeReadings } from '@/lib/support-nudge'
 import {
   recordBookmarkPromptReading,
   syncBookmarkPromptReadingCount,
@@ -18,7 +24,13 @@ export interface ReadingRecord {
   source?: 'share-link'
   counterEventId?: string
   ordinal?: number | null
+  /** 用户记录的所问之事，只保存在本地，不进入分享链接 */
+  question?: string
+  /** 用户事后补记的应验情况 */
+  outcome?: string
 }
+
+export type ReadingNotes = Pick<ReadingRecord, 'question' | 'outcome'>
 
 export interface CommitReadingOptions {
   fromShareLink?: boolean
@@ -29,7 +41,7 @@ export interface CommitReadingOptions {
 
 const CURRENT_KEY = 'hex64.current.v1'
 const HISTORY_KEY = 'hex64.history.v1'
-const HISTORY_LIMIT = 20
+export const HISTORY_LIMIT = 100
 
 function loadCurrent(): ReadingRecord | null {
   try {
@@ -60,6 +72,10 @@ interface ReadingContextValue {
     options?: CommitReadingOptions,
   ) => ReadingRecord
   clearCurrent: () => void
+  openReading: (id: string) => boolean
+  updateNotes: (id: string, notes: ReadingNotes) => void
+  deleteReading: (id: string) => void
+  importReadings: (records: ReadingRecord[]) => number
 }
 
 const ReadingContext = createContext<ReadingContextValue | null>(null)
@@ -98,6 +114,7 @@ export function ReadingProvider({ children }: { children: ReactNode }) {
       (record) => record.source !== 'share-link' && record.chart.inputMethod !== 'link',
     ).length
     syncBookmarkPromptReadingCount(localReadingCount)
+    syncSupportNudgeReadings(localReadingCount)
   }, [history])
 
   useEffect(() => {
@@ -145,14 +162,19 @@ export function ReadingProvider({ children }: { children: ReactNode }) {
     (chart: ChartData, rawLines: ReadingRecord['rawLines'], options: CommitReadingOptions = {}) => {
       const isNewReading = !options.fromShareLink && chart.inputMethod !== 'link'
       const shouldClaimCounter = isNewReading && shouldClaimHexagramOrdinal()
+      const id = options.readingId ?? makeId()
+      const previous = loadHistory().find((r) => r.id === id)
       const record: ReadingRecord = {
-        id: options.readingId ?? makeId(),
+        id,
         chart,
         rawLines,
         hanziSeed: options.hanziSeed,
         source: options.fromShareLink ? 'share-link' : undefined,
         counterEventId: shouldClaimCounter ? crypto.randomUUID() : undefined,
         ordinal: shouldClaimCounter ? null : options.ordinal,
+        // 再次打开同一分享链接时保留此前写下的备注
+        question: previous?.question,
+        outcome: previous?.outcome,
       }
       setCurrent(record)
       setHistory((prev) => {
@@ -163,6 +185,7 @@ export function ReadingProvider({ children }: { children: ReactNode }) {
       saveCurrent(record)
       if (isNewReading) {
         recordBookmarkPromptReading()
+        recordSupportNudgeReading(record.id)
         trackDivinationEvent('成功生成排盘', chart.inputMethod)
       }
       return record
@@ -179,12 +202,71 @@ export function ReadingProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const openReading = useCallback((id: string) => {
+    const record = loadHistory().find((r) => r.id === id)
+    if (!record) return false
+    setCurrent(record)
+    saveCurrent(record)
+    return true
+  }, [])
+
+  const updateNotes = useCallback((id: string, notes: ReadingNotes) => {
+    const patch = normalizeNotes(notes)
+    setCurrent((record) => {
+      if (record?.id !== id) return record
+      const next = { ...record, ...patch }
+      saveCurrent(next)
+      return next
+    })
+    setHistory((records) => {
+      if (!records.some((r) => r.id === id)) return records
+      const next = records.map((r) => (r.id === id ? { ...r, ...patch } : r))
+      saveHistory(next)
+      return next
+    })
+  }, [])
+
+  const deleteReading = useCallback((id: string) => {
+    setHistory((records) => {
+      const next = records.filter((r) => r.id !== id)
+      saveHistory(next)
+      return next
+    })
+  }, [])
+
+  const importReadings = useCallback((records: ReadingRecord[]) => {
+    const merged = mergeHistory(loadHistory(), records, HISTORY_LIMIT)
+    setHistory(merged.records)
+    saveHistory(merged.records)
+    return merged.added
+  }, [])
+
   const value = useMemo(
-    () => ({ current, history, commitReading, clearCurrent }),
-    [current, history, commitReading, clearCurrent],
+    () => ({
+      current,
+      history,
+      commitReading,
+      clearCurrent,
+      openReading,
+      updateNotes,
+      deleteReading,
+      importReadings,
+    }),
+    [current, history, commitReading, clearCurrent, openReading, updateNotes, deleteReading, importReadings],
   )
 
   return <ReadingContext.Provider value={value}>{children}</ReadingContext.Provider>
+}
+
+function normalizeNotes(notes: ReadingNotes): ReadingNotes {
+  const patch: ReadingNotes = {}
+  if ('question' in notes) {
+    patch.question = notes.question?.slice(0, READING_QUESTION_MAX_LENGTH) || undefined
+  }
+  if ('outcome' in notes) {
+    patch.outcome = notes.outcome?.slice(0, READING_OUTCOME_MAX_LENGTH) || undefined
+  }
+  return patch
 }
 
 export function useReading(): ReadingContextValue {
