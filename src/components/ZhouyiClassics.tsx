@@ -38,7 +38,7 @@ export function ZhouyiClassics({ chart }: { chart: ChartData }) {
   )
 }
 
-function HexagramClassic({
+export function HexagramClassic({
   label,
   state,
   mutationMask,

@@ -9,7 +9,7 @@ describe('public HTML without a browser', () => {
       expect(html).toContain(mode)
     }
     expect(html).toMatch(/<h1[^>]*>六爻排盘<\/h1>/)
-    for (const href of ['/about', '/ai-guide']) {
+    for (const href of ['/about', '/ai-guide', '/gua']) {
       expect(html).toContain(`href="${href}"`)
     }
     expect(html).not.toContain('系统正在启动，跳过启动动画')

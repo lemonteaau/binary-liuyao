@@ -1,5 +1,5 @@
-import { readFile, writeFile } from 'node:fs/promises'
-import { resolve } from 'node:path'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { dirname, resolve } from 'node:path'
 import { createServer } from 'vite'
 import { JSDOM } from 'jsdom'
 
@@ -25,7 +25,10 @@ try {
       // The public content already works without JS; avoid the homepage-only fallback.
       document.querySelector('noscript')?.remove()
     }
-    await writeFile(resolve(output, route === '/' ? 'index.html' : `${route.slice(1)}.html`), dom.serialize())
+    // `/gua/13` → `gua/13.html`; Pages serves it at the extensionless path.
+    const file = resolve(output, route === '/' ? 'index.html' : `${route.slice(1)}.html`)
+    await mkdir(dirname(file), { recursive: true })
+    await writeFile(file, dom.serialize())
     dom.window.close()
   }
   // Unknown paths get a real 404 status from Pages instead of a soft-404 copy of

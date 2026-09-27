@@ -41,7 +41,8 @@ const MATRIX: Record<TrigramKey, Record<TrigramKey, string>> = {
 
 function shortNameOf(full: string): string {
   const weiIndex = full.indexOf('为')
-  if (weiIndex > 0 && full.length === 4) return full.slice(weiIndex + 1)
+  // 八纯卦「乾为天」取「乾」，其余「天火同人」取后两字
+  if (weiIndex > 0 && full.length === 3) return full.slice(0, weiIndex)
   return full.slice(2)
 }
 

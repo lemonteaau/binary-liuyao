@@ -1,6 +1,9 @@
+import { GUA_INDEX_PATH, GUA_NUMBERS, guaNumberFromPath, guaPath, guaProfile, palaceRankLabel } from './gua'
+
 export const CANONICAL_URL = 'https://liuyao.lemontea.xyz/'
-export const PUBLIC_ROUTES = ['/', '/ai-guide', '/about'] as const
-export const APP_ROUTES = [...PUBLIC_ROUTES, '/settings', '/result', '/history'] as const
+export const GUA_ROUTES: readonly string[] = [GUA_INDEX_PATH, ...GUA_NUMBERS.map(guaPath)]
+export const PUBLIC_ROUTES: readonly string[] = ['/', '/ai-guide', '/about', ...GUA_ROUTES]
+export const APP_ROUTES: readonly string[] = [...PUBLIC_ROUTES, '/settings', '/result', '/history']
 
 export function normalizePagePath(pathname: string): string {
   return pathname.replace(/\/+$/, '').toLowerCase() || '/'
@@ -20,7 +23,18 @@ export function robotsContent(pathname: string): string {
 const DEFAULT_DESCRIPTION =
   'HEX//64 免费在线六爻排盘：支持摇币、电脑、手动、卦名、数字、时间、汉字七种起卦方式，自动纳甲装卦，排出六亲、六神、世应、伏神、卦身、旬空、神煞与四柱，附周易卦辞爻辞。开源无广告，无需下载注册，手机电脑打开即用；排盘在浏览器本地计算，可复制排盘文本或生成分享图交给 AI 解卦。'
 
+function guaMetadata(kingWenNumber: number): { title: string; description: string } {
+  const { record, state, classic } = guaProfile(kingWenNumber)
+  const statement = classic.statement.length > 28 ? `${classic.statement.slice(0, 27)}…` : classic.statement
+  return {
+    title: `${record.chineseName}（${record.shortName}卦）卦辞爻辞与纳甲装卦 - 周易第${kingWenNumber}卦 - HEX//64`,
+    description: `《周易》第${kingWenNumber}卦${record.chineseName}：卦辞「${statement}」及六爻爻辞原文。京房八宫属${palaceRankLabel(state)}，附纳甲装卦、世应、六亲、伏神与错综互卦。`,
+  }
+}
+
 export function routeMetadata(pathname: string): { title: string; description: string } {
+  const kingWenNumber = guaNumberFromPath(normalizePagePath(pathname))
+  if (kingWenNumber !== null) return guaMetadata(kingWenNumber)
   switch (normalizePagePath(pathname)) {
     case '/result':
       return {
@@ -41,6 +55,11 @@ export function routeMetadata(pathname: string): { title: string; description: s
       return {
         title: '用 AI 解读六爻排盘 - HEX//64 教程',
         description: '图文教程：在 ChatGPT 安装八讲六爻解读 Skill，把 HEX//64 生成的完整排盘交给 AI 分析。',
+      }
+    case GUA_INDEX_PATH:
+      return {
+        title: '六十四卦列表：京房八宫卦序、卦辞爻辞与纳甲 - HEX//64',
+        description: '《周易》六十四卦按京房八宫排列，从首卦、一世到游魂、归魂；每卦附卦辞爻辞原文、纳甲装卦、世应、六亲、伏神与错综互卦。',
       }
     case '/about':
       return {

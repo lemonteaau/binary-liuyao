@@ -24,6 +24,7 @@
 - `index.html`：首页现有的七种起卦方式、简短说明和可抓取导航链接。
 - `about.html`、`ai-guide.html`：独立元信息及真实页面正文。
 - `settings.html`、`result.html`：独立元信息与 noindex；用户设置和排盘仍在浏览器初始化，不写入静态 HTML。
+- `gua.html`、`gua/1.html` 至 `gua/64.html`：六十四卦列表与各卦静态页，详见下文。
 - `404.html`：noindex 元信息。Pages 对未知路径返回 404 状态，避免软 404；访问者仍由客户端兜底路由看到起卦页。
 
 三个公开页都将真实页面内容写入 `#root`，不再依赖 `noscript` 介绍，也不向爬虫提供单独的文案版本。功能说明与本地计算说明仍位于关于页，教程仍位于 AI 教程页；首页静态导航直接链接到这两个页面。
@@ -36,10 +37,16 @@ Cloudflare Pages 将 `/about` 匹配到 `about.html`，并将 `/about.html` 规�
 
 自行托管时，服务器需要支持 `.html` 无扩展名匹配或 SPA 回退；子目录部署需同时设置 Vite base 与服务器的挂载路径。不要直接把新版本复制到不支持路径回退的文件服务器后假定所有无扩展名地址可用。
 
+## 六十四卦页
+
+`/gua` 按京房八宫列出六十四卦，`/gua/1` 至 `/gua/64` 按文王卦序各占一页（`src/pages/GuaPage.tsx`，数据由 `src/lib/gua.ts` 从现有排盘引擎推出）。每页包含卦辞爻辞原文、上下卦、宫位卦别、世应、卦身、纳甲装卦表、伏神、错综互卦、同宫八卦与前后卦链接；六神、旬空、神煞随起卦时间变化，不写入静态页。
+
+这些页面主要用于搜索收录，站内入口刻意保持低调：只有页脚一行「六十四卦」小字链接，页头导航和起卦流程不变。页面对访客和爬虫完全相同，不按 User-Agent 区分内容。无效编号（如 `/gua/65`）返回 404，客户端兜底为起卦页并标记 noindex。
+
 ## 搜索元信息
 
 - 首页、教程、关于页各有 canonical、Open Graph URL、标题、描述和 JSON-LD；运行时和构建时共用 src/lib/seo.ts。
-- sitemap 只列 `/`、`/ai-guide`、`/about`。设置、结果和未知路径使用 noindex,follow。
+- sitemap 列出 `/`、`/ai-guide`、`/about`、`/gua` 与 64 个卦页，顺序与 `PUBLIC_ROUTES` 一致（测试会校验）。设置、结果和未知路径使用 noindex,follow。
 - sitemap 的 `lastmod` 手动维护：公开页正文或元信息有实质改动时更新对应日期。
 - `_headers` 对 `*.pages.dev`（含预览部署）返回 `X-Robots-Tag: noindex`，只让自定义域名进入搜索结果。
 - Bing 使用 IndexNow：密钥文件位于 `public/<密钥>.txt`。生产部署完成后运行 `node scripts/indexnow.mjs`，提交 sitemap 中的全部地址。

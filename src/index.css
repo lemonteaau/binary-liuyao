@@ -3703,3 +3703,172 @@ html[data-motion="off"] *::after {
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
 }
+
+/* ---------------------------------- */
+/* 六十四卦静态页                      */
+/* ---------------------------------- */
+
+.gua-page {
+  max-width: 58rem;
+  margin-inline: auto;
+}
+
+.gua-kicker {
+  margin-bottom: 0.35rem;
+  color: var(--color-signal);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+}
+
+.gua-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 8rem;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.gua-hero-figure {
+  width: 8rem;
+  padding: 1.1rem;
+  border: 1px solid var(--color-edge);
+  background: var(--color-panel);
+}
+
+.gua-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--color-edge);
+  border-left: 1px solid var(--color-edge);
+}
+
+.gua-facts > div {
+  padding: 0.7rem 0.9rem;
+  border-right: 1px solid var(--color-edge);
+  border-bottom: 1px solid var(--color-edge);
+}
+
+.gua-facts dt,
+.gua-related dt {
+  color: var(--color-fog);
+  font-size: 0.8125rem;
+  letter-spacing: 0.14em;
+}
+
+.gua-facts dd {
+  margin-top: 0.2rem;
+  color: var(--color-ink);
+}
+
+.gua-table-wrap {
+  margin-top: 1rem;
+  overflow-x: auto;
+}
+
+.gua-table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+.gua-table th,
+.gua-table td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--color-edge);
+  text-align: left;
+}
+
+.gua-table thead th {
+  color: var(--color-fog);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+}
+
+.gua-table tbody th {
+  color: var(--color-signal);
+  font-weight: 400;
+}
+
+.gua-related {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.gua-related > div {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.gua-related dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.9rem;
+}
+
+.gua-related dd > span:last-child {
+  color: var(--color-fog);
+  font-size: 0.875rem;
+}
+
+.gua-palace-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem 1rem;
+  margin-top: 1rem;
+}
+
+.gua-palace-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.gua-palace-list li > span {
+  color: var(--color-fog);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+}
+
+.gua-pager {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  font-size: 0.9375rem;
+}
+
+.gua-pager a {
+  color: var(--color-signal);
+  text-underline-offset: 0.2em;
+}
+
+.gua-pager a:last-child {
+  text-align: right;
+}
+
+@media (max-width: 639px) {
+  .gua-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gua-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gua-palace-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gua-pager {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .gua-pager a:nth-child(2) {
+    display: none;
+  }
+}
