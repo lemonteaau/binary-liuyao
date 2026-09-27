@@ -112,21 +112,22 @@
   }
 }
 
-/* 首屏保持原样：起卦区占满原先 main 的可用高度（页头、页脚含 1px 边框与 main 底部留白），
-   说明从原页脚的位置开始，需下滑才可见 */
+/* 首屏保持原样且不露出说明：起卦区内容区仍是原先 main 的可用高度（居中位置不变），
+   下方再补上原页脚与 main 底部留白的高度，使起卦区占满页头以下的整屏 */
 .crt-content:has(.generator-page-idle + .homepage-guide) {
   container-type: size;
 }
 
 .generator-page-idle:has(+ .homepage-guide) {
   align-content: start;
-  min-height: calc(100cqh - 11.5rem - 2px);
+  padding-bottom: calc(6.75rem + 1px);
+  min-height: calc(100cqh - 4.75rem - 1px);
 }
 
 /* 窄屏页头为两行：多出标志行与行距 */
 @media (max-width: 639px) {
   .generator-page-idle:has(+ .homepage-guide) {
-    min-height: calc(100cqh - 12.15rem - 34px);
+    min-height: calc(100cqh - 5.4rem - 33px);
   }
 }
 
