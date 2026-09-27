@@ -69,7 +69,7 @@ export function AboutPage() {
             <span key={step} className="whitespace-nowrap">{index > 0 && ' → '}{step}</span>
           ))}
         </p>
-        <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-edge pt-4">
+        <div className="mt-5 flex flex-col items-center gap-2 border-t border-edge pt-4 sm:flex-row sm:flex-wrap sm:gap-x-4">
           <a
             className="bmc-button"
             href={BUY_ME_A_COFFEE_URL}
@@ -83,7 +83,7 @@ export function AboutPage() {
             <CoffeeCup />
             <span>Buy me a coffee</span>
           </a>
-          <span className="text-[0.875rem] text-fog">海外用户可用银行卡或 Apple Pay / Google Pay 支付。</span>
+          <span className="text-center text-[0.875rem] text-balance text-fog sm:text-left">海外用户可用银行卡或 Apple Pay / Google Pay 支付。</span>
         </div>
       </Section>
 
