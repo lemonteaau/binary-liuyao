@@ -6,13 +6,14 @@ import { BootSequence, useBootOnce } from '@/components/BootSequence'
 import { FeedbackInvitation } from '@/components/FeedbackInvitation'
 import { HomepageGuide } from '@/components/HomepageGuide'
 import { LegacyRouteRedirect } from '@/components/LegacyRouteRedirect'
-import { trackEvent } from '@/lib/analytics'
+import { recordSupportClick } from '@/lib/support-nudge'
 import { updatePageMetadata } from '@/lib/seo'
 import { GeneratorPage } from '@/pages/GeneratorPage'
 import { ResultPage } from '@/pages/ResultPage'
 import { SettingsPage } from '@/pages/SettingsPage'
 import { AboutPage } from '@/pages/AboutPage'
 import { AiGuidePage } from '@/pages/AiGuidePage'
+import { HistoryPage } from '@/pages/HistoryPage'
 import { ReadingProvider } from '@/store/reading'
 import { SettingsProvider, useDisplaySettings } from '@/store/settings'
 
@@ -105,6 +106,7 @@ export function Shell() {
               <Route path="/" element={<><GeneratorPage /><HomepageGuide /></>} />
               <Route path="/result" element={<ResultPage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/history" element={<HistoryPage />} />
               <Route path="/ai-guide" element={<AiGuidePage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="*" element={<GeneratorPage />} />
@@ -157,22 +159,34 @@ export function Shell() {
   )
 }
 
+const HISTORY_NAV_SEEN_KEY = 'hex64.history-nav.seen'
+
+function persistHistoryBadgeSeen() {
+  try {
+    localStorage.setItem(HISTORY_NAV_SEEN_KEY, '1')
+  } catch {
+    // Keep the badge dismissed for this session when storage is unavailable.
+  }
+}
+
 function Header() {
-  const [showGuideBadge, setShowGuideBadge] = useState(() => {
+  const [showHistoryBadge, setShowHistoryBadge] = useState(() => {
     try {
-      return localStorage.getItem('hex64.ai-guide.seen') !== '1'
+      return localStorage.getItem(HISTORY_NAV_SEEN_KEY) !== '1'
     } catch {
       return true
     }
   })
 
-  function dismissGuideBadge() {
-    setShowGuideBadge(false)
-    try {
-      localStorage.setItem('hex64.ai-guide.seen', '1')
-    } catch {
-      // Keep the badge dismissed for this session when storage is unavailable.
-    }
+  // 从结果页、设置页等其他入口进入记录页，也算已看过
+  const onHistoryPage = useLocation().pathname === '/history'
+  useEffect(() => {
+    if (onHistoryPage) persistHistoryBadgeSeen()
+  }, [onHistoryPage])
+
+  function dismissHistoryBadge() {
+    setShowHistoryBadge(false)
+    persistHistoryBadgeSeen()
   }
 
   return (
@@ -186,13 +200,14 @@ function Header() {
       </Link>
       <nav className="app-nav flex items-center gap-1 text-[0.9375rem] tracking-[0.16em]">
         <HeaderNavLink to="/">起卦</HeaderNavLink>
-        <HeaderNavLink to="/ai-guide" showNew={showGuideBadge} onClick={dismissGuideBadge}>AI解卦</HeaderNavLink>
+        <HeaderNavLink to="/history" showNew={showHistoryBadge && !onHistoryPage} onClick={dismissHistoryBadge}>记录</HeaderNavLink>
+        <HeaderNavLink to="/ai-guide">AI解卦</HeaderNavLink>
         <HeaderNavLink to="/settings">设置</HeaderNavLink>
         <HeaderNavLink to="/about">关于</HeaderNavLink>
       </nav>
       <Link
         to="/about?support=1"
-        onClick={() => trackEvent('点击支持作者', { 入口: '页头' })}
+        onClick={() => recordSupportClick('页头')}
         className="app-header-support support-link relative inline-flex h-8 items-center rounded-sm border border-signal/40 bg-signal/5 px-3 text-[0.875rem] font-bold tracking-[0.14em] whitespace-nowrap text-signal no-underline transition-colors hover:border-signal hover:bg-signal/10 focus-visible:border-signal focus-visible:bg-signal/10"
       >
         <svg className="support-link-orbit" aria-hidden="true" focusable="false">

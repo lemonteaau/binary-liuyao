@@ -1,6 +1,6 @@
 export const CANONICAL_URL = 'https://liuyao.lemontea.xyz/'
 export const PUBLIC_ROUTES = ['/', '/ai-guide', '/about'] as const
-export const APP_ROUTES = [...PUBLIC_ROUTES, '/settings', '/result'] as const
+export const APP_ROUTES = [...PUBLIC_ROUTES, '/settings', '/result', '/history'] as const
 
 export function normalizePagePath(pathname: string): string {
   return pathname.replace(/\/+$/, '').toLowerCase() || '/'
@@ -31,6 +31,11 @@ export function routeMetadata(pathname: string): { title: string; description: s
       return {
         title: '设置 - HEX//64 六爻排盘',
         description: '设置 HEX//64 六爻排盘的时区、字号、动效与排盘复制选项。',
+      }
+    case '/history':
+      return {
+        title: '历史排盘 - HEX//64 六爻排盘',
+        description: '查看保存在本机浏览器中的六爻排盘记录、所问之事与应验备注，并可导出或导入备份。',
       }
     case '/ai-guide':
       return {

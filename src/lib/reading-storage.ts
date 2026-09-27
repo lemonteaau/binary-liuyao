@@ -54,6 +54,13 @@ function hanziSeed(value: unknown): boolean {
       && ['horizontal', 'vertical', 'other'].includes(String(parts.layout))))
 }
 
+export const READING_QUESTION_MAX_LENGTH = 200
+export const READING_OUTCOME_MAX_LENGTH = 2000
+
+function optionalNote(value: unknown, maxLength: number): boolean {
+  return value === undefined || (typeof value === 'string' && value.length <= maxLength)
+}
+
 /** localStorage 可被旧版本、扩展或用户改写，读取前检查所有渲染依赖的结构。 */
 export function isReadingRecord(value: unknown): value is ReadingRecord {
   if (!object(value) || typeof value.id !== 'string' || !/^[0-9A-F]{6}$/.test(value.id)) return false
@@ -64,6 +71,8 @@ export function isReadingRecord(value: unknown): value is ReadingRecord {
   if (value.counterEventId !== undefined && typeof value.counterEventId !== 'string') return false
   if (value.ordinal != null && (!Number.isSafeInteger(value.ordinal) || Number(value.ordinal) < 1)) return false
   if (value.hanziSeed !== undefined && !hanziSeed(value.hanziSeed)) return false
+  if (!optionalNote(value.question, READING_QUESTION_MAX_LENGTH)
+    || !optionalNote(value.outcome, READING_OUTCOME_MAX_LENGTH)) return false
 
   const chart = value.chart
   if (!object(chart) || typeof chart.createdAt !== 'string'

@@ -1,13 +1,17 @@
 import type { ChartData } from '@/types'
 import { INPUT_METHOD_LABELS } from '@/engine'
+import { CANONICAL_URL } from '@/lib/seo'
 
 export const DEFAULT_AI_INSTRUCTION = '请根据以上六爻排盘进行分析。'
+export const RAW_TEXT_SOURCE_LINE = `排盘来源：HEX//64 六爻排盘 ${new URL(CANONICAL_URL).host}`
 
 export interface RawTextOptions {
   /** 是否在末尾附加 AI 指令 */
   includeAiInstruction: boolean
   /** 用户自定义的 AI 指令 */
   aiInstructionPrompt?: string
+  /** 是否在排盘内容后注明来源网址 */
+  includeSource?: boolean
 }
 
 const LINE_NAMES = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'] as const
@@ -75,6 +79,11 @@ export function formatRawText(chart: ChartData, options: RawTextOptions): string
   out.push('')
   out.push('卦爻：')
   out.push(...lineLines)
+
+  if (options.includeSource) {
+    out.push('')
+    out.push(RAW_TEXT_SOURCE_LINE)
+  }
 
   const aiInstructionPrompt = (options.aiInstructionPrompt ?? DEFAULT_AI_INSTRUCTION).trim()
   if (options.includeAiInstruction && aiInstructionPrompt) {

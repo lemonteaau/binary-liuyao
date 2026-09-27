@@ -2,6 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { CrtFx } from '@/App'
 import { DEFAULT_AI_INSTRUCTION } from '@/formatters/rawText'
 import { SettingsPage } from '@/pages/SettingsPage'
@@ -95,7 +96,7 @@ describe('动效设置', () => {
     const { container } = render(
       <SettingsProvider>
         <CrtFx />
-        <SettingsPage />
+        <MemoryRouter><SettingsPage /></MemoryRouter>
       </SettingsProvider>,
     )
 
@@ -118,7 +119,7 @@ describe('AI 指令设置', () => {
 
     render(
       <SettingsProvider>
-        <SettingsPage />
+        <MemoryRouter><SettingsPage /></MemoryRouter>
       </SettingsProvider>,
     )
 
@@ -128,7 +129,7 @@ describe('AI 指令设置', () => {
   it('自定义提示词会持久化，并在重新挂载时恢复', async () => {
     const firstRender = render(
       <SettingsProvider>
-        <SettingsPage />
+        <MemoryRouter><SettingsPage /></MemoryRouter>
       </SettingsProvider>,
     )
 
@@ -149,7 +150,7 @@ describe('AI 指令设置', () => {
     firstRender.unmount()
     render(
       <SettingsProvider>
-        <SettingsPage />
+        <MemoryRouter><SettingsPage /></MemoryRouter>
       </SettingsProvider>,
     )
 
@@ -164,7 +165,7 @@ describe('AI 指令设置', () => {
 
     render(
       <SettingsProvider>
-        <SettingsPage />
+        <MemoryRouter><SettingsPage /></MemoryRouter>
       </SettingsProvider>,
     )
 

@@ -8,6 +8,7 @@ import {
   saveFeedbackPromptState,
   snoozeFeedbackPrompt,
 } from '@/lib/feedback'
+import { IS_DEV_SERVER } from '@/lib/dev-server'
 
 const TRACK_INTERVAL_MS = 15_000
 
@@ -79,7 +80,8 @@ export function FeedbackInvitation({ suppressed = false }: { suppressed?: boolea
     setVisible(false)
   }
 
-  const shouldShow = visible || (isLocalPreview && !previewDismissed)
+  // 本地开发时不自动弹出，需要调试样式时用 ?feedback-preview=1
+  const shouldShow = (visible && !IS_DEV_SERVER) || (isLocalPreview && !previewDismissed)
   if (suppressed || !shouldShow || location.pathname === '/about') return null
 
   return (

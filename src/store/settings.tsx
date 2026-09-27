@@ -12,6 +12,8 @@ export interface Settings {
   fontSize: FontSize
   aiInstruction: boolean
   aiInstructionPrompt: string
+  /** 复制排盘时附上来源网址 */
+  includeSource: boolean
   animation: boolean
   screenFx: boolean
 }
@@ -24,6 +26,7 @@ function loadSettings(): Settings {
     fontSize: 'standard',
     aiInstruction: false,
     aiInstructionPrompt: DEFAULT_AI_INSTRUCTION,
+    includeSource: true,
     animation: true,
     screenFx: true,
   }
@@ -50,6 +53,7 @@ function loadSettings(): Settings {
       fontSize,
       aiInstructionPrompt,
       aiInstruction: typeof stored.aiInstruction === 'boolean' ? stored.aiInstruction : defaults.aiInstruction,
+      includeSource: typeof stored.includeSource === 'boolean' ? stored.includeSource : defaults.includeSource,
       animation: typeof stored.animation === 'boolean' ? stored.animation : defaults.animation,
       screenFx: typeof stored.screenFx === 'boolean' ? stored.screenFx : defaults.screenFx,
     }
@@ -70,6 +74,7 @@ interface SettingsContextValue {
   setFontSize: (fontSize: FontSize) => void
   setAiInstruction: (on: boolean) => void
   setAiInstructionPrompt: (prompt: string) => void
+  setIncludeSource: (on: boolean) => void
   setAnimation: (on: boolean) => void
   setScreenFx: (on: boolean) => void
 }
@@ -133,6 +138,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     (aiInstructionPrompt: string) => update({ aiInstructionPrompt }),
     [update],
   )
+  const setIncludeSource = useCallback(
+    (includeSource: boolean) => update({ includeSource }),
+    [update],
+  )
   const setAnimation = useCallback((animation: boolean) => update({ animation }), [update])
   const setScreenFx = useCallback((screenFx: boolean) => update({ screenFx }), [update])
 
@@ -145,6 +154,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setFontSize,
       setAiInstruction,
       setAiInstructionPrompt,
+      setIncludeSource,
       setAnimation,
       setScreenFx,
     }),
@@ -156,6 +166,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setFontSize,
       setAiInstruction,
       setAiInstructionPrompt,
+      setIncludeSource,
       setAnimation,
       setScreenFx,
     ],

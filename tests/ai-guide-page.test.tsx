@@ -16,19 +16,29 @@ afterEach(() => {
 })
 
 describe('AI 解卦教程', () => {
-  it('点击导航后隐藏 NEW，重新打开页面仍保持隐藏', () => {
+  it('NEW 标记在记录入口上，点击后隐藏，重新打开页面仍保持隐藏', () => {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify({ animation: false }))
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline in test')))
-    window.location.hash = '#/ai-guide'
     const view = render(<App />)
 
-    expect(screen.getByText('NEW')).toBeTruthy()
-    fireEvent.click(screen.getByRole('link', { name: '[AI解卦]' }))
+    expect(screen.getByRole('link', { name: '[AI解卦]' }).textContent).not.toContain('NEW')
+    expect(screen.getByRole('link', { name: '[记录]' }).textContent).toContain('NEW')
+    fireEvent.click(screen.getByRole('link', { name: '[记录]' }))
     expect(screen.queryByText('NEW')).toBeNull()
 
     view.unmount()
     render(<App />)
     expect(screen.queryByText('NEW')).toBeNull()
+  })
+
+  it('从其他入口直接打开记录页时同样视为已看过 NEW', () => {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ animation: false }))
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline in test')))
+    window.history.replaceState(null, '', '/history')
+    render(<App />)
+
+    expect(screen.getByRole('link', { name: '[记录]' }).textContent).not.toContain('NEW')
+    expect(localStorage.getItem('hex64.history-nav.seen')).toBe('1')
   })
 
   it('从导航进入后展示完整流程并可一键启用推荐设置', async () => {
