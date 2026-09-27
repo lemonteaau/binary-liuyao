@@ -15,6 +15,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@fontsource/cookie": "^5.3.0",
     "@phosphor-icons/react": "^2.1.10",
     "chinese-characters-decomposition": "^0.1.0",
     "cnchar": "^3.2.6",

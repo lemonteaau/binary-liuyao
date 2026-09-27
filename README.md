@@ -13,7 +13,7 @@
 <a href="public/support/alipay.jpg"><img src="public/support/alipay.jpg" alt="支付宝赞赏码" width="288" /></a>
 
 <p>海外用户</p>
-<a href="https://buymeacoffee.com/lemonteaau">Buy Me a Coffee</a>
+<a href="https://buymeacoffee.com/lemonteaau"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" height="50" /></a>
 
 ## 本地运行
 

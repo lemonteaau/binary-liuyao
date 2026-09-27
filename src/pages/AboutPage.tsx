@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import '@fontsource/cookie/latin-400.css'
 import { FeedbackForm } from '@/components/FeedbackForm'
 import { trackEvent } from '@/lib/analytics'
 import { markSupportIntent } from '@/lib/support-nudge'
@@ -70,7 +71,7 @@ export function AboutPage() {
         </p>
         <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-edge pt-4">
           <a
-            className="btn no-underline"
+            className="bmc-button"
             href={BUY_ME_A_COFFEE_URL}
             target="_blank"
             rel="noopener noreferrer"
@@ -79,7 +80,8 @@ export function AboutPage() {
               markSupportIntent()
             }}
           >
-            [ Buy Me a Coffee ↗ ]
+            <CoffeeCup />
+            <span>Buy me a coffee</span>
           </a>
           <span className="text-[0.875rem] text-fog">海外用户可用银行卡或 Apple Pay / Google Pay 支付。</span>
         </div>
@@ -191,6 +193,17 @@ export function AboutPage() {
         </p>
       </Section>
     </div>
+  )
+}
+
+function CoffeeCup() {
+  return (
+    <svg className="bmc-button-cup" viewBox="0 0 24 32" aria-hidden="true">
+      <path d="M5 1.5h14l1 2.5H4z" fill="#fff" stroke="#000" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M2.5 4h19v3.5h-19z" fill="#fff" stroke="#000" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M3.8 7.5h16.4L17 30.5H7z" fill="#fff" stroke="#000" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M5.3 13h13.4l-1.5 11H6.8z" fill="#FFDD00" />
+    </svg>
   )
 }
 
