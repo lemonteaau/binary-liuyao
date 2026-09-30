@@ -38,9 +38,25 @@ function remainderOrBase(value: number, base: number): number {
 
 const NUMBER_SEPARATORS = /[\s,，、.。·\-/]+/
 
-export function parseNumberSeed(input: string): ParsedNumberSeed | null {
+export type NumberSeedIssue = 'EMPTY' | 'NOT_DIGITS' | 'TOO_MANY_GROUPS' | 'TOO_SHORT' | 'TOO_LONG'
+
+function tokenizeNumberSeed(input: string): string[] {
   // NFKC 把全角数字与全角标点折成半角，兼容中文输入法
-  const tokens = input.normalize('NFKC').split(NUMBER_SEPARATORS).filter(Boolean)
+  return input.normalize('NFKC').split(NUMBER_SEPARATORS).filter(Boolean)
+}
+
+/** 解释输入为何还不能起卦；可以起卦时返回 null */
+export function numberSeedIssue(input: string): NumberSeedIssue | null {
+  const tokens = tokenizeNumberSeed(input)
+  if (tokens.length === 0) return 'EMPTY'
+  if (!tokens.every((t) => /^\d+$/.test(t))) return 'NOT_DIGITS'
+  if (tokens.length > 3) return 'TOO_MANY_GROUPS'
+  if (tokens.length === 1 && tokens[0]!.length < 3) return 'TOO_SHORT'
+  return parseNumberSeed(input) ? null : 'TOO_LONG'
+}
+
+export function parseNumberSeed(input: string): ParsedNumberSeed | null {
+  const tokens = tokenizeNumberSeed(input)
   if (tokens.length === 0 || tokens.length > 3) return null
   if (!tokens.every((t) => /^\d+$/.test(t))) return null
 
@@ -89,9 +105,9 @@ export function rawLinesFromTrigrams(
 /** 数字输入 → 六爻 */
 export function rawLinesFromNumbers(input: string):
   | { ok: true; seed: ParsedNumberSeed; rawLines: [LineValue, LineValue, LineValue, LineValue, LineValue, LineValue] }
-  | { ok: false; error: 'INVALID_SEED' } {
+  | { ok: false; error: NumberSeedIssue } {
   const seed = parseNumberSeed(input)
-  if (!seed) return { ok: false, error: 'INVALID_SEED' }
+  if (!seed) return { ok: false, error: numberSeedIssue(input) ?? 'TOO_LONG' }
   const upperKey = trigramKeyByRemainder(seed.upperRemainder)
   const lowerKey = trigramKeyByRemainder(seed.lowerRemainder)
   return { ok: true, seed, rawLines: rawLinesFromTrigrams(upperKey, lowerKey, seed.movingLine) }

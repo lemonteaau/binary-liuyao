@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  numberSeedIssue,
   parseNumberSeed,
   rawLinesFromNumbers,
   splitSingleNumber,
@@ -78,6 +79,15 @@ describe('数字起卦', () => {
     // 输入过程中结尾多一个分隔符不影响解析
     const trailing = rawLinesFromNumbers('128.64.')
     expect(trailing.ok && trailing.seed.numbers).toEqual([128, 64, 192])
+  })
+
+  it('给出无法起卦的具体原因', () => {
+    expect(numberSeedIssue('')).toBe('EMPTY')
+    expect(numberSeedIssue('12')).toBe('TOO_SHORT')
+    expect(numberSeedIssue('12a')).toBe('NOT_DIGITS')
+    expect(numberSeedIssue('1.2.3.4')).toBe('TOO_MANY_GROUPS')
+    expect(numberSeedIssue('9'.repeat(60))).toBe('TOO_LONG')
+    expect(numberSeedIssue('12.5')).toBeNull()
   })
 
   it('非法输入拒绝', () => {
