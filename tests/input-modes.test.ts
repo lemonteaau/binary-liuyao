@@ -67,8 +67,23 @@ describe('数字起卦', () => {
     expect(splitSingleNumber('1234')).toEqual([12, 3, 4])
   })
 
+  it('手机数字键盘没有空格：小数点、逗号、横线等都可分组', () => {
+    for (const input of ['128.64.32', '128,64,32', '128-64-32', '128/64/32', '128。64。32', '１２８，６４，３２']) {
+      const r = rawLinesFromNumbers(input)
+      expect(r.ok, input).toBe(true)
+      if (r.ok) expect(r.seed.numbers).toEqual([128, 64, 32])
+    }
+    const two = rawLinesFromNumbers('12.34')
+    expect(two.ok && two.seed.numbers).toEqual([12, 34, 46])
+    // 输入过程中结尾多一个分隔符不影响解析
+    const trailing = rawLinesFromNumbers('128.64.')
+    expect(trailing.ok && trailing.seed.numbers).toEqual([128, 64, 192])
+  })
+
   it('非法输入拒绝', () => {
     expect(rawLinesFromNumbers('abc').ok).toBe(false)
+    expect(rawLinesFromNumbers('12').ok).toBe(false)
+    expect(rawLinesFromNumbers('1.2.3.4').ok).toBe(false)
     expect(rawLinesFromNumbers('').ok).toBe(false)
     expect(rawLinesFromNumbers('12 abc').ok).toBe(false)
     expect(parseNumberSeed('1 2')).not.toBeNull() // 两数合法

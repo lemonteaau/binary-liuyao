@@ -149,6 +149,7 @@ export function AboutPage() {
             <dd className="text-fog">
               上卦 = A ➗ 8 · 下卦 = B ➗ 8 · 动爻 = C ➗ 6。余数 0 取坤卦 / 上爻。
               两数时动爻 = (A+B) ➗ 6；单数按位自左向右切成三组（余数从左到右依次多一位）。
+              多组数字可用空格、逗号或小数点分隔。
             </dd>
           </div>
           <div>

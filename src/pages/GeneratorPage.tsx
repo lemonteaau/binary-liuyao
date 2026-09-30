@@ -1095,12 +1095,13 @@ function NumberPanel() {
       <Panel tag="数字种子">
         <RitualGuide>
           一事一问。静心默念后，输入最先浮现于心的数字。
+          可以连写一串，也可以用小数点、逗号或空格分成两到三组。
         </RitualGuide>
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          inputMode="numeric"
-          placeholder="输入一至三个数字，例如：384927 或 128 64 32"
+          inputMode="decimal"
+          placeholder="例如：384927，或分组输入 128.64.32"
           aria-label="数字种子"
           className="w-full border border-edge bg-void px-3 py-2 text-lg tracking-[0.2em] text-ink placeholder:tracking-normal placeholder:text-fog/60 focus:border-signal focus:outline-none"
         />
@@ -1110,7 +1111,7 @@ function NumberPanel() {
         </p>*/}
         {input.trim() !== '' && !valid && (
           <p className="mt-2 text-[0.9375rem] tracking-widest text-flux" role="alert">
-            种子无效 — 请输入数字
+            种子无效 — 单个数字至少三位；分组时用空格、逗号或小数点隔开，最多三组
           </p>
         )}
         {parsed.ok && (

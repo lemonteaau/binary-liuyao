@@ -7,6 +7,7 @@ import type { LineValue } from '@/types'
  * - 两个数 A B：上卦 = A mod 8，下卦 = B mod 8，动爻 = (A+B) mod 6
  * - 一个数 N：按位自左向右切成三组（余数从左到右依次多一位）后同三数规则
  * - 余 0：卦取坤（8），动爻取上爻（6）
+ * - 多组数字可用空格、逗号、顿号、小数点、横线或斜杠分隔（手机数字键盘常常没有空格键）
  */
 export function splitSingleNumber(digits: string): [number, number, number] | null {
   if (!/^\d+$/.test(digits) || digits.length < 3) return null
@@ -35,8 +36,11 @@ function remainderOrBase(value: number, base: number): number {
   return remainder === 0 ? base : remainder
 }
 
+const NUMBER_SEPARATORS = /[\s,，、.。·\-/]+/
+
 export function parseNumberSeed(input: string): ParsedNumberSeed | null {
-  const tokens = input.trim().split(/[\s,，、]+/).filter(Boolean)
+  // NFKC 把全角数字与全角标点折成半角，兼容中文输入法
+  const tokens = input.normalize('NFKC').split(NUMBER_SEPARATORS).filter(Boolean)
   if (tokens.length === 0 || tokens.length > 3) return null
   if (!tokens.every((t) => /^\d+$/.test(t))) return null
 
