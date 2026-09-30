@@ -26,6 +26,7 @@ import {
   rawLinesFromNumbers,
   trigramKeyByRemainder,
 } from '@/features/number/derive'
+import type { NumberSeedIssue } from '@/features/number/derive'
 import { deriveTimeSeed } from '@/features/time/derive'
 import { rawLinesFromRecord, searchHexagrams } from '@/features/hexagram-search/search'
 import {
@@ -1085,6 +1086,17 @@ function bitsOf(lines: RawLines): number {
   return bits
 }
 
+const NUMBER_SEED_HINT: Record<NumberSeedIssue, string> = {
+  EMPTY: '连写一串数字即可；想分组时用小数点隔开，最多三组',
+  TOO_SHORT: '单个数字至少三位，或用小数点分成两到三组',
+  NOT_DIGITS: '只能输入数字，分组请用小数点隔开',
+  TOO_MANY_GROUPS: '最多分成三组',
+  TOO_LONG: '数字太长了，请缩短一些',
+}
+
+/** 继续输入就能解决的情况用灰色提示，其余用红色报错 */
+const NUMBER_SEED_BLOCKING = new Set<NumberSeedIssue>(['NOT_DIGITS', 'TOO_MANY_GROUPS', 'TOO_LONG'])
+
 function NumberPanel() {
   const [input, setInput] = useState('')
   const parsed = useMemo(() => rawLinesFromNumbers(input), [input])
@@ -1099,8 +1111,8 @@ function NumberPanel() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          inputMode="numeric"
-          placeholder="输入一至三个数字，例如：384927 或 128 64 32"
+          inputMode="decimal"
+          placeholder="例如：384927 或 128.64.32"
           aria-label="数字种子"
           className="w-full border border-edge bg-void px-3 py-2 text-lg tracking-[0.2em] text-ink placeholder:tracking-normal placeholder:text-fog/60 focus:border-signal focus:outline-none"
         />
@@ -1108,9 +1120,14 @@ function NumberPanel() {
           规则：上卦 = A MOD 8 · 下卦 = B MOD 8 · 动爻 = C MOD 6 ·
           余数 0 → 坤 / 上爻
         </p>*/}
-        {input.trim() !== '' && !valid && (
-          <p className="mt-2 text-[0.9375rem] tracking-widest text-flux" role="alert">
-            种子无效 — 请输入数字
+        {!parsed.ok && (
+          <p
+            className={`mt-2 text-[0.9375rem] leading-relaxed ${
+              NUMBER_SEED_BLOCKING.has(parsed.error) ? 'text-flux' : 'text-fog'
+            }`}
+            role={NUMBER_SEED_BLOCKING.has(parsed.error) ? 'alert' : undefined}
+          >
+            {NUMBER_SEED_HINT[parsed.error]}
           </p>
         )}
         {parsed.ok && (

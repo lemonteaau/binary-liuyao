@@ -7,6 +7,7 @@ import type { LineValue } from '@/types'
  * - 两个数 A B：上卦 = A mod 8，下卦 = B mod 8，动爻 = (A+B) mod 6
  * - 一个数 N：按位自左向右切成三组（余数从左到右依次多一位）后同三数规则
  * - 余 0：卦取坤（8），动爻取上爻（6）
+ * - 多组数字可用空格、逗号、顿号、小数点、横线或斜杠分隔（手机数字键盘常常没有空格键）
  */
 export function splitSingleNumber(digits: string): [number, number, number] | null {
   if (!/^\d+$/.test(digits) || digits.length < 3) return null
@@ -35,8 +36,27 @@ function remainderOrBase(value: number, base: number): number {
   return remainder === 0 ? base : remainder
 }
 
+const NUMBER_SEPARATORS = /[\s,，、.。·\-/]+/
+
+export type NumberSeedIssue = 'EMPTY' | 'NOT_DIGITS' | 'TOO_MANY_GROUPS' | 'TOO_SHORT' | 'TOO_LONG'
+
+function tokenizeNumberSeed(input: string): string[] {
+  // NFKC 把全角数字与全角标点折成半角，兼容中文输入法
+  return input.normalize('NFKC').split(NUMBER_SEPARATORS).filter(Boolean)
+}
+
+/** 解释输入为何还不能起卦；可以起卦时返回 null */
+export function numberSeedIssue(input: string): NumberSeedIssue | null {
+  const tokens = tokenizeNumberSeed(input)
+  if (tokens.length === 0) return 'EMPTY'
+  if (!tokens.every((t) => /^\d+$/.test(t))) return 'NOT_DIGITS'
+  if (tokens.length > 3) return 'TOO_MANY_GROUPS'
+  if (tokens.length === 1 && tokens[0]!.length < 3) return 'TOO_SHORT'
+  return parseNumberSeed(input) ? null : 'TOO_LONG'
+}
+
 export function parseNumberSeed(input: string): ParsedNumberSeed | null {
-  const tokens = input.trim().split(/[\s,，、]+/).filter(Boolean)
+  const tokens = tokenizeNumberSeed(input)
   if (tokens.length === 0 || tokens.length > 3) return null
   if (!tokens.every((t) => /^\d+$/.test(t))) return null
 
@@ -85,9 +105,9 @@ export function rawLinesFromTrigrams(
 /** 数字输入 → 六爻 */
 export function rawLinesFromNumbers(input: string):
   | { ok: true; seed: ParsedNumberSeed; rawLines: [LineValue, LineValue, LineValue, LineValue, LineValue, LineValue] }
-  | { ok: false; error: 'INVALID_SEED' } {
+  | { ok: false; error: NumberSeedIssue } {
   const seed = parseNumberSeed(input)
-  if (!seed) return { ok: false, error: 'INVALID_SEED' }
+  if (!seed) return { ok: false, error: numberSeedIssue(input) ?? 'TOO_LONG' }
   const upperKey = trigramKeyByRemainder(seed.upperRemainder)
   const lowerKey = trigramKeyByRemainder(seed.lowerRemainder)
   return { ok: true, seed, rawLines: rawLinesFromTrigrams(upperKey, lowerKey, seed.movingLine) }
