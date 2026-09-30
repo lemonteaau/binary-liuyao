@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
-  numberSeedIssue,
   parseNumberSeed,
   rawLinesFromNumbers,
-  splitSingleNumber,
+  splitPastedNumbers,
 } from '@/features/number/derive'
 import { deriveTimeSeed } from '@/features/time/derive'
 import { deriveHanziSeed } from '@/features/hanzi/derive'
@@ -26,77 +25,77 @@ describe('摇币起卦', () => {
 })
 
 describe('数字起卦', () => {
-  it('三数规则：8 8 8 → 坤坤、二爻动', () => {
-    const r = rawLinesFromNumbers('8 8 8')
+  it('一个数：前后两半各位相加定上下卦，总和定动爻', () => {
+    const r = rawLinesFromNumbers(['384927'])
     expect(r.ok).toBe(true)
     if (!r.ok) return
-    expect(r.seed.upperRemainder).toBe(8)
-    expect(r.seed.lowerRemainder).toBe(8)
-    expect(r.seed.movingLine).toBe(1)
-  })
-
-  it('种子 0 按余数 0 规则取坤、上爻', () => {
-    const r = rawLinesFromNumbers('0 0 0')
-    expect(r.ok).toBe(true)
-    if (!r.ok) return
-    expect(r.seed.upperRemainder).toBe(8)
-    expect(r.seed.lowerRemainder).toBe(8)
-    expect(r.seed.movingLine).toBe(5)
-    expect(r.rawLines[5]).toBe(6)
-  })
-
-  it('PRD 示例：384927 → 拆分后推导合法状态', () => {
-    const r = rawLinesFromNumbers('384927')
-    expect(r.ok).toBe(true)
-    if (!r.ok) return
-    // 384927 → [38, 49, 27]（余数从左到右依次多一位）
-    expect(r.seed.numbers).toEqual([38, 49, 27])
+    expect(r.seed.strategy).toBe('one-number')
+    expect(r.seed.upper).toEqual({ formula: '3+8+4', value: 15n })
+    expect(r.seed.lower).toEqual({ formula: '9+2+7', value: 18n })
+    expect(r.seed.moving).toEqual({ formula: '15+18', value: 33n })
+    expect([r.seed.upperRemainder, r.seed.lowerRemainder, r.seed.movingLine]).toEqual([7, 2, 2])
     const chart = generateChart({
       inputMethod: 'number',
       rawLines: r.rawLines,
       when: new Date('2026-08-24T06:42:37Z'),
     })
-    expect(chart.primary.record.chineseName).toBeTruthy()
-    // 动爻 = C mod 6：((27-1)%6) = 2（三爻）
-    expect(r.seed.movingLine).toBe(2)
+    expect(chart.primary.record.chineseName).toBe('山泽损')
     expect(chart.lines[2]!.mutating).toBe(true)
   })
 
-  it('单数切分：余数从左到右依次多一位', () => {
-    expect(splitSingleNumber('12345')).toEqual([12, 34, 5])
-    expect(splitSingleNumber('123456')).toEqual([12, 34, 56])
-    expect(splitSingleNumber('1234')).toEqual([12, 3, 4])
+  it('一个数位数为奇数时后半多一位；只有一位数时三者都取这个数', () => {
+    const odd = parseNumberSeed(['12345'])
+    expect(odd.ok && [odd.seed.upper.formula, odd.seed.lower.formula]).toEqual(['1+2', '3+4+5'])
+    const single = parseNumberSeed(['7'])
+    expect(single.ok && [single.seed.upperRemainder, single.seed.lowerRemainder, single.seed.movingLine]).toEqual([7, 7, 0])
   })
 
-  it('手机数字键盘没有空格：小数点、逗号、横线等都可分组', () => {
-    for (const input of ['128.64.32', '128,64,32', '128-64-32', '128/64/32', '128。64。32', '１２８，６４，３２']) {
-      const r = rawLinesFromNumbers(input)
-      expect(r.ok, input).toBe(true)
-      if (r.ok) expect(r.seed.numbers).toEqual([128, 64, 32])
-    }
-    const two = rawLinesFromNumbers('12.34')
-    expect(two.ok && two.seed.numbers).toEqual([12, 34, 46])
-    // 输入过程中结尾多一个分隔符不影响解析
-    const trailing = rawLinesFromNumbers('128.64.')
-    expect(trailing.ok && trailing.seed.numbers).toEqual([128, 64, 192])
+  it('两个数：分定上下卦，两数之和定动爻', () => {
+    const r = rawLinesFromNumbers(['128', '64', ''])
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    expect(r.seed.strategy).toBe('two-numbers')
+    expect(r.seed.moving).toEqual({ formula: '128+64', value: 192n })
+    expect([r.seed.upperRemainder, r.seed.lowerRemainder, r.seed.movingLine]).toEqual([8, 8, 5])
+  })
+
+  it('三个数：依次定上卦、下卦、动爻', () => {
+    const r = rawLinesFromNumbers(['8', '8', '8'])
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    expect(r.seed.strategy).toBe('three-numbers')
+    expect([r.seed.upperRemainder, r.seed.lowerRemainder, r.seed.movingLine]).toEqual([8, 8, 1])
+  })
+
+  it('余数 0 取坤、上爻', () => {
+    const r = rawLinesFromNumbers(['0', '0', '0'])
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    expect([r.seed.upperRemainder, r.seed.lowerRemainder, r.seed.movingLine]).toEqual([8, 8, 5])
+    expect(r.rawLines[5]).toBe(6)
+  })
+
+  it('全角数字与空白可以识别，超长数字也能准确取余', () => {
+    const fullWidth = parseNumberSeed(['１２８', ' 64 '])
+    expect(fullWidth.ok && [fullWidth.seed.upper.value, fullWidth.seed.lower.value]).toEqual([128n, 64n])
+    const long = parseNumberSeed(['123456789012345678901234567890', '9'])
+    expect(long.ok && long.seed.upperRemainder).toBe(2)
+    expect(long.ok && long.seed.moving.value).toBe(123456789012345678901234567899n)
+  })
+
+  it('粘贴整串时拆成多个数', () => {
+    expect(splitPastedNumbers('128 64 32')).toEqual(['128', '64', '32'])
+    expect(splitPastedNumbers('128.64')).toEqual(['128', '64'])
+    expect(splitPastedNumbers('１２８，６４')).toEqual(['128', '64'])
+    expect(splitPastedNumbers('384927')).toEqual(['384927'])
   })
 
   it('给出无法起卦的具体原因', () => {
-    expect(numberSeedIssue('')).toBe('EMPTY')
-    expect(numberSeedIssue('12')).toBe('TOO_SHORT')
-    expect(numberSeedIssue('12a')).toBe('NOT_DIGITS')
-    expect(numberSeedIssue('1.2.3.4')).toBe('TOO_MANY_GROUPS')
-    expect(numberSeedIssue('9'.repeat(60))).toBe('TOO_LONG')
-    expect(numberSeedIssue('12.5')).toBeNull()
-  })
-
-  it('非法输入拒绝', () => {
-    expect(rawLinesFromNumbers('abc').ok).toBe(false)
-    expect(rawLinesFromNumbers('12').ok).toBe(false)
-    expect(rawLinesFromNumbers('1.2.3.4').ok).toBe(false)
-    expect(rawLinesFromNumbers('').ok).toBe(false)
-    expect(rawLinesFromNumbers('12 abc').ok).toBe(false)
-    expect(parseNumberSeed('1 2')).not.toBeNull() // 两数合法
+    expect(rawLinesFromNumbers(['', '', ''])).toEqual({ ok: false, error: 'EMPTY' })
+    expect(rawLinesFromNumbers(['12a'])).toEqual({ ok: false, error: 'NOT_DIGITS', field: 0 })
+    expect(rawLinesFromNumbers(['1', '2.5'])).toEqual({ ok: false, error: 'NOT_DIGITS', field: 1 })
+    expect(rawLinesFromNumbers(['', '64'])).toEqual({ ok: false, error: 'SKIPPED', field: 0 })
+    expect(rawLinesFromNumbers(['1', '', '3'])).toEqual({ ok: false, error: 'SKIPPED', field: 1 })
   })
 })
 

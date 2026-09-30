@@ -2,83 +2,127 @@ import { TRIGRAMS, TRIGRAM_KEYS } from '@/data/trigrams'
 import type { LineValue } from '@/types'
 
 /**
- * 数字起卦规则（About 页公开）：
- * - 三个数 A B C：上卦 = A mod 8，下卦 = B mod 8，动爻 = C mod 6
- * - 两个数 A B：上卦 = A mod 8，下卦 = B mod 8，动爻 = (A+B) mod 6
- * - 一个数 N：按位自左向右切成三组（余数从左到右依次多一位）后同三数规则
- * - 余 0：卦取坤（8），动爻取上爻（6）
- * - 多组数字可用空格、逗号、顿号、小数点、横线或斜杠分隔（手机数字键盘常常没有空格键）
+ * 数字起卦（About 页公开），规则与常见六爻排盘软件一致：
+ * - 只报一个数：按位分成前后两半，位数为奇数时后半多一位；前半各位之和定上卦，
+ *   后半各位之和定下卦，两者相加定动爻。只有一位数时，上卦、下卦、动爻都取这个数。
+ * - 报两个数：第一个数定上卦，第二个数定下卦，两数之和定动爻。
+ * - 报三个数：依次定上卦、下卦、动爻。
+ * - 上下卦除以 8、动爻除以 6 取余；余 0 时卦取坤（8），动爻取上爻（6）。
+ * 每个数单独输入，手机数字键盘即可完成。数字不限长度：用 BigInt 计算。
  */
-export function splitSingleNumber(digits: string): [number, number, number] | null {
-  if (!/^\d+$/.test(digits) || digits.length < 3) return null
-  const n = digits.length
-  const base = Math.floor(n / 3)
-  const rem = n % 3
-  const sizes = [base + (rem > 0 ? 1 : 0), base + (rem > 1 ? 1 : 0), base]
-  let offset = 0
-  const parts = sizes.map((size) => {
-    const part = Number(digits.slice(offset, offset + size))
-    offset += size
-    return part
-  })
-  return parts as [number, number, number]
+export const NUMBER_SEED_FIELDS = 3
+
+export type NumberSeedStrategy = 'one-number' | 'two-numbers' | 'three-numbers'
+
+export type NumberSeedIssue =
+  | { error: 'EMPTY' }
+  | { error: 'NOT_DIGITS'; field: number }
+  | { error: 'SKIPPED'; field: number }
+
+export interface NumberSeedPart {
+  /** 算式，如 3+8+4；直接取数时就是数本身 */
+  formula: string
+  value: bigint
 }
 
 export interface ParsedNumberSeed {
-  numbers: [number, number, number]
+  strategy: NumberSeedStrategy
+  upper: NumberSeedPart
+  lower: NumberSeedPart
+  moving: NumberSeedPart
   upperRemainder: number // 1..8
   lowerRemainder: number
   movingLine: number // 0..5
 }
 
-function remainderOrBase(value: number, base: number): number {
-  const remainder = value % base
-  return remainder === 0 ? base : remainder
-}
-
 const NUMBER_SEPARATORS = /[\s,，、.。·\-/]+/
 
-export type NumberSeedIssue = 'EMPTY' | 'NOT_DIGITS' | 'TOO_MANY_GROUPS' | 'TOO_SHORT' | 'TOO_LONG'
+/** 清理单个输入：全角转半角、去掉空白；非纯数字返回 null */
+export function normalizeNumberField(input: string): string | null {
+  const digits = input.normalize('NFKC').replace(/\s+/g, '')
+  return /^\d*$/.test(digits) ? digits : null
+}
 
-function tokenizeNumberSeed(input: string): string[] {
-  // NFKC 把全角数字与全角标点折成半角，兼容中文输入法
+/** 粘贴 128 64 32 这类整串时拆成多个数，用来分到后面的输入框 */
+export function splitPastedNumbers(input: string): string[] {
   return input.normalize('NFKC').split(NUMBER_SEPARATORS).filter(Boolean)
 }
 
-/** 解释输入为何还不能起卦；可以起卦时返回 null */
-export function numberSeedIssue(input: string): NumberSeedIssue | null {
-  const tokens = tokenizeNumberSeed(input)
-  if (tokens.length === 0) return 'EMPTY'
-  if (!tokens.every((t) => /^\d+$/.test(t))) return 'NOT_DIGITS'
-  if (tokens.length > 3) return 'TOO_MANY_GROUPS'
-  if (tokens.length === 1 && tokens[0]!.length < 3) return 'TOO_SHORT'
-  return parseNumberSeed(input) ? null : 'TOO_LONG'
+function remainderOrBase(value: bigint, base: number): number {
+  const remainder = Number(value % BigInt(base))
+  return remainder === 0 ? base : remainder
 }
 
-export function parseNumberSeed(input: string): ParsedNumberSeed | null {
-  const tokens = tokenizeNumberSeed(input)
-  if (tokens.length === 0 || tokens.length > 3) return null
-  if (!tokens.every((t) => /^\d+$/.test(t))) return null
+function numberPart(digits: string): NumberSeedPart {
+  const value = BigInt(digits)
+  return { formula: value.toString(), value }
+}
 
-  let nums: [number, number, number]
-  if (tokens.length === 1) {
-    const split = splitSingleNumber(tokens[0]!)
-    if (!split) return null
-    nums = split
-  } else if (tokens.length === 2) {
-    const [a, b] = tokens as [string, string]
-    nums = [Number(a), Number(b), Number(a) + Number(b)]
+function digitSumPart(digits: string): NumberSeedPart {
+  const list = [...digits]
+  return {
+    formula: list.join('+'),
+    value: list.reduce((total, digit) => total + BigInt(digit), BigInt(0)),
+  }
+}
+
+function sumPart(a: NumberSeedPart, b: NumberSeedPart): NumberSeedPart {
+  return { formula: `${a.value}+${b.value}`, value: a.value + b.value }
+}
+
+export function parseNumberSeed(inputs: readonly string[]):
+  | { ok: true; seed: ParsedNumberSeed }
+  | ({ ok: false } & NumberSeedIssue) {
+  const fields: string[] = []
+  for (let i = 0; i < NUMBER_SEED_FIELDS; i++) {
+    const digits = normalizeNumberField(inputs[i] ?? '')
+    if (digits === null) return { ok: false, error: 'NOT_DIGITS', field: i }
+    fields.push(digits)
+  }
+  const count = fields.filter(Boolean).length
+  if (count === 0) return { ok: false, error: 'EMPTY' }
+  const skipped = fields.findIndex((digits, i) => !digits && fields.slice(i + 1).some(Boolean))
+  if (skipped >= 0) return { ok: false, error: 'SKIPPED', field: skipped }
+
+  let strategy: NumberSeedStrategy
+  let upper: NumberSeedPart
+  let lower: NumberSeedPart
+  let moving: NumberSeedPart
+  if (count === 1) {
+    const digits = fields[0]!
+    strategy = 'one-number'
+    if (digits.length === 1) {
+      upper = lower = moving = numberPart(digits)
+    } else {
+      const splitIndex = Math.floor(digits.length / 2)
+      upper = digitSumPart(digits.slice(0, splitIndex))
+      lower = digitSumPart(digits.slice(splitIndex))
+      moving = sumPart(upper, lower)
+    }
+  } else if (count === 2) {
+    strategy = 'two-numbers'
+    upper = numberPart(fields[0]!)
+    lower = numberPart(fields[1]!)
+    moving = sumPart(upper, lower)
   } else {
-    nums = [Number(tokens[0]), Number(tokens[1]), Number(tokens[2])]
+    strategy = 'three-numbers'
+    upper = numberPart(fields[0]!)
+    lower = numberPart(fields[1]!)
+    moving = numberPart(fields[2]!)
   }
 
-  if (!nums.every(Number.isSafeInteger)) return null
-
-  const upperRemainder = remainderOrBase(nums[0], 8)
-  const lowerRemainder = remainderOrBase(nums[1], 8)
-  const movingLine = remainderOrBase(nums[2], 6) - 1
-
-  return { numbers: nums, upperRemainder, lowerRemainder, movingLine }
+  return {
+    ok: true,
+    seed: {
+      strategy,
+      upper,
+      lower,
+      moving,
+      upperRemainder: remainderOrBase(upper.value, 8),
+      lowerRemainder: remainderOrBase(lower.value, 8),
+      movingLine: remainderOrBase(moving.value, 6) - 1,
+    },
+  }
 }
 
 /** 余数 1..8 → 卦（乾1 兑2 离3 震4 巽5 坎6 艮7 坤8），0 视作 8 */
@@ -103,11 +147,12 @@ export function rawLinesFromTrigrams(
 }
 
 /** 数字输入 → 六爻 */
-export function rawLinesFromNumbers(input: string):
+export function rawLinesFromNumbers(inputs: readonly string[]):
   | { ok: true; seed: ParsedNumberSeed; rawLines: [LineValue, LineValue, LineValue, LineValue, LineValue, LineValue] }
-  | { ok: false; error: NumberSeedIssue } {
-  const seed = parseNumberSeed(input)
-  if (!seed) return { ok: false, error: numberSeedIssue(input) ?? 'TOO_LONG' }
+  | ({ ok: false } & NumberSeedIssue) {
+  const parsed = parseNumberSeed(inputs)
+  if (!parsed.ok) return parsed
+  const { seed } = parsed
   const upperKey = trigramKeyByRemainder(seed.upperRemainder)
   const lowerKey = trigramKeyByRemainder(seed.lowerRemainder)
   return { ok: true, seed, rawLines: rawLinesFromTrigrams(upperKey, lowerKey, seed.movingLine) }

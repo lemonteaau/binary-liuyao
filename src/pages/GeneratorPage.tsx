@@ -23,10 +23,16 @@ import {
 import type { CoinToss } from '@/engine/binary'
 import { hexagramByBits } from '@/data/hexagrams'
 import {
+  NUMBER_SEED_FIELDS,
   rawLinesFromNumbers,
+  splitPastedNumbers,
   trigramKeyByRemainder,
 } from '@/features/number/derive'
-import type { NumberSeedIssue } from '@/features/number/derive'
+import type {
+  NumberSeedIssue,
+  NumberSeedPart,
+  NumberSeedStrategy,
+} from '@/features/number/derive'
 import { deriveTimeSeed } from '@/features/time/derive'
 import { rawLinesFromRecord, searchHexagrams } from '@/features/hexagram-search/search'
 import {
@@ -1086,21 +1092,69 @@ function bitsOf(lines: RawLines): number {
   return bits
 }
 
-const NUMBER_SEED_HINT: Record<NumberSeedIssue, string> = {
-  EMPTY: '连写一串数字即可；想分组时用小数点隔开，最多三组',
-  TOO_SHORT: '单个数字至少三位，或用小数点分成两到三组',
-  NOT_DIGITS: '只能输入数字，分组请用小数点隔开',
-  TOO_MANY_GROUPS: '最多分成三组',
-  TOO_LONG: '数字太长了，请缩短一些',
+const NUMBER_FIELD_LABELS = ['第一个数', '第二个数', '第三个数'] as const
+
+const NUMBER_SEED_STRATEGY_LABEL: Record<NumberSeedStrategy, string> = {
+  'one-number': '一个数 · 两半各位之和定上下卦，总和定动爻',
+  'two-numbers': '两个数 · 分定上下卦，两数之和定动爻',
+  'three-numbers': '三个数 · 依次定上卦、下卦、动爻',
 }
 
-/** 继续输入就能解决的情况用灰色提示，其余用红色报错 */
-const NUMBER_SEED_BLOCKING = new Set<NumberSeedIssue>(['NOT_DIGITS', 'TOO_MANY_GROUPS', 'TOO_LONG'])
+const LINE_NAMES = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'] as const
+
+function numberSeedIssueText(issue: NumberSeedIssue): string | null {
+  if (issue.error === 'EMPTY') return null
+  if (issue.error === 'NOT_DIGITS') return `${NUMBER_FIELD_LABELS[issue.field]}只能填数字`
+  return `请先填${NUMBER_FIELD_LABELS[issue.field]}`
+}
+
+function NumberSeedStep({
+  label,
+  part,
+  divisor,
+  remainder,
+  result,
+}: {
+  label: string
+  part: NumberSeedPart
+  divisor: number
+  remainder: number
+  result: string
+}) {
+  const shownRemainder = remainder === divisor ? 0 : remainder
+  const formula = part.formula === part.value.toString() ? part.formula : `${part.formula} = ${part.value}`
+  return (
+    <p className="grid grid-cols-[2.75rem_1fr] gap-x-2">
+      <span>{label}</span>
+      <span className="break-all">
+        <span className="text-ink">{formula}</span>
+        {' '}÷ {divisor} 余 {shownRemainder} →{' '}
+        <span className="text-signal">{result}</span>
+      </span>
+    </p>
+  )
+}
 
 function NumberPanel() {
-  const [input, setInput] = useState('')
-  const parsed = useMemo(() => rawLinesFromNumbers(input), [input])
-  const valid = parsed.ok
+  const [fields, setFields] = useState<string[]>(['', '', ''])
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+  const parsed = useMemo(() => rawLinesFromNumbers(fields), [fields])
+  const hexagram = parsed.ok ? hexagramByBits(bitsOf(parsed.rawLines)) : undefined
+  const issueText = parsed.ok ? null : numberSeedIssueText(parsed)
+
+  function updateField(index: number, value: string) {
+    // 一次粘贴 128 64 32 这样的整串时，依次分到后面的输入框
+    const pasted = splitPastedNumbers(value)
+    const next = [...fields]
+    if (pasted.length > 1) {
+      pasted.slice(0, NUMBER_SEED_FIELDS - index).forEach((digits, offset) => {
+        next[index + offset] = digits
+      })
+    } else {
+      next[index] = value
+    }
+    setFields(next)
+  }
 
   return (
     <>
@@ -1108,48 +1162,75 @@ function NumberPanel() {
         <RitualGuide>
           一事一问。静心默念后，输入最先浮现于心的数字。
         </RitualGuide>
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          inputMode="decimal"
-          placeholder="例如：384927 或 128.64.32"
-          aria-label="数字种子"
-          className="w-full border border-edge bg-void px-3 py-2 text-lg tracking-[0.2em] text-ink placeholder:tracking-normal placeholder:text-fog/60 focus:border-signal focus:outline-none"
-        />
-        {/*<p className="mt-2 text-[0.875rem] leading-relaxed text-fog">
-          规则：上卦 = A MOD 8 · 下卦 = B MOD 8 · 动爻 = C MOD 6 ·
-          余数 0 → 坤 / 上爻
-        </p>*/}
-        {!parsed.ok && (
-          <p
-            className={`mt-2 text-[0.9375rem] leading-relaxed ${
-              NUMBER_SEED_BLOCKING.has(parsed.error) ? 'text-flux' : 'text-fog'
-            }`}
-            role={NUMBER_SEED_BLOCKING.has(parsed.error) ? 'alert' : undefined}
-          >
-            {NUMBER_SEED_HINT[parsed.error]}
+        <div className="grid grid-cols-3 gap-2">
+          {NUMBER_FIELD_LABELS.map((label, index) => (
+            <label key={label} className="block min-w-0">
+              <span className="mb-1 block text-[0.8125rem] tracking-[0.08em] text-fog">
+                {label}
+              </span>
+              <input
+                ref={(element) => {
+                  inputRefs.current[index] = element
+                }}
+                value={fields[index]}
+                onChange={(event) => updateField(index, event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') inputRefs.current[index + 1]?.focus()
+                }}
+                inputMode="numeric"
+                enterKeyHint={index < NUMBER_SEED_FIELDS - 1 ? 'next' : 'done'}
+                autoComplete="off"
+                placeholder={index > 0 ? '可不填' : undefined}
+                aria-label={label}
+                className="w-full min-w-0 border border-edge bg-void px-2 py-2 text-lg tracking-[0.12em] text-ink placeholder:text-base placeholder:tracking-normal placeholder:text-fog/50 focus:border-signal focus:outline-none"
+              />
+            </label>
+          ))}
+        </div>
+        <p className="mt-2 text-[0.875rem] leading-relaxed text-fog">
+          只填一个数也可以；填两个数分定上下卦，填三个数时第三个数定动爻
+        </p>
+        {issueText && (
+          <p className="mt-2 text-[0.9375rem] leading-relaxed text-flux" role="alert">
+            {issueText}
           </p>
         )}
         {parsed.ok && (
           <div className="mt-3 space-y-1 text-[0.9375rem] text-fog">
-            <p>
-              种子 A/B/C：{' '}
-              <span className="text-ink">
-                {parsed.seed.numbers.join(' / ')}
-              </span>
+            <p className="text-[0.875rem] tracking-[0.08em]">
+              {NUMBER_SEED_STRATEGY_LABEL[parsed.seed.strategy]}
             </p>
-            <p>
-              所得卦象：{' '}
-              <span className="text-signal">
-                {TRIGRAMS[trigramKeyByRemainder(parsed.seed.upperRemainder) as keyof typeof TRIGRAMS].name}
-                {TRIGRAMS[trigramKeyByRemainder(parsed.seed.lowerRemainder) as keyof typeof TRIGRAMS].name}
-              </span>{' '}
-              · 动爻 L{(parsed.seed.movingLine as number) + 1}
-            </p>
+            <NumberSeedStep
+              label="上卦"
+              part={parsed.seed.upper}
+              divisor={8}
+              remainder={parsed.seed.upperRemainder}
+              result={TRIGRAMS[trigramKeyByRemainder(parsed.seed.upperRemainder) as keyof typeof TRIGRAMS].name}
+            />
+            <NumberSeedStep
+              label="下卦"
+              part={parsed.seed.lower}
+              divisor={8}
+              remainder={parsed.seed.lowerRemainder}
+              result={TRIGRAMS[trigramKeyByRemainder(parsed.seed.lowerRemainder) as keyof typeof TRIGRAMS].name}
+            />
+            <NumberSeedStep
+              label="动爻"
+              part={parsed.seed.moving}
+              divisor={6}
+              remainder={parsed.seed.movingLine + 1}
+              result={LINE_NAMES[parsed.seed.movingLine]!}
+            />
+            {hexagram && (
+              <p>
+                本卦：<span className="text-signal">{hexagram.chineseName}</span>
+                {' '}· {LINE_NAMES[parsed.seed.movingLine]}动
+              </p>
+            )}
           </div>
         )}
       </Panel>
-      {valid && <GenerateBar rawLines={parsed.rawLines} method="number" />}
+      {parsed.ok && <GenerateBar rawLines={parsed.rawLines} method="number" />}
     </>
   )
 }
