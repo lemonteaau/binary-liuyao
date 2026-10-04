@@ -2909,12 +2909,6 @@ html[data-motion="off"] :is(.coin-console, .coin-record) :is(*, *::before, *::af
   font-weight: 400;
 }
 
-.reading-line-code {
-  color: var(--color-signal);
-  font-size: 0.875rem;
-  letter-spacing: 0.16em;
-}
-
 .reading-side-cell {
   display: grid;
   min-width: 0;
@@ -3037,11 +3031,6 @@ html[data-motion="off"] :is(.coin-console, .coin-record) :is(*, *::before, *::af
 
 .reading-change-cell > span {
   font-size: 1.125rem;
-}
-
-.reading-change-cell small {
-  font-size: 0.6875rem;
-  letter-spacing: 0.12em;
 }
 
 .reading-change-cell[data-mutating="true"] {
@@ -3598,9 +3587,6 @@ html[data-motion="off"] :is(.coin-console, .coin-record) :is(*, *::before, *::af
     font-size: 0.875rem;
   }
 
-  .reading-change-cell small {
-    display: none;
-  }
 }
 
 /* ---------------------------------- */

@@ -209,7 +209,6 @@ function ReadingLineRow({ chart, line }: { chart: ChartData; line: ChartLine }) 
       aria-label={`${lineName}${line.mutating ? '，动爻' : '，静爻'}${transform ? `，${transform}` : ''}`}
     >
       <header className="reading-line-rail">
-        <span className="reading-line-code">L{line.index + 1}</span>
         <span>{lineName}</span>
         <strong>{line.primary.spirit ?? '—'}</strong>
       </header>
@@ -233,7 +232,6 @@ function ReadingLineRow({ chart, line }: { chart: ChartData; line: ChartLine }) 
 
       <div className="reading-change-cell" data-mutating={line.mutating} aria-hidden="true">
         <span>{line.mutating ? '变' : '·'}</span>
-        <small>{line.mutating ? '动爻' : '不变'}</small>
       </div>
 
       <div className="reading-side-cell reading-result-cell">
@@ -242,7 +240,6 @@ function ReadingLineRow({ chart, line }: { chart: ChartData; line: ChartLine }) 
           <NajiaValue relation={line.result.relation} najia={line.result.najia} />
           <div className="reading-line-badges">
             <span>{resultYang ? '阳爻' : '阴爻'}</span>
-            {line.mutating && <strong>变后</strong>}
             {transform && (
               <em className="reading-transform" title={LINE_TRANSFORM_NOTES[transform]}>
                 {transform}

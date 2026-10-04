@@ -230,7 +230,7 @@ function lineModel(chart: ChartData, line: ChartLine): ShareLineModel {
     primary: `${line.primary.relation} ${najiaText(line.primary.najia)}`,
     primaryState: `${line.yang ? (line.mutating ? '老阳 · 动' : '少阳 · 静') : (line.mutating ? '老阴 · 动' : '少阴 · 静')}${line.primary.shiYing ? ` · ${line.primary.shiYing}` : ''}`,
     result: `${line.result.relation} ${najiaText(line.result.najia)}`,
-    resultState: `${resultYang ? '阳爻' : '阴爻'}${line.mutating ? ' · 变后' : ''}`,
+    resultState: resultYang ? '阳爻' : '阴爻',
     change: line.mutating ? '变' : '·',
     transform: lineTransformOf(line),
     mutating: line.mutating,
