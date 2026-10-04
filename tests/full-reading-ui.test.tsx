@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { FullReading } from '@/components/FullReading'
 import { generateChart } from '@/engine'
 import { formatRawText } from '@/formatters/rawText'
@@ -9,6 +9,7 @@ import { formatRawText } from '@/formatters/rawText'
 afterEach(() => {
   cleanup()
   vi.restoreAllMocks()
+  localStorage.clear()
 })
 
 function testReading() {
@@ -24,7 +25,7 @@ function testReading() {
   }
 }
 
-describe('FullReading 显示模式与复制', () => {
+describe('FullReading 显示模式与逐爻排盘', () => {
   it('默认显示结构化排盘', () => {
     const { chart, rawText } = testReading()
     render(<FullReading chart={chart} rawText={rawText} />)
@@ -39,8 +40,71 @@ describe('FullReading 显示模式与复制', () => {
     expect(screen.getByRole('heading', { name: '周易原文' })).toBeTruthy()
     expect(screen.getByRole('article', { name: '本卦《坎为水》周易原文' })).toBeTruthy()
     expect(screen.getByRole('article', { name: '变卦《水雷屯》周易原文' })).toBeTruthy()
-    const copyButton = screen.getByRole('button', { name: '复制排盘' })
-    expect(copyButton.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true')
+    // 复制与分享已移到结果页顶部工具栏
+    expect(screen.queryByRole('button', { name: '复制排盘' })).toBeNull()
+  })
+
+  it('静爻只保留必要标注，世应放在爻位栏，旬空标在落空的爻上', () => {
+    const { chart, rawText } = testReading()
+    render(<FullReading chart={chart} rawText={rawText} />)
+
+    const fifth = screen.getByRole('article', { name: '五爻，静爻' })
+    // 坎为水：日空戌亥，五爻官鬼戊戌落空
+    expect(within(fifth).getByText('空').getAttribute('title')).toBe('旬空：戌亥')
+    expect(within(fifth).queryByText('少阳 · 静')).toBeNull()
+    expect(within(fifth).queryByText('阳爻')).toBeNull()
+    expect(screen.getAllByText('空')).toHaveLength(1)
+
+    const top = screen.getByRole('article', { name: '上爻，静爻' })
+    expect(top.querySelector('.reading-line-rail .reading-shiying')?.textContent).toBe('世')
+    const third = screen.getByRole('article', { name: '三爻，静爻' })
+    expect(third.querySelector('.reading-line-rail .reading-shiying')?.textContent).toBe('应')
+
+    const second = screen.getByRole('article', { name: '二爻，动爻，回头克' })
+    expect(within(second).getByText('老阳 · 动')).toBeTruthy()
+    expect(within(second).getByText('变')).toBeTruthy()
+  })
+
+  it('历法区把四柱、旬空与卦身排在同一行', () => {
+    const { chart, rawText } = testReading()
+    render(<FullReading chart={chart} rawText={rawText} />)
+
+    const pillars = screen.getByLabelText('四柱干支、旬空与卦身')
+    const terms = within(pillars).getAllByRole('term').map((term) => term.textContent)
+    expect(terms).toEqual(['年柱', '月柱', '日柱', '时柱', '旬空', '卦身'])
+    expect(within(pillars).getByText('戌亥')).toBeTruthy()
+  })
+
+  it('神煞标出所临的爻位，包括伏神与动爻化出的变爻', () => {
+    const { chart, rawText } = testReading()
+    render(<FullReading chart={chart} rawText={rawText} />)
+
+    const shensha = screen.getByRole('region', { name: '神煞与附加信息' })
+    // 驿马、日禄都在申，落在四爻父母戊申
+    expect(within(shensha).getAllByTitle('落在四爻').map((hit) => hit.textContent)).toEqual(['四爻', '四爻'])
+    // 贵人寅午：初爻寅、三爻午，二爻动化出寅
+    expect(within(shensha).getByTitle('落在初、三爻 · 二爻变').textContent).toBe('初、三爻 · 二爻变')
+    // 灾煞子：上爻子，初爻动化出子
+    expect(within(shensha).getByTitle('落在上爻 · 初爻变')).toBeTruthy()
+    const peach = within(shensha).getByText('桃花').closest('li')!
+    expect(peach.getAttribute('data-hit')).toBe('false')
+    expect(peach.querySelector('em')).toBeNull()
+  })
+
+  it('静卦不显示变卦一栏', () => {
+    const chart = generateChart({
+      inputMethod: 'manual',
+      rawLines: [7, 7, 7, 7, 7, 7],
+      when: new Date('2026-08-24T14:42:37+08:00'),
+      timezone: 'Asia/Shanghai',
+    })
+    render(<FullReading chart={chart} rawText="" />)
+
+    const matrix = screen.getByRole('region', { name: '本卦逐爻排盘' })
+    expect(matrix.getAttribute('data-static')).toBe('true')
+    expect(within(matrix).queryByText('变卦')).toBeNull()
+    expect(within(matrix).queryByText('变化')).toBeNull()
+    expect(within(matrix).getByText('六爻安静 · 无变卦')).toBeTruthy()
   })
 
   it('动爻标出变爻对本爻的回头生克', () => {
@@ -90,18 +154,9 @@ describe('FullReading 显示模式与复制', () => {
     expect(screen.queryByRole('article', { name: '变卦《乾为天》周易原文' })).toBeNull()
   })
 
-  it('可切换为纯文字，并复制完整的排盘文本', async () => {
-    const writeText = vi.fn().mockResolvedValue(undefined)
-    const track = vi.fn()
-    vi.stubGlobal('umami', { track })
-    Object.defineProperty(navigator, 'clipboard', {
-      configurable: true,
-      value: { writeText },
-    })
+  it('可切换为纯文字，并记住上次选择的显示模式', () => {
     const { chart, rawText } = testReading()
-    const { container } = render(
-      <FullReading chart={chart} rawText={rawText} hasAiInstruction />,
-    )
+    const { container, unmount } = render(<FullReading chart={chart} rawText={rawText} />)
 
     fireEvent.click(screen.getByRole('button', { name: '纯文字' }))
 
@@ -109,17 +164,23 @@ describe('FullReading 显示模式与复制', () => {
     expect(screen.getByRole('button', { name: '纯文字' }).getAttribute('aria-pressed')).toBe('true')
     expect(screen.queryByRole('region', { name: '本卦与变卦逐爻排盘' })).toBeNull()
     expect(screen.getByRole('heading', { name: '周易原文' })).toBeTruthy()
-    const plainReading = container.querySelector('pre')
-    expect(plainReading?.textContent).toBe(rawText)
+    expect(container.querySelector('pre')?.textContent).toBe(rawText)
 
-    const copyButton = screen.getByRole('button', { name: '复制排盘' })
-    expect(copyButton.textContent).toBe('复制排盘')
-    fireEvent.click(copyButton)
+    unmount()
+    render(<FullReading chart={chart} rawText={rawText} />)
+    expect(screen.getByRole('heading', { name: '纯文字排盘' })).toBeTruthy()
+  })
 
-    await waitFor(() => {
-      expect(writeText).toHaveBeenCalledTimes(1)
-    })
-    expect(writeText).toHaveBeenCalledWith(rawText)
-    expect(track).toHaveBeenCalledWith('成功复制排盘', { 是否包含AI指令: true })
+  it('周易原文可展开或收起其余爻辞', () => {
+    const { chart, rawText } = testReading()
+    render(<FullReading chart={chart} rawText={rawText} />)
+
+    const classics = screen.getByRole('region', { name: '周易原文' })
+    expect(classics.getAttribute('data-collapsed')).toBe('true')
+    const toggle = within(classics).getByRole('button', { name: '展开全部爻辞' })
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+    fireEvent.click(toggle)
+    expect(classics.getAttribute('data-collapsed')).toBe('false')
+    expect(within(classics).getByRole('button', { name: '收起其余爻辞' }).getAttribute('aria-expanded')).toBe('true')
   })
 })

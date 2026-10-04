@@ -1,34 +1,41 @@
 import { useState } from 'react'
-import { CopyButton } from '@/components/CopyButton'
-import { ShareImageButton } from '@/components/ShareImageButton'
 import { ZhouyiClassics } from '@/components/ZhouyiClassics'
-import { TRIGRAMS } from '@/data/trigrams'
 import { LINE_TRANSFORM_NOTES, lineTransformOf } from '@/engine'
-import { trackEvent } from '@/lib/analytics'
 import { cn } from '@/lib/cn'
+import { isXunKong, LINE_NAMES, shenshaPosition } from '@/lib/reading-marks'
 import { formatTimezoneWithOffset, parseGregorianToDate } from '@/lib/timezone-display'
-import type { ChartData, ChartLine, HexStateInfo, NajiaLine } from '@/types'
+import type { Branch, ChartData, ChartLine, HexStateInfo, NajiaLine, ShenShaEntry } from '@/types'
 
-const LINE_NAMES = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'] as const
+const READING_MODE_KEY = 'hex64.reading-mode.v1'
 
 type ReadingMode = 'structured' | 'plain'
 
-export function FullReading({
-  chart,
-  rawText,
-  hasAiInstruction = false,
-  sessionId,
-  ordinal,
-}: {
-  chart: ChartData
-  rawText: string
-  hasAiInstruction?: boolean
-  sessionId?: string
-  ordinal?: number | null
-}) {
-  const [mode, setMode] = useState<ReadingMode>('structured')
+function loadReadingMode(): ReadingMode {
+  try {
+    return localStorage.getItem(READING_MODE_KEY) === 'plain' ? 'plain' : 'structured'
+  } catch {
+    return 'structured'
+  }
+}
+
+function saveReadingMode(mode: ReadingMode): void {
+  try {
+    localStorage.setItem(READING_MODE_KEY, mode)
+  } catch {
+    /* 只是个人偏好，写不进去时下次回到默认的结构化视图 */
+  }
+}
+
+export function FullReading({ chart, rawText }: { chart: ChartData; rawText: string }) {
+  const [mode, setMode] = useState<ReadingMode>(loadReadingMode)
   const rows = [...chart.lines].sort((a, b) => b.index - a.index)
+  const hasMutation = chart.mutationMask !== 0
   const visibleShensha = chart.shensha.filter((entry) => entry.branches.length > 0)
+
+  function changeMode(next: ReadingMode) {
+    setMode(next)
+    saveReadingMode(next)
+  }
 
   return (
     <section
@@ -39,40 +46,14 @@ export function FullReading({
       <span className="panel-tag">完整排盘</span>
 
       <header className="full-reading-header">
-        <div>
-          <p className="full-reading-kicker">COMPLETE LIUYAO MATRIX</p>
-          <h2 id="full-reading-title">{mode === 'structured' ? '结构化六爻排盘' : '纯文字排盘'}</h2>
-        </div>
-        <div className="full-reading-tools">
-          <div className="full-reading-mode" role="group" aria-label="排盘显示模式">
-            <ModeButton active={mode === 'structured'} onClick={() => setMode('structured')}>
-              结构化
-            </ModeButton>
-            <ModeButton active={mode === 'plain'} onClick={() => setMode('plain')}>
-              纯文字
-            </ModeButton>
-          </div>
-          <div className="full-reading-actions" aria-label="排盘分享操作">
-            <ShareImageButton
-              chart={chart}
-              sessionId={sessionId}
-              ordinal={ordinal}
-              className="full-reading-share-button"
-            />
-            <div className="full-reading-copy">
-              <CopyButton
-                label="复制排盘"
-                getText={() => rawText}
-                className="full-reading-copy-button"
-                onCopied={() => trackEvent('成功复制排盘', {
-                  是否包含AI指令: hasAiInstruction,
-                })}
-              >
-                <CopyIcon />
-                <span>复制排盘</span>
-              </CopyButton>
-            </div>
-          </div>
+        <h2 id="full-reading-title">{mode === 'structured' ? '结构化六爻排盘' : '纯文字排盘'}</h2>
+        <div className="full-reading-mode" role="group" aria-label="排盘显示模式">
+          <ModeButton active={mode === 'structured'} onClick={() => changeMode('structured')}>
+            结构化
+          </ModeButton>
+          <ModeButton active={mode === 'plain'} onClick={() => changeMode('plain')}>
+            纯文字
+          </ModeButton>
         </div>
       </header>
 
@@ -93,31 +74,44 @@ export function FullReading({
                   parseGregorianToDate(chart.calendar.gregorian, chart.calendar.utcOffset),
                 )}
               />
-              <ReadingDatum label="旬空" value={chart.calendar.xunKong.join('')} />
-              <ReadingDatum
-                label="卦身"
-                value={`${chart.guaShen.branch} · ${chart.guaShen.onHexagram ? '已上卦' : '未上卦'}`}
-              />
             </dl>
-            <div className="reading-pillars" aria-label="四柱干支">
+            <dl className="reading-pillars" aria-label="四柱干支、旬空与卦身">
               <Pillar label="年柱" value={chart.calendar.ganzhi.year} />
               <Pillar label="月柱" value={chart.calendar.ganzhi.month} />
               <Pillar label="日柱" value={chart.calendar.ganzhi.day} />
               <Pillar label="时柱" value={chart.calendar.ganzhi.hour} />
-            </div>
+              <Pillar label="旬空" value={chart.calendar.xunKong.join('')} />
+              <Pillar
+                label="卦身"
+                value={chart.guaShen.branch}
+                note={chart.guaShen.onHexagram ? '已上卦' : '未上卦'}
+              />
+            </dl>
           </section>
 
-          <section className="reading-matrix" aria-label="本卦与变卦逐爻排盘">
+          <section
+            className="reading-matrix"
+            data-static={!hasMutation}
+            aria-label={hasMutation ? '本卦与变卦逐爻排盘' : '本卦逐爻排盘'}
+          >
             <div className="reading-matrix-head">
               <span className="reading-axis-head">爻位 / 六神</span>
-              <HexReadingHead label="本卦" state={chart.primary} />
-              <span className="reading-change-head">变化</span>
-              <HexReadingHead label="变卦" state={chart.result} />
+              <HexReadingHead
+                label="本卦"
+                state={chart.primary}
+                note={hasMutation ? undefined : '六爻安静 · 无变卦'}
+              />
+              {hasMutation && (
+                <>
+                  <span className="reading-change-head">变化</span>
+                  <HexReadingHead label="变卦" state={chart.result} />
+                </>
+              )}
             </div>
 
             <div className="reading-line-list">
               {rows.map((line) => (
-                <ReadingLineRow key={line.index} chart={chart} line={line} />
+                <ReadingLineRow key={line.index} chart={chart} line={line} showResult={hasMutation} />
               ))}
             </div>
           </section>
@@ -131,10 +125,7 @@ export function FullReading({
               {visibleShensha.length > 0 ? (
                 <ul>
                   {visibleShensha.map((entry) => (
-                    <li key={entry.id}>
-                      <span>{entry.name}</span>
-                      <strong>{entry.branches.join('')}</strong>
-                    </li>
+                    <ShenshaItem key={entry.id} entry={entry} chart={chart} />
                   ))}
                 </ul>
               ) : (
@@ -170,37 +161,31 @@ function ModeButton({
   )
 }
 
-function CopyIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className="size-[1em] fill-none stroke-current">
-      <rect x="8" y="8" width="11" height="11" rx="1" strokeWidth="1.8" />
-      <path d="M16 8V5H5v11h3" strokeWidth="1.8" />
-    </svg>
-  )
-}
-
-function HexReadingHead({ label, state }: { label: string; state: HexStateInfo }) {
-  const upper = TRIGRAMS[state.record.upperKey]
-  const lower = TRIGRAMS[state.record.lowerKey]
-
+function HexReadingHead({ label, state, note }: { label: string; state: HexStateInfo; note?: string }) {
   return (
     <div className="reading-hex-head">
       <span>{label}</span>
       <strong>{state.record.chineseName}</strong>
-      <p>
-        HEX {String(state.record.kingWenNumber).padStart(2, '0')} · {state.palace} · {state.palaceRank}
-        {state.attribute ? ` · ${state.attribute}` : ''}
-      </p>
-      <p>上卦 {upper.name}{upper.symbol} / 下卦 {lower.name}{lower.symbol}</p>
+      {note && <small>{note}</small>}
     </div>
   )
 }
 
-function ReadingLineRow({ chart, line }: { chart: ChartData; line: ChartLine }) {
+function ReadingLineRow({
+  chart,
+  line,
+  showResult,
+}: {
+  chart: ChartData
+  line: ChartLine
+  showResult: boolean
+}) {
   const resultYang = Boolean((chart.result.bits >> line.index) & 1)
   const fuShen = chart.fuShen.filter((entry) => entry.index === line.index)
   const lineName = LINE_NAMES[line.index] ?? `第${line.index + 1}爻`
   const transform = lineTransformOf(line)
+  const xunKong = chart.calendar.xunKong
+  const isKong = (branch: Branch) => isXunKong(chart, branch)
 
   return (
     <article
@@ -211,43 +196,57 @@ function ReadingLineRow({ chart, line }: { chart: ChartData; line: ChartLine }) 
       <header className="reading-line-rail">
         <span>{lineName}</span>
         <strong>{line.primary.spirit ?? '—'}</strong>
+        {line.primary.shiYing && <b className="reading-shiying">{line.primary.shiYing}</b>}
       </header>
 
       <div className="reading-side-cell reading-primary-cell">
         <LineGlyph yang={line.yang} mutating={line.mutating} />
         <div className="reading-line-detail">
-          <NajiaValue relation={line.primary.relation} najia={line.primary.najia} />
-          <div className="reading-line-badges">
-            <span>{primaryLineState(line)}</span>
-            {line.primary.shiYing && <strong>{line.primary.shiYing}</strong>}
-          </div>
+          <NajiaValue
+            relation={line.primary.relation}
+            najia={line.primary.najia}
+            kong={isKong(line.primary.najia.branch) ? xunKong : null}
+          />
+          {line.mutating && (
+            <div className="reading-line-badges">
+              <span>{line.yang ? '老阳 · 动' : '老阴 · 动'}</span>
+            </div>
+          )}
           {fuShen.map((entry) => (
             <p className="reading-fushen" key={`${entry.index}-${entry.relation}`}>
               <span>伏神</span>
               {entry.relation}{najiaText(entry.najia)}
+              {isKong(entry.najia.branch) && <KongMark xunKong={xunKong} />}
             </p>
           ))}
         </div>
       </div>
 
-      <div className="reading-change-cell" data-mutating={line.mutating} aria-hidden="true">
-        <span>{line.mutating ? '变' : '·'}</span>
-      </div>
-
-      <div className="reading-side-cell reading-result-cell">
-        <LineGlyph yang={resultYang} />
-        <div className="reading-line-detail">
-          <NajiaValue relation={line.result.relation} najia={line.result.najia} />
-          <div className="reading-line-badges">
-            <span>{resultYang ? '阳爻' : '阴爻'}</span>
-            {transform && (
-              <em className="reading-transform" title={LINE_TRANSFORM_NOTES[transform]}>
-                {transform}
-              </em>
-            )}
+      {showResult && (
+        <>
+          <div className="reading-change-cell" data-mutating={line.mutating} aria-hidden="true">
+            {line.mutating && <span>变</span>}
           </div>
-        </div>
-      </div>
+
+          <div className="reading-side-cell reading-result-cell">
+            <LineGlyph yang={resultYang} />
+            <div className="reading-line-detail">
+              <NajiaValue
+                relation={line.result.relation}
+                najia={line.result.najia}
+                kong={line.mutating && isKong(line.result.najia.branch) ? xunKong : null}
+              />
+              {transform && (
+                <div className="reading-line-badges">
+                  <em className="reading-transform" title={LINE_TRANSFORM_NOTES[transform]}>
+                    {transform}
+                  </em>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </article>
   )
 }
@@ -267,12 +266,42 @@ function LineGlyph({ yang, mutating = false }: { yang: boolean; mutating?: boole
   )
 }
 
-function NajiaValue({ relation, najia }: { relation: string; najia: NajiaLine }) {
+function NajiaValue({
+  relation,
+  najia,
+  kong,
+}: {
+  relation: string
+  najia: NajiaLine
+  kong: readonly Branch[] | null
+}) {
   return (
     <p className="reading-najia">
       <strong>{relation}</strong>
       <span>{najiaText(najia)}</span>
+      {kong && <KongMark xunKong={kong} />}
     </p>
+  )
+}
+
+/** 地支落在日旬空亡：只做事实标注，不判吉凶。 */
+function KongMark({ xunKong }: { xunKong: readonly Branch[] }) {
+  return (
+    <em className="reading-kong" title={`旬空：${xunKong.join('')}`}>
+      空
+    </em>
+  )
+}
+
+function ShenshaItem({ entry, chart }: { entry: ShenShaEntry; chart: ChartData }) {
+  const position = shenshaPosition(entry, chart)
+
+  return (
+    <li data-hit={position !== null}>
+      <span>{entry.name}</span>
+      <strong>{entry.branches.join('')}</strong>
+      {position && <em title={`落在${position}`}>{position}</em>}
+    </li>
   )
 }
 
@@ -285,20 +314,18 @@ function ReadingDatum({ label, value }: { label: string; value: string }) {
   )
 }
 
-function Pillar({ label, value }: { label: string; value: string }) {
+function Pillar({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
     <div className="reading-pillar">
-      <span>{label}</span>
-      <strong>{value}</strong>
+      <dt>{label}</dt>
+      <dd>
+        <strong>{value}</strong>
+        {note && <small>{note}</small>}
+      </dd>
     </div>
   )
 }
 
 function najiaText(najia: NajiaLine): string {
   return `${najia.stem}${najia.branch}${najia.element}`
-}
-
-function primaryLineState(line: ChartLine): string {
-  if (line.yang) return line.mutating ? '老阳 · 动' : '少阳 · 静'
-  return line.mutating ? '老阴 · 动' : '少阴 · 静'
 }

@@ -1,9 +1,10 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { RefObject } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { CopyButton } from '@/components/CopyButton'
 import { FullReading } from '@/components/FullReading'
 import { HexLines } from '@/components/HexLines'
-import { ReadingNotesPanel } from '@/components/ReadingNotesPanel'
+import { ReadingOutcomePanel, useNoteDraft } from '@/components/ReadingNotesPanel'
+import { ResultDock, ResultToolbar } from '@/components/ResultToolbar'
 import { SupportNudge } from '@/components/SupportNudge'
 import { generateChart } from '@/engine'
 import { bitsToString } from '@/engine/binary'
@@ -11,19 +12,20 @@ import { TRIGRAMS } from '@/data/trigrams'
 import { trigramKeyByRemainder } from '@/features/number/derive'
 import type { HanziSeed } from '@/features/hanzi/derive'
 import { formatRawText } from '@/formatters/rawText'
+import { trackEvent } from '@/lib/analytics'
 import { buildShareUrl, parseShareLink } from '@/lib/share-link'
 import { isFreshReading, milestoneForReading } from '@/lib/support-nudge'
-import type { LineValue } from '@/types'
+import type { ChartData, HexStateInfo, LineValue } from '@/types'
 import { INPUT_METHOD_LABELS_UI, useReading } from '@/store/reading'
+import type { ReadingRecord } from '@/store/reading'
 import { useSettings } from '@/store/settings'
 
 type RawLines = [LineValue, LineValue, LineValue, LineValue, LineValue, LineValue]
 
 export function ResultPage() {
   const location = useLocation()
-  const navigate = useNavigate()
   const { current, commitReading } = useReading()
-  const { resolvedTimezone, settings } = useSettings()
+  const { resolvedTimezone } = useSettings()
 
   const linkParams = useMemo(() => parseShareLink(new URLSearchParams(location.hash.slice(1))), [location.hash])
   const restoredLink = useMemo(() => {
@@ -74,145 +76,126 @@ export function ResultPage() {
     )
   }
 
-  const chart = current.chart
+  return (
+    <ResultView
+      key={current.id}
+      record={current}
+      isLinkMode={current.chart.inputMethod === 'link' || linkParams !== null}
+      restoredOriginalContext={Boolean(linkParams?.when && linkParams.timezone && linkParams.inputMethod)}
+    />
+  )
+}
+
+/** 以排盘 ID 作为 key 挂载，所问草稿随排盘切换重置。 */
+function ResultView({
+  record,
+  isLinkMode,
+  restoredOriginalContext,
+}: {
+  record: ReadingRecord
+  isLinkMode: boolean
+  restoredOriginalContext: boolean
+}) {
+  const navigate = useNavigate()
+  const { settings, setAiInstruction, setIncludeQuestion } = useSettings()
+  const question = useNoteDraft(record, 'question')
+  const toolbarRef = useRef<HTMLElement>(null)
+  const toolbarInView = useInView(toolbarRef)
+
+  const chart = record.chart
   const rawText = formatRawText(chart, {
     includeAiInstruction: settings.aiInstruction,
     aiInstructionPrompt: settings.aiInstructionPrompt,
     includeSource: settings.includeSource,
+    question: settings.includeQuestion ? question.value : undefined,
   })
   const hasAiInstruction = settings.aiInstruction && settings.aiInstructionPrompt.trim().length > 0
-  const isLinkMode = chart.inputMethod === 'link' || linkParams !== null
-  const restoredOriginalContext = Boolean(
-    linkParams?.when && linkParams.timezone && linkParams.inputMethod,
-  )
-  const hasMutation = chart.mutationMask !== 0
+  const hasQuestion = settings.includeQuestion && question.value.trim().length > 0
   // 起卦序号与里程碑提示只跟随刚完成的新排盘，从历史或分享链接打开时不出现
-  const fresh = isFreshReading(current)
-  const milestone = fresh ? milestoneForReading(current.id) : null
+  const fresh = isFreshReading(record)
+  const milestone = fresh ? milestoneForReading(record.id) : null
 
-  const shareUrl = () => {
-    return buildShareUrl(
-      chart,
-      new URL(import.meta.env.BASE_URL, window.location.origin).href,
-      { readingId: current.id, ordinal: current.ordinal },
-    )
+  const output = {
+    chart,
+    sessionId: record.id,
+    ordinal: record.ordinal,
+    getRawText: () => rawText,
+    onCopied: () => trackEvent('成功复制排盘', {
+      是否包含AI指令: hasAiInstruction,
+      是否包含所问: hasQuestion,
+    }),
   }
+  const shareUrl = () => buildShareUrl(
+    chart,
+    new URL(import.meta.env.BASE_URL, window.location.origin).href,
+    { readingId: record.id, ordinal: record.ordinal },
+  )
+  const startOver = () => navigate('/')
 
   return (
-    <div className="pt-5">
+    <div className="result-page pt-5">
       <h1 className="sr-only">六爻排盘结果</h1>
-      {isLinkMode && (
-        <p className="mb-4 border border-edge bg-surface px-3 py-2 text-[0.875rem] tracking-[0.16em] text-fog" role="note">
-          {restoredOriginalContext
-            ? '来自分享链接 // 已按原起卦时间与时区还原'
-            : '来自旧版分享链接 // 历法按查看时刻重新计算'}
-        </p>
-      )}
 
-      <div className="result-session-bar mb-4 flex flex-wrap items-center justify-between gap-2 border border-edge bg-surface px-3 py-2 text-[0.875rem] tracking-[0.18em] text-fog">
-        <span className="result-session-meta flex items-center gap-3">
-          <span className="shrink-0 whitespace-nowrap text-signal">排盘 {current.id}</span>
-          <span className="shrink-0" aria-hidden="true">//</span>
-          <span className="shrink-0 whitespace-nowrap">排盘完成</span>
-          <span className="shrink-0" aria-hidden="true">//</span>
-          <span className="shrink-0 whitespace-nowrap">{INPUT_METHOD_LABELS_UI[chart.inputMethod]}</span>
-        </span>
-        <span className="result-session-time whitespace-nowrap tabular-nums">{chart.createdAt}</span>
+      <div className="result-session-bar mb-4 border border-edge bg-surface px-3 py-2 text-[0.875rem] tracking-[0.18em] text-fog">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="result-session-meta flex items-center gap-3">
+            <span className="shrink-0 whitespace-nowrap text-signal">排盘 {record.id}</span>
+            <span className="shrink-0" aria-hidden="true">//</span>
+            <span className="shrink-0 whitespace-nowrap">{INPUT_METHOD_LABELS_UI[chart.inputMethod]}</span>
+            {isLinkMode && chart.inputMethod !== 'link' && (
+              <>
+                <span className="shrink-0" aria-hidden="true">//</span>
+                <span className="shrink-0 whitespace-nowrap">来自分享链接</span>
+              </>
+            )}
+          </span>
+          <span className="result-session-time whitespace-nowrap tabular-nums">{chart.createdAt}</span>
+        </div>
+        {isLinkMode && (
+          <p className="result-session-note" role="note">
+            {restoredOriginalContext
+              ? '已按原起卦时间与时区还原。'
+              : '旧版分享链接没有保存起卦时刻，历法按查看时刻重新计算。'}
+          </p>
+        )}
       </div>
 
-      {chart.inputMethod === 'hanzi' && current.hanziSeed && (
-        <HanziSeedResult seed={current.hanziSeed} />
+      {chart.inputMethod === 'hanzi' && record.hanziSeed && (
+        <HanziSeedResult seed={record.hanziSeed} />
       )}
 
-      <div className="result-state-grid">
-        <div className="result-state-primary">
-          <StatePanel
-            tag="本卦"
-            binary={chart.primary.binary}
-            bits={chart.primary.bits}
-            mask={chart.mutationMask}
-            name={chart.primary.record.chineseName}
-            hexNumber={chart.primary.record.kingWenNumber}
-            palace={`${chart.primary.palace}·${chart.primary.palaceRank}${chart.primary.attribute ? `·${chart.primary.attribute}` : ''}`}
-          />
-        </div>
+      <HexSummary chart={chart} />
 
-        <div className="result-state-xor" aria-label={`动爻标记 ${bitsToString(chart.mutationMask)}`}>
-          <div className="hidden h-full w-px bg-edge lg:block" />
-          <div className="result-state-xor-copy">
-            <p className={`result-state-xor-label ${hasMutation ? 'text-flux' : 'text-fog'}`}>动爻标记</p>
-            <p className={`result-state-xor-mask ${hasMutation ? 'text-flux' : 'text-ink'}`}>
-              {bitsToString(chart.mutationMask)}
-            </p>
-            <p className="result-state-xor-direction text-fog">
-              <span className="result-state-xor-mobile">→ XOR →</span>
-              <span className="result-state-xor-desktop">▼ XOR ▼</span>
-            </p>
-          </div>
-          <div className="hidden h-full w-px bg-edge lg:block" />
-        </div>
-
-        <div className="result-state-result">
-          <StatePanel
-            tag="变卦"
-            binary={chart.result.binary}
-            bits={chart.result.bits}
-            mask={0}
-            name={chart.result.record.chineseName}
-            hexNumber={chart.result.record.kingWenNumber}
-            palace={`${chart.result.palace}·${chart.result.palaceRank}${chart.result.attribute ? `·${chart.result.attribute}` : ''}`}
-          />
-        </div>
-      </div>
-
-      <FullReading
-        chart={chart}
-        rawText={rawText}
-        hasAiInstruction={hasAiInstruction}
-        sessionId={current.id}
-        ordinal={current.ordinal}
+      <ResultToolbar
+        ref={toolbarRef}
+        {...output}
+        question={question}
+        getShareUrl={shareUrl}
+        onEdit={() => navigate('/', { state: { editRawLines: record.rawLines } })}
+        onStartOver={startOver}
+        includeQuestion={settings.includeQuestion}
+        onIncludeQuestionChange={setIncludeQuestion}
+        aiInstruction={settings.aiInstruction}
+        onAiInstructionChange={setAiInstruction}
       />
 
-      <ReadingNotesPanel key={current.id} record={current} />
+      <FullReading chart={chart} rawText={rawText} />
 
-      <section className="panel mt-4 p-4 sm:p-5">
-        <span className="panel-tag">操作</span>
-        <div className="flex flex-wrap gap-2">
-          <CopyButton label="[ 复制链接 ]" getText={shareUrl} />
-          <button
-            type="button"
-            className="btn"
-            onClick={() => navigate('/', { state: { editRawLines: current.rawLines } })}
-          >
-            [ 修改排盘 ]
-          </button>
-          <button type="button" className="btn" onClick={() => navigate('/')}>
-            [ 再起一卦 ]
-          </button>
-          <Link to="/history" className="btn no-underline">
-            [ 历史记录 ]
-          </Link>
-        </div>
-        <p className="mt-3 text-[0.875rem] leading-relaxed text-fog">
-          上方「复制排盘」输出适用于 AI 或六爻使用者。
-          {hasAiInstruction ? ' AI 指令附加：已开启。' : ' AI 指令附加：未启用（可在设置中配置）。'}
-          {' '}分享图与分享链接都会保留本次排盘信息。
-        </p>
-      </section>
+      <ReadingOutcomePanel record={record} />
 
-      {current.ordinal !== undefined && (
+      {record.ordinal !== undefined && (
         <p
           className="mt-4 border border-edge bg-panel px-4 py-3 text-center text-[0.9375rem] tracking-[0.16em] text-fog"
           aria-live="polite"
         >
-          {current.ordinal === null ? (
+          {record.ordinal === null ? (
             <span>正在登记全局序号…</span>
           ) : (
             <span>
               这是HEX//64自上线以来完成的
               <span className="inline-flex items-center align-middle whitespace-nowrap">
                 第<strong className="text-lg font-bold tabular-nums text-signal">
-                  {current.ordinal.toLocaleString('zh-CN')}
+                  {record.ordinal.toLocaleString('zh-CN')}
                 </strong>次起卦
               </span>
             </span>
@@ -221,14 +204,104 @@ export function ResultPage() {
       )}
 
       {milestone !== null ? (
-        <SupportNudge key={current.id} kind="milestone" occurrence={current.id} className="mt-3 text-center">
+        <SupportNudge key={record.id} kind="milestone" occurrence={record.id} className="mt-3 text-center">
           这是你在 HEX//64 排的第 {milestone} 卦。如果它一直有用，欢迎支持本站继续免费、无广告。
         </SupportNudge>
-      ) : fresh && typeof current.ordinal === 'number' && (
-        <SupportNudge key={current.id} kind="ordinal" occurrence={current.id} className="mt-3 text-center">
+      ) : fresh && typeof record.ordinal === 'number' && (
+        <SupportNudge key={record.id} kind="ordinal" occurrence={record.id} className="mt-3 text-center">
           HEX//64 不接广告，服务器与域名费用靠打赏维持。
         </SupportNudge>
       )}
+
+      <ResultDock visible={!toolbarInView} {...output} onStartOver={startOver} />
+    </div>
+  )
+}
+
+/** 元素是否与视口相交；不支持 IntersectionObserver 时视为可见。 */
+function useInView(ref: RefObject<HTMLElement | null>): boolean {
+  const [inView, setInView] = useState(true)
+  useEffect(() => {
+    const element = ref.current
+    if (!element || typeof IntersectionObserver === 'undefined') return
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry) setInView(entry.isIntersecting)
+    })
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [ref])
+  return inView
+}
+
+function HexSummary({ chart }: { chart: ChartData }) {
+  const hasMutation = chart.mutationMask !== 0
+
+  return (
+    <section className="result-summary" aria-label={hasMutation ? '本卦与变卦' : '本卦'}>
+      <HexSummaryCard tag="本卦" state={chart.primary} mask={chart.mutationMask} markLines />
+      {hasMutation ? (
+        <>
+          <div className="result-summary-xor" aria-label={`动爻标记 ${bitsToString(chart.mutationMask)}`}>
+            <span>动爻</span>
+            <strong>{bitsToString(chart.mutationMask)}</strong>
+            <span aria-hidden="true">XOR →</span>
+          </div>
+          <HexSummaryCard tag="变卦" state={chart.result} mask={chart.mutationMask} />
+        </>
+      ) : (
+        <div className="result-summary-quiet">
+          <strong>六爻安静</strong>
+          <span>无动爻，不生变卦</span>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function HexSummaryCard({
+  tag,
+  state,
+  mask,
+  markLines = false,
+}: {
+  tag: string
+  state: HexStateInfo
+  mask: number
+  /** 卦画上标出动爻；变卦只在二进制位上标出翻转位 */
+  markLines?: boolean
+}) {
+  const upper = TRIGRAMS[state.record.upperKey]
+  const lower = TRIGRAMS[state.record.lowerKey]
+
+  return (
+    <div className="result-summary-card panel">
+      <span className="panel-tag">{tag}</span>
+      <div className="result-summary-glyph">
+        <HexLines
+          bits={state.bits}
+          mask={markLines ? mask : 0}
+          compact
+          showLabels={false}
+          showMutationLabels={false}
+        />
+      </div>
+      <div className="result-summary-text">
+        <p className="result-summary-name">{state.record.chineseName}</p>
+        <p className="result-summary-binary chroma tabular-nums" aria-label={state.binary}>
+          {[...state.binary].map((digit, position) => (
+            <span key={position} data-changed={Boolean((mask >> (5 - position)) & 1)}>
+              {digit}
+            </span>
+          ))}
+        </p>
+        <p className="result-summary-meta">
+          <span>HEX {String(state.record.kingWenNumber).padStart(2, '0')}</span>
+          <span>
+            {[state.palace, state.palaceRank, state.attribute].filter(Boolean).join('\u00a0· ')}
+          </span>
+          <span>上{upper.name}{upper.symbol} 下{lower.name}{lower.symbol}</span>
+        </p>
+      </div>
     </div>
   )
 }
@@ -290,40 +363,6 @@ function hanziSplitLabels(
   if (layout === 'vertical') return ['上部', '下部']
   if (layout === 'other') return ['第一部分', '第二部分']
   return ['前半', '后半']
-}
-
-function StatePanel(props: {
-  tag: string
-  binary: string
-  bits: number
-  mask: number
-  name: string
-  hexNumber: number
-  palace: string
-}) {
-  return (
-    <section className="state-panel panel">
-      <span className="panel-tag">{props.tag}</span>
-      <p className="state-binary chroma text-center font-bold tabular-nums text-signal">
-        {props.binary}
-      </p>
-      <div className="state-lines mx-auto max-w-sm">
-        <HexLines
-          bits={props.bits}
-          mask={props.mask}
-          compact
-          showLabels={false}
-          showMutationLabels={false}
-        />
-      </div>
-      <div className="state-name-block text-center">
-        <p className="state-name font-bold">{props.name}</p>
-        <p className="state-meta text-fog">
-          HEX {String(props.hexNumber).padStart(2, '0')}·{props.palace}
-        </p>
-      </div>
-    </section>
-  )
 }
 
 function rawLinesFromBits(primary: number, mask: number): RawLines {

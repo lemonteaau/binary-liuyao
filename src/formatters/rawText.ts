@@ -12,6 +12,8 @@ export interface RawTextOptions {
   aiInstructionPrompt?: string
   /** 是否在排盘内容后注明来源网址 */
   includeSource?: boolean
+  /** 用户填写的所问之事；为空时不输出 */
+  question?: string
 }
 
 const LINE_NAMES = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'] as const
@@ -59,7 +61,17 @@ export function formatRawText(chart: ChartData, options: RawTextOptions): string
     .filter((s) => s.branches.length > 0)
     .map((s) => `${s.name}—${s.branches.join('')}`)
 
+  const question = options.question?.trim().replace(/\s+/g, ' ') ?? ''
+  const aiInstructionPrompt = (options.aiInstructionPrompt ?? DEFAULT_AI_INSTRUCTION).trim()
+  const includeAiInstruction = options.includeAiInstruction && aiInstructionPrompt.length > 0
+  // 提示词以冒号收尾（如“要分析的问题是：”）时，问题直接接在冒号后；否则放在排盘第一行
+  const questionInPrompt = Boolean(question) && includeAiInstruction && /[:：]$/.test(aiInstructionPrompt)
+
   const out: string[] = []
+  if (question && !questionInPrompt) {
+    out.push(`所问之事：${question}`)
+    out.push('')
+  }
   out.push(`起卦方式：${method}`)
   out.push('')
   out.push(`公历时间：${y}年${mo}月${d}日 ${hh}时${mi}分`)
@@ -86,10 +98,9 @@ export function formatRawText(chart: ChartData, options: RawTextOptions): string
     out.push(RAW_TEXT_SOURCE_LINE)
   }
 
-  const aiInstructionPrompt = (options.aiInstructionPrompt ?? DEFAULT_AI_INSTRUCTION).trim()
-  if (options.includeAiInstruction && aiInstructionPrompt) {
+  if (includeAiInstruction) {
     out.push('')
-    out.push(aiInstructionPrompt)
+    out.push(questionInPrompt ? `${aiInstructionPrompt}${question}` : aiInstructionPrompt)
   }
 
   return out.join('\n')

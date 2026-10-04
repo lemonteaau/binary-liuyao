@@ -1,23 +1,24 @@
+import { useId, useState } from 'react'
 import { zhouyiTextByKingWen } from '@/data/zhouyi'
 import type { ChartData, HexStateInfo } from '@/types'
 
 export function ZhouyiClassics({ chart }: { chart: ChartData }) {
   const hasTransformation = chart.primary.bits !== chart.result.bits
+  // 手机上默认只留卦辞与动爻爻辞，其余爻辞按需展开；桌面端始终完整显示
+  const [expanded, setExpanded] = useState(false)
+  const gridId = useId()
 
   return (
     <section
       className="zhouyi-classics"
+      data-collapsed={!expanded}
       aria-labelledby="zhouyi-classics-title"
     >
       <header className="zhouyi-classics-header">
-        <div>
-          <p>THE BOOK OF CHANGES</p>
-          <h3 id="zhouyi-classics-title">周易原文</h3>
-        </div>
-        <span>卦辞 · 六爻</span>
+        <h3 id="zhouyi-classics-title">周易原文</h3>
       </header>
 
-      <div className="zhouyi-classics-grid" data-single={!hasTransformation}>
+      <div id={gridId} className="zhouyi-classics-grid" data-single={!hasTransformation}>
         <HexagramClassic
           label={hasTransformation ? '本卦' : '本卦 · 无变爻'}
           state={chart.primary}
@@ -33,7 +34,18 @@ export function ZhouyiClassics({ chart }: { chart: ChartData }) {
         )}
       </div>
 
-      <p className="zhouyi-classics-note">仅录《周易》卦辞与爻辞，不含彖传、象传。</p>
+      <footer className="zhouyi-classics-footer">
+        <button
+          type="button"
+          className="zhouyi-classics-toggle"
+          aria-expanded={expanded}
+          aria-controls={gridId}
+          onClick={() => setExpanded((value) => !value)}
+        >
+          {expanded ? '收起其余爻辞' : '展开全部爻辞'}
+        </button>
+        <p className="zhouyi-classics-note">仅录《周易》卦辞与爻辞，不含彖传、象传。</p>
+      </footer>
     </section>
   )
 }

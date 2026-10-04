@@ -74,6 +74,7 @@ export function SettingsPage() {
     setAiInstruction,
     setAiInstructionPrompt,
     setIncludeSource,
+    setIncludeQuestion,
     setAnimation,
     setScreenFx,
   } = useSettings()
@@ -193,6 +194,19 @@ export function SettingsPage() {
                 开
               </ToggleBtn>
               <ToggleBtn active={!settings.includeSource} onClick={() => setIncludeSource(false)}>
+                关
+              </ToggleBtn>
+            </div>
+          </SettingRow>
+          <SettingRow
+            title="附上所问之事"
+            description="复制排盘时带上结果页填写的「所问何事」。提示词以冒号结尾时接在冒号后，否则放在排盘第一行。"
+          >
+            <div className="flex shrink-0 gap-1" role="group" aria-label="附上所问之事开关">
+              <ToggleBtn active={settings.includeQuestion} onClick={() => setIncludeQuestion(true)}>
+                开
+              </ToggleBtn>
+              <ToggleBtn active={!settings.includeQuestion} onClick={() => setIncludeQuestion(false)}>
                 关
               </ToggleBtn>
             </div>

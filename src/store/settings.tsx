@@ -14,6 +14,8 @@ export interface Settings {
   aiInstructionPrompt: string
   /** 复制排盘时附上来源网址 */
   includeSource: boolean
+  /** 复制排盘时附上结果页填写的所问之事 */
+  includeQuestion: boolean
   animation: boolean
   screenFx: boolean
 }
@@ -27,6 +29,7 @@ function loadSettings(): Settings {
     aiInstruction: false,
     aiInstructionPrompt: DEFAULT_AI_INSTRUCTION,
     includeSource: true,
+    includeQuestion: false,
     animation: true,
     screenFx: true,
   }
@@ -54,6 +57,7 @@ function loadSettings(): Settings {
       aiInstructionPrompt,
       aiInstruction: typeof stored.aiInstruction === 'boolean' ? stored.aiInstruction : defaults.aiInstruction,
       includeSource: typeof stored.includeSource === 'boolean' ? stored.includeSource : defaults.includeSource,
+      includeQuestion: typeof stored.includeQuestion === 'boolean' ? stored.includeQuestion : defaults.includeQuestion,
       animation: typeof stored.animation === 'boolean' ? stored.animation : defaults.animation,
       screenFx: typeof stored.screenFx === 'boolean' ? stored.screenFx : defaults.screenFx,
     }
@@ -75,6 +79,7 @@ interface SettingsContextValue {
   setAiInstruction: (on: boolean) => void
   setAiInstructionPrompt: (prompt: string) => void
   setIncludeSource: (on: boolean) => void
+  setIncludeQuestion: (on: boolean) => void
   setAnimation: (on: boolean) => void
   setScreenFx: (on: boolean) => void
 }
@@ -142,6 +147,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     (includeSource: boolean) => update({ includeSource }),
     [update],
   )
+  const setIncludeQuestion = useCallback(
+    (includeQuestion: boolean) => update({ includeQuestion }),
+    [update],
+  )
   const setAnimation = useCallback((animation: boolean) => update({ animation }), [update])
   const setScreenFx = useCallback((screenFx: boolean) => update({ screenFx }), [update])
 
@@ -155,6 +164,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setAiInstruction,
       setAiInstructionPrompt,
       setIncludeSource,
+      setIncludeQuestion,
       setAnimation,
       setScreenFx,
     }),
@@ -167,6 +177,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setAiInstruction,
       setAiInstructionPrompt,
       setIncludeSource,
+      setIncludeQuestion,
       setAnimation,
       setScreenFx,
     ],

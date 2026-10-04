@@ -42,6 +42,6 @@ describe('路由切换滚动复位', () => {
 
     expect(resultScroller).not.toBe(generatorScroller)
     expect(resultScroller.scrollTop).toBe(0)
-    expect(screen.getByText('排盘完成')).toBeTruthy()
+    expect(screen.getByRole('region', { name: '所问与操作' })).toBeTruthy()
   })
 })

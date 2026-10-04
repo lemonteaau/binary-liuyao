@@ -210,6 +210,7 @@ export function AiGuidePage() {
         <p>
           新建一个 ChatGPT 对话，粘贴刚才复制的内容。光标会停在最后一句提示词之后，
           在冒号后补上你的问题，再发送即可。
+          如果已在结果页填写「所问何事」并勾选「复制时附带：所问」，问题会自动接在冒号后。
         </p>
         <div className="ai-guide-example">
           <span>问题示例</span>
