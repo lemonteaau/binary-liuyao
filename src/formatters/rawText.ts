@@ -54,8 +54,9 @@ export function formatRawText(chart: ChartData, options: RawTextOptions): string
     lineLines.push(`${LINE_NAMES[i]}：${parts.join(' ')}`)
   }
 
+  // 宫位 · 世数（含游魂、归魂）· 六冲六合，与结果页和分享图写法一致
   const attrOf = (info: ChartData['primary']): string =>
-    info.attribute ? `${info.palace}${info.attribute}` : info.palace
+    [info.palace, info.palaceRank, info.attribute].filter(Boolean).join(' · ')
 
   const shenshaLines = chart.shensha
     .filter((s) => s.branches.length > 0)
@@ -92,6 +93,12 @@ export function formatRawText(chart: ChartData, options: RawTextOptions): string
   out.push('')
   out.push('卦爻：')
   out.push(...lineLines)
+  // 与卦爻同样自上而下列出，静卦写明无动爻
+  const movingNames = [...lines]
+    .filter((line) => line.mutating)
+    .sort((a, b) => b.index - a.index)
+    .map((line) => LINE_NAMES[line.index])
+  out.push(`动爻汇总：${movingNames.length > 0 ? movingNames.join('、') : '无（六爻安静）'}`)
 
   if (options.includeSource) {
     out.push('')

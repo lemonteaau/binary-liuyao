@@ -127,8 +127,9 @@ describe('RAW TEXT 格式（黄金快照）', () => {
     expect(text).toContain('驿马—申')
     expect(text).toContain('贵人—寅午')
     expect(text).toContain('卦身：亥')
-    expect(text).toContain('本卦：坎为水（坎宫六冲）')
-    expect(text).toContain('变卦：水雷屯（坎宫）')
+    expect(text).toContain('本卦：坎为水（坎宫 · 首卦 · 六冲）')
+    expect(text).toContain('变卦：水雷屯（坎宫 · 二世）')
+    expect(text).toContain('动爻汇总：二爻、初爻')
     expect(text).toContain('卦爻：')
     expect(text).not.toContain('自上爻至初爻')
     expect(text).toContain('上爻：腾蛇 兄弟戊子水 世 少阴')
@@ -157,5 +158,18 @@ describe('RAW TEXT 格式（黄金快照）', () => {
       aiInstructionPrompt: '   ',
     })
     expect(withEmptyInstruction).toBe(withoutInstruction)
+  })
+
+  it('静卦写明无动爻，并带出游魂归魂', () => {
+    // 天火同人：离宫归魂
+    const quiet = generateChart({
+      inputMethod: 'manual',
+      rawLines: [7, 8, 7, 7, 7, 7],
+      when: new Date('2026-08-24T14:42:37+08:00'),
+      timezone: 'Asia/Shanghai',
+    })
+    const text = formatRawText(quiet, { includeAiInstruction: false })
+    expect(text).toContain('本卦：天火同人（离宫 · 归魂）')
+    expect(text).toContain('动爻汇总：无（六爻安静）')
   })
 })
