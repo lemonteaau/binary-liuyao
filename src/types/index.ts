@@ -38,6 +38,9 @@ export type Stem =
 
 export type SixRelation = '父母' | '兄弟' | '子孙' | '妻财' | '官鬼'
 
+/** 动爻化出变爻后，变爻对本爻的作用 */
+export type LineTransform = '回头生' | '回头克' | '化进神' | '化退神'
+
 export type SixSpirit = '青龙' | '朱雀' | '勾陈' | '腾蛇' | '白虎' | '玄武'
 
 export type PalaceRank =

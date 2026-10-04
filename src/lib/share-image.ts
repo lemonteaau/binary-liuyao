@@ -1,9 +1,9 @@
 import { TRIGRAMS } from '@/data/trigrams'
 import { zhouyiTextByKingWen } from '@/data/zhouyi'
-import { INPUT_METHOD_LABELS } from '@/engine'
+import { INPUT_METHOD_LABELS, lineTransformOf } from '@/engine'
 import { bitsToString } from '@/engine/binary'
 import { formatTimezoneWithOffset, parseGregorianToDate } from '@/lib/timezone-display'
-import type { ChartData, ChartLine, HexStateInfo } from '@/types'
+import type { ChartData, ChartLine, HexStateInfo, LineTransform } from '@/types'
 
 export const SHARE_IMAGE_SITE = 'liuyao.lemontea.xyz'
 
@@ -76,6 +76,7 @@ interface ShareLineModel {
   result: string
   resultState: string
   change: string
+  transform: LineTransform | null
   mutating: boolean
   fuShen: string | null
 }
@@ -231,6 +232,7 @@ function lineModel(chart: ChartData, line: ChartLine): ShareLineModel {
     result: `${line.result.relation} ${najiaText(line.result.najia)}`,
     resultState: `${resultYang ? '阳爻' : '阴爻'}${line.mutating ? ' · 变后' : ''}`,
     change: line.mutating ? '变' : '·',
+    transform: lineTransformOf(line),
     mutating: line.mutating,
     fuShen: fuShen ? `伏神 ${fuShen.relation} ${najiaText(fuShen.najia)}` : null,
   }
@@ -466,6 +468,11 @@ function drawMatrix(ctx: CanvasRenderingContext2D, model: ShareImageModel, y: nu
     setFont(ctx, line.mutating ? 30 : 24, line.mutating)
     ctx.fillStyle = line.mutating ? COLORS.flux : COLORS.fog
     ctx.fillText(line.change, xChange + changeWidth / 2, rowY + 37)
+    if (line.transform) {
+      setFont(ctx, 18)
+      ctx.fillStyle = COLORS.ink
+      ctx.fillText(line.transform, xChange + changeWidth / 2, rowY + 76)
+    }
   })
   ctx.textAlign = 'left'
 }

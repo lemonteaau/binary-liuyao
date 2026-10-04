@@ -1,5 +1,5 @@
 import type { ChartData } from '@/types'
-import { INPUT_METHOD_LABELS } from '@/engine'
+import { INPUT_METHOD_LABELS, lineTransformOf } from '@/engine'
 import { CANONICAL_URL } from '@/lib/seo'
 
 export const DEFAULT_AI_INSTRUCTION = '请根据以上六爻排盘进行分析。'
@@ -46,7 +46,8 @@ export function formatRawText(chart: ChartData, options: RawTextOptions): string
     if (line.mutating) {
       const r = line.result
       parts.push('变')
-      parts.push(`${r.relation}${r.najia.stem}${r.najia.branch}${r.najia.element}`)
+      const transform = lineTransformOf(line)
+      parts.push(`${r.relation}${r.najia.stem}${r.najia.branch}${r.najia.element}${transform ? `（${transform}）` : ''}`)
     }
     lineLines.push(`${LINE_NAMES[i]}：${parts.join(' ')}`)
   }

@@ -43,6 +43,19 @@ describe('FullReading 显示模式与复制', () => {
     expect(copyButton.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true')
   })
 
+  it('动爻标出变爻对本爻的回头生克', () => {
+    const { chart, rawText } = testReading()
+    render(<FullReading chart={chart} rawText={rawText} />)
+
+    const second = screen.getByRole('article', { name: '二爻，动爻，回头克' })
+    expect(within(second).getByText('回头克').getAttribute('title')).toBe('变爻五行克本爻')
+    const first = screen.getByRole('article', { name: '初爻，动爻，回头生' })
+    expect(within(first).getByText('回头生').getAttribute('title')).toBe('变爻五行生本爻')
+    // 只说明关系、不暗示吉凶：生克标签外观一致
+    expect(within(second).getByText('回头克').className).toBe(within(first).getByText('回头生').className)
+    expect(screen.getByRole('article', { name: '三爻，静爻' })).toBeTruthy()
+  })
+
   it('显示本卦与变卦的卦辞、六爻，并标出本卦动爻', () => {
     const { chart, rawText } = testReading()
     render(<FullReading chart={chart} rawText={rawText} />)

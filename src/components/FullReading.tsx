@@ -3,6 +3,7 @@ import { CopyButton } from '@/components/CopyButton'
 import { ShareImageButton } from '@/components/ShareImageButton'
 import { ZhouyiClassics } from '@/components/ZhouyiClassics'
 import { TRIGRAMS } from '@/data/trigrams'
+import { LINE_TRANSFORM_NOTES, lineTransformOf } from '@/engine'
 import { trackEvent } from '@/lib/analytics'
 import { cn } from '@/lib/cn'
 import { formatTimezoneWithOffset, parseGregorianToDate } from '@/lib/timezone-display'
@@ -199,12 +200,13 @@ function ReadingLineRow({ chart, line }: { chart: ChartData; line: ChartLine }) 
   const resultYang = Boolean((chart.result.bits >> line.index) & 1)
   const fuShen = chart.fuShen.filter((entry) => entry.index === line.index)
   const lineName = LINE_NAMES[line.index] ?? `第${line.index + 1}爻`
+  const transform = lineTransformOf(line)
 
   return (
     <article
       className="reading-line-row"
       data-mutating={line.mutating}
-      aria-label={`${lineName}${line.mutating ? '，动爻' : '，静爻'}`}
+      aria-label={`${lineName}${line.mutating ? '，动爻' : '，静爻'}${transform ? `，${transform}` : ''}`}
     >
       <header className="reading-line-rail">
         <span className="reading-line-code">L{line.index + 1}</span>
@@ -241,6 +243,11 @@ function ReadingLineRow({ chart, line }: { chart: ChartData; line: ChartLine }) 
           <div className="reading-line-badges">
             <span>{resultYang ? '阳爻' : '阴爻'}</span>
             {line.mutating && <strong>变后</strong>}
+            {transform && (
+              <em className="reading-transform" title={LINE_TRANSFORM_NOTES[transform]}>
+                {transform}
+              </em>
+            )}
           </div>
         </div>
       </div>

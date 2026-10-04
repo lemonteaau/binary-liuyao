@@ -113,3 +113,4 @@ export function generateChart(params: GenerateChartParams): ChartData {
 }
 
 export { bitsToString }
+export { LINE_TRANSFORM_NOTES, lineTransformOf } from './line-transform'
