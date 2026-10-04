@@ -1,0 +1,4 @@
+packageImportMethod: hardlink
+allowBuilds:
+  esbuild: true
+  fsevents: true

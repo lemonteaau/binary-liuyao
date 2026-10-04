@@ -38,7 +38,7 @@ than a calculation loop in the application.
 
 ## Regression checks
 
-Run `npm run build` and a local production preview, then:
+Run `pnpm run build` and a local production preview, then:
 
 ```sh
 python3 scripts/test-crt-rendering.py --browser firefox

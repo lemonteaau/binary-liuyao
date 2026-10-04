@@ -17,7 +17,7 @@
 
 ## 构建和部署
 
-仍执行 `npm run build`，仍部署 `dist`。原来的 Cloudflare Pages Functions、D1 迁移、服务绑定、环境变量和统计代理无需更改；无需新增生产服务，也无需浏览器下载。
+仍执行 `pnpm run build`，仍部署 `dist`。原来的 Cloudflare Pages Functions、D1 迁移、服务绑定、环境变量和统计代理无需更改；无需新增生产服务，也无需浏览器下载。
 
 构建末尾的 `scripts/prerender.mjs` 复用现有 React 页面生成：
 
@@ -57,9 +57,9 @@ Cloudflare Pages 将 `/about` 匹配到 `about.html`，并将 `/about.html` 规�
 ## 验证
 
 ```bash
-npm run build
-npm run lint
-npm test
+pnpm run build
+pnpm run lint
+pnpm test
 ```
 
 首页预渲染回归使用 `scripts/test-prerender-browser.py --url <新版本本地预览地址> --baseline <改动前本地预览地址>`，需要 Python Playwright 和 Pillow。两个地址均使用生产构建的 Vite preview，接口和统计请求由测试模拟。

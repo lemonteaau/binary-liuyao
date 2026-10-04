@@ -18,13 +18,13 @@
 ## 本地运行
 
 ```bash
-npm install
-npm run dev       # 开发
-npm run build
-npm run preview   # 预览生产构建
-npm run typecheck # 类型检查
-npm run lint      # 代码检查
-npm test          # 测试
+pnpm install
+pnpm run dev       # 开发
+pnpm run build
+pnpm run preview   # 预览生产构建
+pnpm run typecheck # 类型检查
+pnpm run lint      # 代码检查
+pnpm test          # 测试
 ```
 
 ## 核心规范
