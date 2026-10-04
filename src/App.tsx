@@ -164,36 +164,7 @@ export function Shell() {
   )
 }
 
-const HISTORY_NAV_SEEN_KEY = 'hex64.history-nav.seen'
-
-function persistHistoryBadgeSeen() {
-  try {
-    localStorage.setItem(HISTORY_NAV_SEEN_KEY, '1')
-  } catch {
-    // Keep the badge dismissed for this session when storage is unavailable.
-  }
-}
-
 function Header() {
-  const [showHistoryBadge, setShowHistoryBadge] = useState(() => {
-    try {
-      return localStorage.getItem(HISTORY_NAV_SEEN_KEY) !== '1'
-    } catch {
-      return true
-    }
-  })
-
-  // 从结果页、设置页等其他入口进入记录页，也算已看过
-  const onHistoryPage = useLocation().pathname === '/history'
-  useEffect(() => {
-    if (onHistoryPage) persistHistoryBadgeSeen()
-  }, [onHistoryPage])
-
-  function dismissHistoryBadge() {
-    setShowHistoryBadge(false)
-    persistHistoryBadgeSeen()
-  }
-
   return (
     <header className="app-header border-b border-edge py-4">
       <Link
@@ -205,7 +176,7 @@ function Header() {
       </Link>
       <nav className="app-nav flex items-center gap-1 text-[0.9375rem] tracking-[0.16em]">
         <HeaderNavLink to="/">起卦</HeaderNavLink>
-        <HeaderNavLink to="/history" showNew={showHistoryBadge && !onHistoryPage} onClick={dismissHistoryBadge}>记录</HeaderNavLink>
+        <HeaderNavLink to="/history">记录</HeaderNavLink>
         <HeaderNavLink to="/ai-guide">AI解卦</HeaderNavLink>
         <HeaderNavLink to="/settings">设置</HeaderNavLink>
         <HeaderNavLink to="/about">关于</HeaderNavLink>
@@ -224,17 +195,11 @@ function Header() {
   )
 }
 
-function HeaderNavLink({ to, children, showNew = false, onClick }: {
-  to: string
-  children: string
-  showNew?: boolean
-  onClick?: () => void
-}) {
+function HeaderNavLink({ to, children }: { to: string; children: string }) {
   return (
     <NavLink
       to={to}
       end={to === '/'}
-      onClick={onClick}
       className={({ isActive }) =>
         `app-nav-link inline-flex min-h-11 items-center px-2 no-underline ${
           isActive ? 'text-signal' : 'text-fog'
@@ -242,7 +207,6 @@ function HeaderNavLink({ to, children, showNew = false, onClick }: {
       }
     >
       [{children}]
-      {showNew && <span className="app-nav-new" aria-hidden="true">NEW</span>}
     </NavLink>
   )
 }
