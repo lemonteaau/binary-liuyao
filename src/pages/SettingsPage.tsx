@@ -4,12 +4,17 @@ import { Link } from 'react-router-dom'
 import { RAW_TEXT_SOURCE_LINE } from '@/formatters/rawText'
 import { formatTimezone, timezoneOptionLabel } from '@/lib/timezone-display'
 import { useSettings } from '@/store/settings'
-import type { FontSize } from '@/store/settings'
+import type { FontSize, Typeface } from '@/store/settings'
 
 const FONT_SIZE_OPTIONS: Array<{ value: FontSize; label: string }> = [
   { value: 'small', label: '小' },
   { value: 'standard', label: '标准' },
   { value: 'large', label: '大' },
+]
+
+const TYPEFACE_OPTIONS: Array<{ value: Typeface; label: string }> = [
+  { value: 'pixel', label: '像素' },
+  { value: 'clear', label: '清晰' },
 ]
 
 function detectTz(): string {
@@ -71,6 +76,7 @@ export function SettingsPage() {
     resolvedTimezone,
     setTimezone,
     setFontSize,
+    setTypeface,
     setAiInstruction,
     setAiInstructionPrompt,
     setIncludeSource,
@@ -104,6 +110,22 @@ export function SettingsPage() {
                 key={option.value}
                 active={settings.fontSize === option.value}
                 onClick={() => setFontSize(option.value)}
+              >
+                {option.label}
+              </ToggleBtn>
+            ))}
+          </div>
+        </SettingRow>
+        <SettingRow
+          title="正文字体"
+          description="文字发虚时可切换为清晰字体：正文改用系统字体，Logo 与标题保留像素风格。"
+        >
+          <div className="flex shrink-0 gap-1" role="group" aria-label="正文字体">
+            {TYPEFACE_OPTIONS.map((option) => (
+              <ToggleBtn
+                key={option.value}
+                active={settings.typeface === option.value}
+                onClick={() => setTypeface(option.value)}
               >
                 {option.label}
               </ToggleBtn>

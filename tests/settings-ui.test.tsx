@@ -17,6 +17,7 @@ afterEach(() => {
   delete document.documentElement.dataset.fontSize
   delete document.documentElement.dataset.motion
   delete document.documentElement.dataset.screenFx
+  delete document.documentElement.dataset.typeface
 })
 
 function SettingsProbe() {
@@ -110,6 +111,48 @@ describe('动效设置', () => {
     expect(container.querySelector('.fx-roll')).toBeNull()
     expect(container.querySelector('.fx-flicker')).toBeNull()
     expect(container.querySelector('.fx-scanlines')).toBeTruthy()
+  })
+})
+
+describe('正文字体设置', () => {
+  it('默认像素字体，旧版或无效设置也回退为像素字体', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ typeface: 'comic' }))
+
+    render(
+      <SettingsProvider>
+        <MemoryRouter><SettingsPage /></MemoryRouter>
+      </SettingsProvider>,
+    )
+
+    const controls = screen.getByRole('group', { name: '正文字体' })
+    expect(within(controls).getByRole('button', { name: '像素' }).getAttribute('aria-pressed')).toBe('true')
+    expect(document.documentElement.dataset.typeface).toBe('pixel')
+  })
+
+  it('切换为清晰字体后立即应用、持久化，并在重新挂载时恢复', async () => {
+    const firstRender = render(
+      <SettingsProvider>
+        <MemoryRouter><SettingsPage /></MemoryRouter>
+      </SettingsProvider>,
+    )
+
+    fireEvent.click(within(screen.getByRole('group', { name: '正文字体' })).getByRole('button', { name: '清晰' }))
+
+    expect(document.documentElement.dataset.typeface).toBe('clear')
+    await waitFor(() => {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}') as { typeface?: string }
+      expect(stored.typeface).toBe('clear')
+    })
+
+    firstRender.unmount()
+    delete document.documentElement.dataset.typeface
+    render(
+      <SettingsProvider>
+        <MemoryRouter><SettingsPage /></MemoryRouter>
+      </SettingsProvider>,
+    )
+
+    expect(document.documentElement.dataset.typeface).toBe('clear')
   })
 })
 

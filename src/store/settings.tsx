@@ -4,12 +4,15 @@ import { detectTimezone } from '@/calendar/solar-lunar'
 import { DEFAULT_AI_INSTRUCTION } from '@/formatters/rawText'
 
 export type FontSize = 'small' | 'standard' | 'large'
+export type Typeface = 'pixel' | 'clear'
 export type SettingsSaveStatus = 'saving' | 'saved' | 'error'
 
 export interface Settings {
   /** 'auto' 或 IANA 时区名 */
   timezone: string
   fontSize: FontSize
+  /** 正文字体；'clear' 时 Logo 与标题仍保留像素字体 */
+  typeface: Typeface
   aiInstruction: boolean
   aiInstructionPrompt: string
   /** 复制排盘时附上来源网址 */
@@ -26,6 +29,7 @@ function loadSettings(): Settings {
   const defaults: Settings = {
     timezone: 'auto',
     fontSize: 'standard',
+    typeface: 'pixel',
     aiInstruction: false,
     aiInstructionPrompt: DEFAULT_AI_INSTRUCTION,
     includeSource: true,
@@ -39,6 +43,7 @@ function loadSettings(): Settings {
     const stored = JSON.parse(raw) as Partial<Settings> | null
     if (!stored || typeof stored !== 'object' || Array.isArray(stored)) return defaults
     const fontSize = isFontSize(stored.fontSize) ? stored.fontSize : defaults.fontSize
+    const typeface = isTypeface(stored.typeface) ? stored.typeface : defaults.typeface
     const aiInstructionPrompt = typeof stored.aiInstructionPrompt === 'string'
       ? stored.aiInstructionPrompt
       : defaults.aiInstructionPrompt
@@ -54,6 +59,7 @@ function loadSettings(): Settings {
     return {
       timezone,
       fontSize,
+      typeface,
       aiInstructionPrompt,
       aiInstruction: typeof stored.aiInstruction === 'boolean' ? stored.aiInstruction : defaults.aiInstruction,
       includeSource: typeof stored.includeSource === 'boolean' ? stored.includeSource : defaults.includeSource,
@@ -70,12 +76,17 @@ function isFontSize(value: unknown): value is FontSize {
   return value === 'small' || value === 'standard' || value === 'large'
 }
 
+function isTypeface(value: unknown): value is Typeface {
+  return value === 'pixel' || value === 'clear'
+}
+
 interface SettingsContextValue {
   settings: Settings
   saveStatus: SettingsSaveStatus
   resolvedTimezone: string
   setTimezone: (tz: string) => void
   setFontSize: (fontSize: FontSize) => void
+  setTypeface: (typeface: Typeface) => void
   setAiInstruction: (on: boolean) => void
   setAiInstructionPrompt: (prompt: string) => void
   setIncludeSource: (on: boolean) => void
@@ -113,9 +124,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   useLayoutEffect(() => {
     document.documentElement.dataset.fontSize = settings.fontSize
+    document.documentElement.dataset.typeface = settings.typeface
     document.documentElement.dataset.motion = settings.animation ? 'on' : 'off'
     document.documentElement.dataset.screenFx = settings.screenFx ? 'on' : 'off'
-  }, [settings.animation, settings.fontSize, settings.screenFx])
+  }, [settings.animation, settings.fontSize, settings.screenFx, settings.typeface])
 
   const update = useCallback((patch: Partial<Settings>) => {
     const next = { ...settingsRef.current, ...patch }
@@ -135,6 +147,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const resolvedTimezone = settings.timezone === 'auto' ? detected : settings.timezone
   const setTimezone = useCallback((timezone: string) => update({ timezone }), [update])
   const setFontSize = useCallback((fontSize: FontSize) => update({ fontSize }), [update])
+  const setTypeface = useCallback((typeface: Typeface) => update({ typeface }), [update])
   const setAiInstruction = useCallback(
     (aiInstruction: boolean) => update({ aiInstruction }),
     [update],
@@ -161,6 +174,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       resolvedTimezone,
       setTimezone,
       setFontSize,
+      setTypeface,
       setAiInstruction,
       setAiInstructionPrompt,
       setIncludeSource,
@@ -174,6 +188,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       resolvedTimezone,
       setTimezone,
       setFontSize,
+      setTypeface,
       setAiInstruction,
       setAiInstructionPrompt,
       setIncludeSource,

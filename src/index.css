@@ -58,6 +58,17 @@ html[data-font-size="large"] {
   }
 }
 
+/* 清晰字体：像素字体只有在 12px 网格整数倍时才锐利，缩放屏幕上正文改用系统字体 */
+html[data-typeface="clear"] {
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Consolas, "PingFang SC",
+    "Noto Sans SC", "Microsoft YaHei", monospace;
+}
+
+html[data-typeface="clear"] :is(.app-logo, h1, h2) {
+  font-family: "Fusion Pixel 12", var(--font-mono);
+}
+
 body {
   margin: 0;
   overflow: hidden;
