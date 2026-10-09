@@ -7,6 +7,9 @@ export default defineConfig({
   base: '/',
   plugins: [react(), tailwindcss()],
   build: {
+    // Lower range media queries (`width<=767px`) to min/max-width so that
+    // Safari < 16.4 and Chrome < 104 still apply the responsive layout.
+    cssTarget: ['chrome90', 'safari15'],
     rolldownOptions: {
       output: {
         codeSplitting: {

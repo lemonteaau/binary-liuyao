@@ -386,6 +386,16 @@ html:not([data-screen-fx="off"]) .crt-content {
     0 0 9px color-mix(in srgb, currentColor 16%, transparent);
 }
 
+/* Tailwind 无法静态解析 currentColor 的 color-mix()，回退会变成不透明的整色模糊；
+   不支持 color-mix() 的浏览器（Safari < 16.2、Chrome < 111）改用正文色（--color-ink）的弱辉光 */
+@supports not (color: color-mix(in srgb, red, red)) {
+  html:not([data-screen-fx="off"]) .crt-content {
+    text-shadow:
+      0 0 2px rgb(215 239 230 / 42%),
+      0 0 9px rgb(215 239 230 / 16%);
+  }
+}
+
 /* ---------------------------------- */
 /* CRT 覆盖层                          */
 /* ---------------------------------- */
