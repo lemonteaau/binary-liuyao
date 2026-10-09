@@ -83,10 +83,22 @@ describe('feedback API', () => {
       submissionId: SUBMISSION_ID,
       message: '两个字',
       source: 'about',
+      contact: null,
     })
     expect(parseSubmission({ submissionId: 'bad-id', message: '反馈', source: 'about' })).toBeNull()
     expect(parseSubmission({ submissionId: SUBMISSION_ID, message: 'x', source: 'about' })).toBeNull()
     expect(parseSubmission({ submissionId: SUBMISSION_ID, message: '反馈', source: 'unknown' })).toBeNull()
+  })
+
+  it('联系方式选填：空白归一、空值存 null、过长或类型错误时拒收', () => {
+    const base = { submissionId: SUBMISSION_ID, message: '反馈', source: 'about' }
+
+    expect(parseSubmission({ ...base, contact: '  微信\n wxid_hex64\t ' })?.contact).toBe('微信 wxid_hex64')
+    expect(parseSubmission({ ...base, contact: '   ' })?.contact).toBeNull()
+    expect(parseSubmission({ ...base, contact: null })?.contact).toBeNull()
+    expect(parseSubmission({ ...base, contact: 'x'.repeat(120) })?.contact).toHaveLength(120)
+    expect(parseSubmission({ ...base, contact: 'x'.repeat(121) })).toBeNull()
+    expect(parseSubmission({ ...base, contact: 12345 })).toBeNull()
   })
 
   it('拒绝非 POST、跨域和非 JSON 请求', async () => {
@@ -138,6 +150,25 @@ describe('feedback API', () => {
       SUBMISSION_ID,
       '希望增加导出功能。',
       'invite',
+      null,
+    ]])
+  })
+
+  it('用户留了联系方式时一并写入 D1', async () => {
+    const db = createDb()
+    const response = await callApi(request(JSON.stringify({
+      submissionId: SUBMISSION_ID,
+      message: '希望增加导出功能。',
+      contact: ' reader@example.com ',
+      source: 'about',
+    })), db)
+
+    expect(response.status).toBe(201)
+    expect(db.inserted).toEqual([[
+      SUBMISSION_ID,
+      '希望增加导出功能。',
+      'about',
+      'reader@example.com',
     ]])
   })
 

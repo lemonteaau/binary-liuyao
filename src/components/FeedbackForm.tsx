@@ -7,6 +7,7 @@ import {
 import type { FeedbackSource } from '@/lib/feedback'
 
 const MAX_MESSAGE_LENGTH = 1200
+const MAX_CONTACT_LENGTH = 120
 
 export function FeedbackForm({
   source = 'about',
@@ -16,11 +17,13 @@ export function FeedbackForm({
   focusOnMount?: boolean
 }) {
   const textareaId = useId()
+  const contactId = useId()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const submissionIdRef = useRef<string | null>(null)
-  const submittedMessageRef = useRef<string | null>(null)
+  const submittedPayloadRef = useRef<string | null>(null)
   const requestRef = useRef<AbortController | null>(null)
   const [message, setMessage] = useState('')
+  const [contact, setContact] = useState('')
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
 
   useEffect(() => () => {
@@ -40,7 +43,9 @@ export function FeedbackForm({
     event.preventDefault()
     if (requestRef.current) return
     const trimmedMessage = message.trim()
+    const trimmedContact = contact.trim()
     if (trimmedMessage.length < 2 || trimmedMessage.length > MAX_MESSAGE_LENGTH) return
+    if (trimmedContact.length > MAX_CONTACT_LENGTH) return
 
     setStatus('submitting')
     const controller = new AbortController()
@@ -48,14 +53,17 @@ export function FeedbackForm({
     const timeout = window.setTimeout(() => controller.abort(), 10_000)
 
     try {
-      if (submittedMessageRef.current !== trimmedMessage) {
+      // 内容或联系方式改过就换新 ID，避免服务端按旧提交去重而丢掉修改
+      const payload = JSON.stringify([trimmedMessage, trimmedContact])
+      if (submittedPayloadRef.current !== payload) {
         submissionIdRef.current = null
       }
       submissionIdRef.current ??= crypto.randomUUID()
-      submittedMessageRef.current = trimmedMessage
+      submittedPayloadRef.current = payload
       await submitFeedback({
         submissionId: submissionIdRef.current,
         message: trimmedMessage,
+        contact: trimmedContact,
         source,
         signal: controller.signal,
       })
@@ -104,6 +112,28 @@ export function FeedbackForm({
           if (status === 'error') setStatus('idle')
         }}
       />
+
+      <div className="feedback-contact">
+        <label htmlFor={contactId}>
+          联系方式<span className="text-fog">（选填）</span>
+        </label>
+        <input
+          id={contactId}
+          type="text"
+          value={contact}
+          maxLength={MAX_CONTACT_LENGTH}
+          disabled={status === 'submitting'}
+          autoComplete="off"
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
+          placeholder="邮箱 / 微信号 / QQ"
+          onChange={(event) => {
+            setContact(event.target.value)
+            if (status === 'error') setStatus('idle')
+          }}
+        />
+      </div>
 
       <div className="feedback-form-footer">
         <div className="min-w-0">

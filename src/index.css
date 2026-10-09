@@ -1184,11 +1184,42 @@ html[data-screen-fx="off"] .chroma {
     box-shadow 140ms ease;
 }
 
-.feedback-form textarea::placeholder {
+.feedback-contact {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.feedback-contact label {
+  flex: 0 0 auto;
+  font-size: 0.9375rem;
+  letter-spacing: 0.08em;
+}
+
+.feedback-contact input {
+  min-width: 0;
+  flex: 1 1 auto;
+  max-width: 22rem;
+  border: 1px solid var(--color-edge-bright);
+  border-radius: 0;
+  padding: 0.5rem 0.8rem;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 1rem;
+  caret-color: var(--color-signal);
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.32);
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.feedback-form :is(textarea, input)::placeholder {
   color: color-mix(in srgb, var(--color-fog) 72%, transparent);
 }
 
-.feedback-form textarea:focus {
+.feedback-form :is(textarea, input):focus {
   border-color: var(--color-signal);
   outline: none;
   box-shadow:
@@ -1369,6 +1400,16 @@ html[data-motion="off"] .feedback-invitation {
 }
 
 @media (max-width: 639px) {
+  .feedback-contact {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.4rem;
+  }
+
+  .feedback-contact input {
+    max-width: none;
+  }
+
   .feedback-form-footer {
     flex-direction: column;
   }

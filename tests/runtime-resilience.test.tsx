@@ -109,7 +109,7 @@ describe('反馈请求恢复', () => {
       init.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')))
     })))
     render(<FeedbackForm />)
-    const input = screen.getByRole('textbox') as HTMLTextAreaElement
+    const input = screen.getByRole('textbox', { name: '反馈意见' }) as HTMLTextAreaElement
     fireEvent.change(input, { target: { value: '网络一直没有回应' } })
     fireEvent.click(screen.getByRole('button', { name: '发送' }))
     expect(input.disabled).toBe(true)
@@ -119,11 +119,11 @@ describe('反馈请求恢复', () => {
     expect(input.value).toBe('网络一直没有回应')
   })
 
-  it('相同内容重试复用 ID，修改内容后分配新的 ID', async () => {
+  it('相同内容重试复用 ID，修改内容或联系方式后分配新的 ID', async () => {
     const fetchMock = vi.fn().mockRejectedValue(new Error('response lost'))
     vi.stubGlobal('fetch', fetchMock)
     render(<FeedbackForm />)
-    const input = screen.getByRole('textbox')
+    const input = screen.getByRole('textbox', { name: '反馈意见' })
     fireEvent.change(input, { target: { value: '第一条反馈' } })
     for (let index = 0; index < 2; index++) {
       fireEvent.click(screen.getByRole('button', { name: '发送' }))
@@ -132,10 +132,17 @@ describe('反馈请求恢复', () => {
     fireEvent.change(input, { target: { value: '修改后的反馈' } })
     fireEvent.click(screen.getByRole('button', { name: '发送' }))
     await screen.findByRole('alert')
+    fireEvent.change(screen.getByRole('textbox', { name: '联系方式（选填）' }), {
+      target: { value: 'wxid_hex64' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '发送' }))
+    await screen.findByRole('alert')
     const payloads = fetchMock.mock.calls.map((call) => JSON.parse(call[1].body))
     expect(payloads[1].submissionId).toBe(payloads[0].submissionId)
     expect(payloads[2].submissionId).not.toBe(payloads[0].submissionId)
     expect(payloads[2].message).toBe('修改后的反馈')
+    expect(payloads[3].submissionId).not.toBe(payloads[2].submissionId)
+    expect(payloads[3].contact).toBe('wxid_hex64')
   })
 
   it('卸载表单取消请求，不留下待处理提交', () => {
@@ -147,7 +154,7 @@ describe('反馈请求恢复', () => {
       })
     }))
     const view = render(<FeedbackForm />)
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: '正在发送的反馈' } })
+    fireEvent.change(screen.getByRole('textbox', { name: '反馈意见' }), { target: { value: '正在发送的反馈' } })
     fireEvent.click(screen.getByRole('button', { name: '发送' }))
     view.unmount()
     expect(signal?.aborted).toBe(true)

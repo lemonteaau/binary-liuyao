@@ -20,18 +20,20 @@ const FEEDBACK_ENDPOINT = import.meta.env.VITE_FEEDBACK_ENDPOINT?.trim() || '/ap
 export async function submitFeedback({
   submissionId,
   message,
+  contact,
   source,
   signal,
 }: {
   submissionId: string
   message: string
+  contact?: string
   source: FeedbackSource
   signal?: AbortSignal
 }): Promise<void> {
   const response = await fetch(FEEDBACK_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ submissionId, message, source }),
+    body: JSON.stringify({ submissionId, message, contact: contact || undefined, source }),
     signal,
   })
 

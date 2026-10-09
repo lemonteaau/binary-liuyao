@@ -45,5 +45,27 @@ describe('feedback notification Worker', () => {
       subject: 'HEX//64 收到新反馈 · 使用邀请',
       text: expect.stringContaining('希望增加历史搜索功能。'),
     }))
+    const mail = env.EMAIL.send.mock.calls[0]?.[0]
+    expect(mail.text).not.toContain('联系方式')
+    expect(mail).not.toHaveProperty('replyTo')
+  })
+
+  it('留了邮箱时写入正文并设为 Reply-To', async () => {
+    const env = environment()
+    await worker.fetch(validRequest({ contact: 'reader@example.com' }), env)
+
+    const mail = env.EMAIL.send.mock.calls[0]?.[0]
+    expect(mail.subject).toBe('HEX//64 收到新反馈 · 关于页 · 留了联系方式')
+    expect(mail.replyTo).toBe('reader@example.com')
+    expect(mail.text).toContain('联系方式：reader@example.com（直接回复这封邮件即可）')
+  })
+
+  it('非邮箱联系方式只写入正文，不设 Reply-To', async () => {
+    const env = environment()
+    await worker.fetch(validRequest({ contact: '微信 wxid_hex64\nBcc: x@example.com' }), env)
+
+    const mail = env.EMAIL.send.mock.calls[0]?.[0]
+    expect(mail).not.toHaveProperty('replyTo')
+    expect(mail.text).toContain('联系方式：微信 wxid_hex64 Bcc: x@example.com\n')
   })
 })

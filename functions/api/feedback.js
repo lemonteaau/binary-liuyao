@@ -1,5 +1,7 @@
 const MAX_BODY_BYTES = 8_192
 const MAX_MESSAGE_LENGTH = 1_200
+const MAX_CONTACT_LENGTH = 120
+const CONTACT_SEPARATORS = /[\s\p{Cc}]+/gu
 const SOURCES = new Set(['about', 'invite'])
 const UUID_V4_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -73,10 +75,10 @@ export async function onRequest({ request, env, waitUntil }) {
   }
 
   const insertResult = await env.DB.prepare(`
-    INSERT OR IGNORE INTO feedback_submissions (submission_id, message, source)
-    VALUES (?1, ?2, ?3)
+    INSERT OR IGNORE INTO feedback_submissions (submission_id, message, source, contact)
+    VALUES (?1, ?2, ?3, ?4)
   `)
-    .bind(submission.submissionId, submission.message, submission.source)
+    .bind(submission.submissionId, submission.message, submission.source, submission.contact)
     .run()
 
   const inserted = Number(insertResult?.meta?.changes ?? 1) > 0
@@ -108,12 +110,18 @@ export function parseSubmission(body) {
   const submissionId = body.submissionId
   const message = typeof body.message === 'string' ? body.message.trim() : ''
   const source = body.source
+  // 联系方式选填：只做空白归一与长度限制，邮箱、微信号、QQ 等格式不强求
+  const contact = typeof body.contact === 'string'
+    ? body.contact.replace(CONTACT_SEPARATORS, ' ').trim()
+    : ''
 
   if (!UUID_V4_PATTERN.test(submissionId)) return null
   if (message.length < 2 || message.length > MAX_MESSAGE_LENGTH) return null
   if (!SOURCES.has(source)) return null
+  if (body.contact != null && typeof body.contact !== 'string') return null
+  if (contact.length > MAX_CONTACT_LENGTH) return null
 
-  return { submissionId, message, source }
+  return { submissionId, message, source, contact: contact || null }
 }
 
 export function readFeedbackLimits(env) {

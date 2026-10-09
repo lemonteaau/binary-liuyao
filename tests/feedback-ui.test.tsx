@@ -42,10 +42,44 @@ describe('关于页反馈栏', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/feedback', expect.objectContaining({
       method: 'POST',
     }))
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(JSON.parse(String(init.body))).not.toHaveProperty('contact')
     const stored = JSON.parse(localStorage.getItem(FEEDBACK_PROMPT_STORAGE_KEY) ?? '{}') as {
       submitted?: boolean
     }
     expect(stored.submitted).toBe(true)
+  })
+
+  it('可选填联系方式，随反馈一起提交', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(
+      JSON.stringify({ ok: true }),
+      { status: 201, headers: { 'Content-Type': 'application/json' } },
+    ))
+    vi.stubGlobal('fetch', fetchMock)
+    vi.spyOn(crypto, 'randomUUID').mockReturnValue('6cb56d6e-c7d8-4824-8ed4-b782e36d9f54')
+
+    render(
+      <MemoryRouter initialEntries={['/about']}>
+        <AboutPage />
+      </MemoryRouter>,
+    )
+
+    fireEvent.change(screen.getByRole('textbox', { name: '反馈意见' }), {
+      target: { value: '希望历史记录可以搜索。' },
+    })
+    fireEvent.change(screen.getByRole('textbox', { name: '联系方式（选填）' }), {
+      target: { value: ' reader@example.com ' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '发送' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('反馈已收到')).toBeTruthy()
+    })
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      message: '希望历史记录可以搜索。',
+      contact: 'reader@example.com',
+    })
   })
 
   it('发送失败时保留原文供重试', async () => {
