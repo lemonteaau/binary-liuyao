@@ -2012,9 +2012,6 @@ html[data-motion="off"] .feedback-invitation {
   position: absolute;
   top: calc(var(--coin-rest-y, 44%) + var(--coin-radius, 3rem) + 0.5rem);
   left: var(--slot, 50%);
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.3em;
   padding: 0.1rem 0.45rem;
   border: 1px solid color-mix(in srgb, var(--coin-light) 38%, transparent);
   background: rgba(4, 8, 7, 0.55);
@@ -2040,11 +2037,6 @@ html[data-motion="off"] .feedback-invitation {
   color: var(--color-ink);
 }
 
-.coin-readout-score {
-  color: var(--color-fog);
-  font-size: 0.75rem;
-}
-
 .coin-tally {
   position: absolute;
   bottom: 0.7rem;
@@ -2060,13 +2052,6 @@ html[data-motion="off"] .feedback-invitation {
   white-space: nowrap;
 }
 
-.coin-tally-sum {
-  display: inline-flex;
-  gap: 0.6em;
-  white-space: pre;
-}
-
-.coin-tally-sum > span,
 .coin-tally-glyph,
 .coin-tally-name {
   opacity: 0;
@@ -2075,32 +2060,26 @@ html[data-motion="off"] .feedback-invitation {
     transform 360ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.coin-tally-sum > span {
-  transform: translateY(5px);
-  transition-delay: calc(var(--i) * 70ms);
-}
-
 .coin-tally-glyph {
   display: inline-flex;
   width: 3.25rem;
   height: 0.5rem;
   justify-content: space-between;
   transform: scaleX(0);
-  transition-delay: 260ms;
 }
 
 .coin-tally-name {
   color: var(--color-ink);
   transform: translateX(-6px);
-  transition-delay: 340ms;
+  transition-delay: 80ms;
 }
 
-.coin-tally[data-on="true"] :is(.coin-tally-sum > span, .coin-tally-glyph, .coin-tally-name) {
+.coin-tally[data-on="true"] :is(.coin-tally-glyph, .coin-tally-name) {
   opacity: 1;
   transform: none;
 }
 
-.coin-tally[data-on="false"] :is(.coin-tally-sum > span, .coin-tally-glyph, .coin-tally-name) {
+.coin-tally[data-on="false"] :is(.coin-tally-glyph, .coin-tally-name) {
   transition-delay: 0ms;
 }
 
@@ -2128,7 +2107,7 @@ html[data-motion="off"] .feedback-invitation {
 
 /* 动爻：爻线在阴阳之间闪变一瞬，示意“将变” */
 .coin-tally[data-on="true"][data-mutating="true"] .coin-tally-glyph {
-  animation: coin-tally-glitch 520ms steps(1, end) 380ms 2;
+  animation: coin-tally-glitch 520ms steps(1, end) 120ms 2;
 }
 
 @keyframes coin-tally-glitch {

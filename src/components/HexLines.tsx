@@ -1,11 +1,12 @@
 import { cn } from '@/lib/cn'
+import { LINE_NAMES } from '@/lib/reading-marks'
 
 interface HexLinesProps {
   /** 6-bit，bit0 = 初爻 */
   bits: number
   /** 可选动爻掩码 */
   mask?: number
-  /** 爻位标签 L1..L6 */
+  /** 爻位标签 初爻..上爻 */
   showLabels?: boolean
   /** 动爻右侧文字；紧凑双栏中可仅用红色爻线表达 */
   showMutationLabels?: boolean
@@ -41,7 +42,7 @@ export function HexLines({
             )}
           >
             {showLabels && (
-              <span className="w-10 shrink-0 text-right text-[0.875rem] text-fog sm:w-16">L{i + 1}</span>
+              <span className="w-10 shrink-0 text-right text-[0.875rem] text-fog sm:w-16">{LINE_NAMES[i]}</span>
             )}
             <div className={cn('flex flex-1 gap-[14%]', mutating ? 'flux-pulse' : null)}>
               {yang ? (

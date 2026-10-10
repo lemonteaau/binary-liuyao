@@ -736,8 +736,7 @@ function CoinReadouts({
             data-on={Boolean(readout?.settled[index])}
             data-face={score === 3 ? 'heads' : 'tails'}
           >
-            <span className="coin-readout-face">{score === 3 ? '正' : '反'}</span>
-            <span className="coin-readout-score">{score ?? ''}</span>
+            {score === 3 ? '正' : '反'}
           </span>
         )
       })}
@@ -746,14 +745,6 @@ function CoinReadouts({
         data-on={Boolean(readout?.tally)}
         data-mutating={value ? lineIsMutating(value) : false}
       >
-        <span className="coin-tally-sum">
-          {readout?.coins.map((score, index) => (
-            <span key={index} style={{ '--i': index } as CSSProperties}>
-              {index > 0 ? `+ ${score}` : score}
-            </span>
-          ))}
-          <span className="text-ink" style={{ '--i': 3 } as CSSProperties}>= {value}</span>
-        </span>
         <span
           ref={glyphRef}
           className="coin-tally-glyph"
@@ -853,7 +844,7 @@ function CoinLineRecord({
               data-fresh={fresh}
               style={{ '--row': index } as CSSProperties}
             >
-              <span className="w-7 shrink-0 text-[0.875rem] text-fog">L{index + 1}</span>
+              <span className="w-8 shrink-0 text-[0.875rem] text-fog">{COIN_LINE_NAMES[index]}</span>
               <span
                 ref={(element) => {
                   glyphRefs.current[index] = element
@@ -923,7 +914,7 @@ export function LineEditor({ draft, setDraft }: LineEditorProps) {
         return (
           <div key={i} className="flex items-center gap-2 sm:gap-3">
             <span className="w-8 shrink-0 text-right text-[0.875rem] text-fog">
-              {['初爻', '二爻', '三爻', '四爻', '五爻', '六爻'][i]}
+              {COIN_LINE_NAMES[i]}
             </span>
             <button
               type="button"

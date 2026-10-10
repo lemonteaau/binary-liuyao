@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import { zhouyiTextByKingWen } from '@/data/zhouyi'
+import { LINE_NAMES } from '@/lib/reading-marks'
 import type { ChartData, HexStateInfo } from '@/types'
 
 export function ZhouyiClassics({ chart }: { chart: ChartData }) {
@@ -110,7 +111,7 @@ function LineTextLabel({
 }) {
   return (
     <div className="zhouyi-line-label">
-      {index !== undefined && <span>L{index + 1}</span>}
+      {index !== undefined && <span>{LINE_NAMES[index]}</span>}
       <strong>{label}</strong>
       {mutating && <em>动爻</em>}
     </div>
