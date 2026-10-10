@@ -27,6 +27,21 @@ import type {
   TossShape,
   Vec3,
 } from './choreography'
+import {
+  BRONZE,
+  DUST,
+  EMBER,
+  HOT,
+  SIGNAL,
+  TAU,
+  random,
+  rgba,
+  spring,
+  springMoving,
+  stepSpring,
+  wobble,
+} from '@/features/stage/fx'
+import type { RGB, Spring } from '@/features/stage/fx'
 import { COIN_RATIO, HOLE_RATIO } from './sprites'
 import type { CoinSprites } from './sprites'
 
@@ -39,12 +54,6 @@ export interface CoinSceneInit {
   faces: CoinToss | null
   shaking: boolean
   intro: boolean
-}
-
-interface Spring {
-  value: number
-  velocity: number
-  target: number
 }
 
 interface CoinBody {
@@ -108,19 +117,10 @@ interface Matrix {
   f: number
 }
 
-type RGB = readonly [number, number, number]
-
-const SIGNAL: RGB = [61, 245, 198]
-const BRONZE: RGB = [214, 158, 84]
-const EMBER: RGB = [255, 214, 150]
-const HOT: RGB = [255, 244, 222]
-const DUST: RGB = [150, 112, 66]
-
 /** 镜头高度（以币半径计），决定升高时的透视放大 */
 const PERSPECTIVE = 9
 const THICKNESS = 0.11
 const RING_IDLE = 0.13
-const TAU = Math.PI * 2
 const SHIMMER_TIME = 1.7
 const DEFAULT_LIGHT = normalize({ x: -0.48, y: -0.52, z: 0.71 })
 const REST_DIFFUSE = DEFAULT_LIGHT.z
@@ -142,20 +142,6 @@ const TRIGRAMS = [
   [1, 1, 0],
 ] as const
 
-const spring = (value: number): Spring => ({ value, velocity: 0, target: value })
-
-function stepSpring(s: Spring, dt: number, stiffness: number, damping: number) {
-  const steps = Math.max(1, Math.ceil(dt * 240))
-  const h = dt / steps
-  for (let i = 0; i < steps; i++) {
-    s.velocity += (stiffness * (s.target - s.value) - damping * s.velocity) * h
-    s.value += s.velocity * h
-  }
-}
-
-const springMoving = (s: Spring, epsilon: number) =>
-  Math.abs(s.target - s.value) > epsilon || Math.abs(s.velocity) > epsilon * 8
-
 function normalize(v: Vec3): Vec3 {
   const length = Math.hypot(v.x, v.y, v.z) || 1
   return { x: v.x / length, y: v.y / length, z: v.z / length }
@@ -163,9 +149,6 @@ function normalize(v: Vec3): Vec3 {
 
 const dot = (a: Vec3, b: Vec3) => a.x * b.x + a.y * b.y + a.z * b.z
 const negate = (v: Vec3): Vec3 => ({ x: -v.x, y: -v.y, z: -v.z })
-const random = (min: number, max: number) => min + Math.random() * (max - min)
-const rgba = (color: RGB, alpha: number) =>
-  `rgba(${color[0]},${color[1]},${color[2]},${clamp01(alpha).toFixed(3)})`
 
 function shuffled<T>(items: readonly T[]): T[] {
   const copy = [...items]
@@ -175,10 +158,6 @@ function shuffled<T>(items: readonly T[]): T[] {
   }
   return copy
 }
-
-/** 平滑的伪随机抖动，用于镜头震动 */
-const wobble = (t: number, seed: number) =>
-  (Math.sin(t + seed) + 0.6 * Math.sin(t * 1.73 + seed * 2.1) + 0.35 * Math.sin(t * 2.91 + seed * 0.7)) / 1.95
 
 export class CoinScene {
   private readonly ctx: CanvasRenderingContext2D

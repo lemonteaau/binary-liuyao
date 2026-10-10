@@ -29,7 +29,7 @@ function cachedFormatter(
   }
 }
 
-function formatTimestampIn(tz: string): string {
+function formatTimestampIn(tz: string, date = new Date()): string {
   timestampFormatterCache = cachedFormatter(timestampFormatterCache, tz, 'en-CA', {
     timeZone: tz,
     year: 'numeric',
@@ -41,19 +41,24 @@ function formatTimestampIn(tz: string): string {
     hourCycle: 'h23',
   })
   try {
-    const parts = timestampFormatterCache.formatter?.formatToParts(new Date())
+    const parts = timestampFormatterCache.formatter?.formatToParts(date)
     if (!parts) throw new RangeError('invalid timezone')
     const values = Object.fromEntries(parts.map((part) => [part.type, part.value]))
     return `${values.year}-${values.month}-${values.day} ${values.hour}:${values.minute}:${values.second}`
   } catch {
-    return new Date().toISOString().replace('T', ' ').slice(0, 19)
+    return date.toISOString().replace('T', ' ').slice(0, 19)
   }
 }
 
-export function LiveTimestamp({ timezone, className }: LiveClockProps) {
+/** frozenAt 给定时不再走动，停在那一刻 */
+export function LiveTimestamp({ timezone, className, frozenAt }: LiveClockProps & { frozenAt?: Date }) {
   const now = useVisibleClock(timezone, formatTimestampIn)
 
-  return <span className={className} data-nosnippet="">{now}</span>
+  return (
+    <span className={className} data-nosnippet="">
+      {frozenAt ? formatTimestampIn(timezone, frozenAt) : now}
+    </span>
+  )
 }
 
 function useVisibleClock(timezone: string, format: (timezone: string) => string): string {

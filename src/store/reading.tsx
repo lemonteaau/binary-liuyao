@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
+import { recordActionIntroReading, syncActionIntroReadings } from '@/lib/action-intro'
 import { claimHexagramOrdinal, shouldClaimHexagramOrdinal } from '@/lib/hexagram-counter'
 import { trackDivinationEvent } from '@/lib/analytics'
 import { mergeHistory } from '@/lib/history-backup'
@@ -110,11 +111,12 @@ export function ReadingProvider({ children }: { children: ReactNode }) {
   const currentOrdinal = current?.ordinal
 
   useEffect(() => {
-    const localReadingCount = history.filter(
+    const localReadings = history.filter(
       (record) => record.source !== 'share-link' && record.chart.inputMethod !== 'link',
-    ).length
-    syncBookmarkPromptReadingCount(localReadingCount)
-    syncSupportNudgeReadings(localReadingCount)
+    )
+    syncBookmarkPromptReadingCount(localReadings.length)
+    syncSupportNudgeReadings(localReadings.length)
+    syncActionIntroReadings(localReadings.map((record) => record.chart.inputMethod))
   }, [history])
 
   useEffect(() => {
@@ -186,6 +188,7 @@ export function ReadingProvider({ children }: { children: ReactNode }) {
       if (isNewReading) {
         recordBookmarkPromptReading()
         recordSupportNudgeReading(record.id)
+        recordActionIntroReading(chart.inputMethod)
         trackDivinationEvent('成功生成排盘', chart.inputMethod)
       }
       return record

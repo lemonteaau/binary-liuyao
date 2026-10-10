@@ -131,12 +131,14 @@ with sync_playwright() as p:
                 page.get_by_role('button', name='点击停止并记录' + line).click()
             page.get_by_role('button', name='六爻已完成，生成排盘').click()
         elif mode == '电脑起卦':
-            page.get_by_role('button', name='立即起卦').click()
+            page.get_by_role('button', name='点击起卦', exact=True).click()
         elif mode == '时间起卦':
-            page.get_by_role('button', name='使用当前时间戳', exact=True).click()
-        else:
+            page.get_by_role('button', name='点击以此刻起卦', exact=True).click()
+        elif mode in ['数字起卦', '汉字起卦']:
             if mode == '数字起卦': page.get_by_label('第一个数').fill('128 64 32')
             if mode == '汉字起卦': page.get_by_label('用于起卦的汉字').fill('天地')
+            page.get_by_role('button', name='点击推演起卦', exact=True).click()
+        else:
             page.get_by_role('button', name='生成排盘 →').click()
         expect(page.get_by_text('排盘完成', exact=True)).to_be_visible()
         assert urlparse(page.url).path == '/result'

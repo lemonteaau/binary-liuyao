@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react'
-import type { CSSProperties, Dispatch, RefObject, SetStateAction } from 'react'
+import { useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react'
+import type { CSSProperties, Dispatch, KeyboardEvent, Ref, RefObject, SetStateAction } from 'react'
 import { Clock } from '@phosphor-icons/react/dist/icons/Clock'
 import { CoinVertical } from '@phosphor-icons/react/dist/icons/CoinVertical'
 import { HandPalm } from '@phosphor-icons/react/dist/icons/HandPalm'
@@ -7,6 +7,11 @@ import { Monitor } from '@phosphor-icons/react/dist/icons/Monitor'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { CoinTossStage } from '@/components/CoinTossStage'
 import type { CoinStageHandle } from '@/components/CoinTossStage'
+import { DeriveStage } from '@/components/DeriveStage'
+import type { DeriveStageHandle } from '@/components/DeriveStage'
+import { EntropyStage } from '@/components/EntropyStage'
+import type { EntropyStageHandle } from '@/components/EntropyStage'
+import { useActionIntro } from '@/components/useActionIntro'
 import { LiveTimestamp } from '@/components/LiveClock'
 import { ScrambleText } from '@/components/ScrambleText'
 import { generateChart } from '@/engine'
@@ -26,13 +31,17 @@ import {
   NUMBER_SEED_FIELDS,
   rawLinesFromNumbers,
   splitPastedNumbers,
-  trigramKeyByRemainder,
 } from '@/features/number/derive'
-import type {
-  NumberSeedIssue,
-  NumberSeedPart,
-  NumberSeedStrategy,
-} from '@/features/number/derive'
+import type { NumberSeedIssue } from '@/features/number/derive'
+import {
+  DERIVE_LINE_NAMES,
+  DERIVE_STEP_LABELS,
+  hanziScript,
+  numberScript,
+  shownRemainder,
+  timeScript,
+} from '@/features/derive-cast/script'
+import type { DeriveScript, DeriveStep } from '@/features/derive-cast/script'
 import { deriveTimeSeed } from '@/features/time/derive'
 import { rawLinesFromRecord, searchHexagrams } from '@/features/hexagram-search/search'
 import {
@@ -52,8 +61,9 @@ import { motionEnabled } from '@/lib/motion'
 import { formatTimezone } from '@/lib/timezone-display'
 import { useReading } from '@/store/reading'
 import { useSettings } from '@/store/settings'
-import { TRIGRAMS } from '@/data/trigrams'
-import type { InputMethod, LineValue } from '@/types'
+import { TRIGRAMS, TRIGRAM_KEYS } from '@/data/trigrams'
+import type { TrigramKey } from '@/data/trigrams'
+import type { HexagramRecord, InputMethod, LineValue } from '@/types'
 
 type RawLines = [LineValue, LineValue, LineValue, LineValue, LineValue, LineValue]
 
@@ -71,6 +81,8 @@ const COIN_LINE_NAMES = ['初爻', '二爻', '三爻', '四爻', '五爻', '上�
 const GENERATOR_SHIFT_DURATION_MS = 520
 /** 三枚铜钱落定后停顿片刻，再把爻线送进记录 */
 const LINE_TRANSFER_DELAY_MS = 520
+/** 入场的三枚铜钱落稳之后，再弹出操作提示 */
+const COIN_ACTION_INTRO_DELAY_MS = 950
 
 export function GeneratorPage() {
   const location = useLocation()
@@ -212,8 +224,6 @@ export function GeneratorPage() {
         {mode === 'number' && <NumberPanel />}
         {mode === 'time' && <TimePanel />}
         {mode === 'hanzi' && <HanziPanel />}
-
-        {mode === 'manual' && <GenerateBar rawLines={draft} method="manual" />}
       </div>
     </div>
   )
@@ -334,34 +344,47 @@ function RitualGuide({ children }: { children: React.ReactNode }) {
   )
 }
 
+interface EntropyCast {
+  lines: RawLines
+  when: Date
+}
+
 function EntropyPanel() {
   const navigate = useNavigate()
   const { commitReading } = useReading()
   const { resolvedTimezone, settings } = useSettings()
-  const [rolling, setRolling] = useState(false)
-  const finishTimerRef = useRef<number | null>(null)
+  const stageRef = useRef<EntropyStageHandle>(null)
+  const actionRef = useRef<HTMLSpanElement>(null)
+  const [cast, setCast] = useState<EntropyCast | null>(null)
+  const [revealed, setRevealed] = useState(0)
+  const [complete, setComplete] = useState(false)
+  useActionIntro(actionRef, 'entropy', cast === null && settings.animation)
 
-  useEffect(() => () => {
-    if (finishTimerRef.current !== null) window.clearTimeout(finishTimerRef.current)
-  }, [])
-
-  function generate() {
-    if (rolling) return
-    trackDivinationEvent('点击生成排盘', 'entropy')
-    const lines = tossRawLines()
-    const when = new Date()
-    if (!settings.animation || !motionEnabled()) {
-      finish(lines, when)
+  function activate() {
+    if (complete && cast) {
+      finish(cast)
       return
     }
-    setRolling(true)
-    finishTimerRef.current = window.setTimeout(() => {
-      finishTimerRef.current = null
-      finish(lines, when)
-    }, 560)
+    if (cast) {
+      // 采样结果早已确定，再次点击只是跳过演出
+      stageRef.current?.skip()
+      return
+    }
+    trackDivinationEvent('点击生成排盘', 'entropy')
+    const tosses = [tossCoins(), tossCoins(), tossCoins(), tossCoins(), tossCoins(), tossCoins()]
+    const next: EntropyCast = { lines: tosses.map(scoreCoinToss) as RawLines, when: new Date() }
+    const playing = settings.animation && motionEnabled() && stageRef.current?.cast(tosses, {
+      onLine: (index) => setRevealed(index + 1),
+      onComplete: () => setComplete(true),
+    })
+    if (!playing) {
+      finish(next)
+      return
+    }
+    setCast(next)
   }
 
-  function finish(lines: RawLines, when: Date) {
+  function finish({ lines, when }: EntropyCast) {
     const chart = generateChart({
       inputMethod: 'entropy',
       rawLines: lines,
@@ -372,28 +395,57 @@ function EntropyPanel() {
     navigate('/result')
   }
 
+  const casting = cast !== null && !complete
+  const actionLabel = complete
+    ? '卦已成，生成排盘'
+    : casting
+      ? '正在采样随机数，点击跳过'
+      : '点击起卦'
+  const statusText = complete
+    ? '卦已成。再次点击生成排盘。'
+    : casting
+      ? `正在采样随机数，已得 ${revealed}/6 爻。`
+      : ''
+
   return (
     <Panel tag="电脑起卦 // 加密随机">
       <RitualGuide>
         一事一问。先静心片刻，在心中默念所问之事；念定，再点击起卦。
       </RitualGuide>
-      <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
-        {/*<div className="text-[0.9375rem] leading-relaxed text-fog">
-          <p>六爻 × 三枚铜钱</p>
-          <p>
-            随机源：<span className="text-signal">WEB CRYPTO API</span>
-          </p>
-          <p>6 : 7 : 8 : 9 = 1/8 : 3/8 : 3/8 : 1/8</p>
-        </div>*/}
-        <button type="button" className="btn btn-primary min-w-44" onClick={generate} disabled={rolling}>
-          {rolling ? '正在起卦…' : '立即起卦'}
-        </button>
-      </div>
-      {rolling && (
-        <p className="mt-3 text-[0.9375rem] tracking-[0.2em] text-flux caret" aria-live="polite">
-          正在采样随机数
-        </p>
-      )}
+      <button
+        type="button"
+        className="coin-console"
+        data-kind="entropy"
+        data-phase={complete ? 'complete' : casting ? 'casting' : 'standby'}
+        onClick={activate}
+        aria-label={actionLabel}
+        aria-busy={casting}
+      >
+        <span className="coin-console-head">
+          <span>RANDOM {String(revealed * 3).padStart(2, '0')} / 18 BIT</span>
+          <span className="coin-console-tag">
+            {complete ? 'COMPLETE' : casting ? 'SAMPLING' : 'STANDBY'}
+          </span>
+        </span>
+        <EntropyStage ref={stageRef}>
+          {complete && cast && (
+            <span className="entropy-names">
+              <HexagramNames lines={cast.lines} />
+            </span>
+          )}
+        </EntropyStage>
+        <span className={cn('coin-console-action', complete && 'coin-console-action-ready')}>
+          {complete ? (
+            <>
+              <span>卦已成</span>
+              <span>生成排盘 →</span>
+            </>
+          ) : (
+            <span ref={actionRef} className="coin-console-cta">{actionLabel}</span>
+          )}
+        </span>
+      </button>
+      <p className="sr-only" aria-live="polite">{statusText}</p>
     </Panel>
   )
 }
@@ -434,6 +486,13 @@ function CoinShakePanel({
       : null,
   )
   const [intro] = useState(() => state.phase === 'ready' && state.lines.length === 0)
+  const actionRef = useRef<HTMLSpanElement>(null)
+  useActionIntro(
+    actionRef,
+    'coin',
+    state.phase === 'ready' && state.lines.length === 0,
+    COIN_ACTION_INTRO_DELAY_MS,
+  )
 
   const completeLines = completeRawLinesOf(state)
   const shaking = state.phase === 'shaking'
@@ -624,15 +683,13 @@ function CoinShakePanel({
                     <span>六爻已完成</span>
                     <span>生成排盘 →</span>
                   </>
-                ) : actionLabel}
+                ) : (
+                  <span ref={actionRef} className="coin-console-cta">{actionLabel}</span>
+                )}
               </span>
             </button>
 
-            <div className="coin-status-row mt-3">
-              <p className="coin-status-copy text-[0.9375rem] leading-relaxed text-fog" aria-live="polite">
-                {statusText}
-              </p>
-            </div>
+            <p className="sr-only" aria-live="polite">{statusText}</p>
             {error && (
               <p className="mt-2 text-[0.9375rem] tracking-widest text-flux" role="alert">
                 {error}
@@ -650,7 +707,7 @@ function CoinShakePanel({
           <div ref={ghostLayerRef} className="coin-ghost-layer" aria-hidden="true" />
         </div>
 
-        <div className="coin-panel-footer mt-3 flex justify-end border-t border-edge pt-3">
+        <div className="coin-panel-footer mt-3 flex border-t border-edge pt-3">
           <button
             type="button"
             className="coin-reset btn shrink-0"
@@ -759,11 +816,6 @@ function CoinReadouts({
 }
 
 function CoinFinale({ lines }: { lines: CompleteRawLines }) {
-  const primaryBits = rawLinesToPrimaryBits(lines)
-  const mask = rawLinesToMutationMask(lines)
-  const primary = hexagramByBits(primaryBits)
-  const changed = mask ? hexagramByBits(resultBitsOf(primaryBits, mask)) : null
-
   return (
     <span className="coin-finale">
       <span className="coin-finale-glyph">
@@ -781,20 +833,32 @@ function CoinFinale({ lines }: { lines: CompleteRawLines }) {
           )
         })}
       </span>
-      <span className="coin-finale-names">
-        <span className="coin-finale-label">本卦</span>
-        <ScrambleText className="coin-finale-name" text={primary?.chineseName ?? ''} delay={380} />
-        {changed && (
-          <>
-            <span className="coin-finale-label">之卦</span>
-            <ScrambleText
-              className="coin-finale-name coin-finale-name-changed"
-              text={changed.chineseName}
-              delay={560}
-            />
-          </>
-        )}
-      </span>
+      <HexagramNames lines={lines} />
+    </span>
+  )
+}
+
+/** 本卦与之卦的卦名，逐字解码显现 */
+function HexagramNames({ lines }: { lines: CompleteRawLines }) {
+  const primaryBits = rawLinesToPrimaryBits(lines)
+  const mask = rawLinesToMutationMask(lines)
+  const primary = hexagramByBits(primaryBits)
+  const changed = mask ? hexagramByBits(resultBitsOf(primaryBits, mask)) : null
+
+  return (
+    <span className="coin-finale-names">
+      <span className="coin-finale-label">本卦</span>
+      <ScrambleText className="coin-finale-name" text={primary?.chineseName ?? ''} delay={380} />
+      {changed && (
+        <>
+          <span className="coin-finale-label">之卦</span>
+          <ScrambleText
+            className="coin-finale-name coin-finale-name-changed"
+            text={changed.chineseName}
+            delay={560}
+          />
+        </>
+      )}
     </span>
   )
 }
@@ -892,61 +956,52 @@ interface LineEditorProps {
   setDraft: (lines: RawLines) => void
 }
 
-export function LineEditor({ draft, setDraft }: LineEditorProps) {
-  function toggleYang(index: number) {
-    const next = [...draft] as RawLines
-    next[index] = draft[index] === 7 ? 8 : draft[index] === 8 ? 7 : draft[index] === 9 ? 6 : 9
-    setDraft(next)
-  }
+/** 手动排卦每爻的四种取值：静爻在前，动爻在后 */
+const LINE_CHOICES: ReadonlyArray<{ value: LineValue; label: string }> = [
+  { value: 7, label: '少阳' },
+  { value: 8, label: '少阴' },
+  { value: 9, label: '老阳' },
+  { value: 6, label: '老阴' },
+]
 
-  function toggleMutation(index: number) {
+function EditorGlyph({ value }: { value: LineValue }) {
+  return (
+    <span className="editor-glyph" data-yang={lineIsYang(value)} aria-hidden="true">
+      <LineGlyph value={value} className="editor-bar" />
+    </span>
+  )
+}
+
+/** 逐爻四选一：阴阳与动静一次点定 */
+function ManualLineEditor({ draft, setDraft }: LineEditorProps) {
+  function setLine(index: number, value: LineValue) {
     const next = [...draft] as RawLines
-    const v = draft[index]!
-    next[index] = v === 7 ? 9 : v === 9 ? 7 : v === 8 ? 6 : 8
+    next[index] = value
     setDraft(next)
   }
 
   return (
     <div className="flex flex-col gap-2">
       {[5, 4, 3, 2, 1, 0].map((i) => {
-        const yang = draft[i] === 7 || draft[i] === 9
-        const mutating = draft[i]! >= 9 || draft[i] === 6
+        const value = draft[i]!
         return (
-          <div key={i} className="flex items-center gap-2 sm:gap-3">
-            <span className="w-8 shrink-0 text-right text-[0.875rem] text-fog">
-              {COIN_LINE_NAMES[i]}
-            </span>
-            <button
-              type="button"
-              onClick={() => toggleYang(i)}
-              className="flex h-9 min-w-0 flex-1 items-center gap-[14%] border border-edge bg-surface px-3 transition-colors hover:border-edge-bright hover:bg-edge/30"
-              aria-label={`第 ${i + 1} 爻：${yang ? '阳' : '阴'}，点击切换阴阳`}
-            >
-              {yang ? (
-                <span className="h-[7px] w-full bg-ink" />
-              ) : (
-                <>
-                  <span className="h-[7px] w-[43%] bg-ink" />
-                  <span className="h-[7px] w-[43%] bg-ink" />
-                </>
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => toggleMutation(i)}
-              aria-pressed={mutating}
-              aria-label={`第 ${i + 1} 爻为${mutating ? '动爻' : '静爻'}，点击切换`}
-              className={cn(
-                'relative flex h-9 w-20 shrink-0 items-center justify-center whitespace-nowrap border text-[0.875rem] leading-none transition-colors',
-                mutating
-                  ? 'border-flux bg-flux/10 text-flux hover:bg-flux/20 hover:border-flux/70'
-                  : 'border-edge bg-surface text-fog hover:border-edge-bright hover:bg-edge/30 hover:text-ink',
-              )}
-            >
-              <span>{mutating ? '动爻' : '静爻'}</span>
-            </button>
-            <span className="w-8 shrink-0 whitespace-nowrap text-[0.875rem] text-fog">
-              {mutating ? '老' : '少'}{yang ? '阳' : '阴'}
+          <div key={i} className="editor-line" data-mutating={lineIsMutating(value)}>
+            <span className="editor-line-name">{COIN_LINE_NAMES[i]}</span>
+            <EditorGlyph value={value} />
+            <span className="editor-choices" role="radiogroup" aria-label={COIN_LINE_NAMES[i]}>
+              {LINE_CHOICES.map((choice) => (
+                <button
+                  key={choice.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={value === choice.value}
+                  className="editor-choice"
+                  data-moving={lineIsMutating(choice.value)}
+                  onClick={() => setLine(i, choice.value)}
+                >
+                  {choice.label}
+                </button>
+              ))}
             </span>
           </div>
         )
@@ -955,35 +1010,92 @@ export function LineEditor({ draft, setDraft }: LineEditorProps) {
   )
 }
 
+/** 卦已选定，只标动爻：点一下爻线设为动爻，再点取消 */
+function MovingLineEditor({ draft, setDraft }: LineEditorProps) {
+  function toggleMoving(index: number) {
+    const next = [...draft] as RawLines
+    const value = draft[index]!
+    next[index] = value === 7 ? 9 : value === 9 ? 7 : value === 8 ? 6 : 8
+    setDraft(next)
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {[5, 4, 3, 2, 1, 0].map((i) => {
+        const value = draft[i]!
+        const moving = lineIsMutating(value)
+        return (
+          <button
+            key={i}
+            type="button"
+            className="editor-line editor-line-toggle"
+            data-mutating={moving}
+            aria-pressed={moving}
+            aria-label={`${COIN_LINE_NAMES[i]}：${moving ? '动爻' : '静爻'}，点击切换`}
+            onClick={() => toggleMoving(i)}
+          >
+            <span className="editor-line-name">{COIN_LINE_NAMES[i]}</span>
+            <EditorGlyph value={value} />
+            <span className="editor-line-state">{moving ? '动爻' : '静爻'}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+/** 当前排出的本卦与之卦，随编辑即时更新 */
+function HexagramReadout({ lines }: { lines: RawLines }) {
+  const primaryBits = rawLinesToPrimaryBits(lines)
+  const mask = rawLinesToMutationMask(lines)
+  const primary = hexagramByBits(primaryBits)
+  const changed = mask ? hexagramByBits(resultBitsOf(primaryBits, mask)) : null
+
+  return (
+    <p className="editor-readout" aria-live="polite">
+      <span>
+        <span className="editor-readout-label">本卦</span>
+        <span className="text-signal">{primary?.chineseName}</span>
+      </span>
+      {changed && (
+        <span>
+          <span className="editor-readout-label">之卦</span>
+          <span className="text-ink">{changed.chineseName}</span>
+        </span>
+      )}
+    </p>
+  )
+}
+
+function EditorFooter({ lines, method }: { lines: RawLines; method: InputMethod }) {
+  return (
+    <div className="editor-footer">
+      <HexagramReadout lines={lines} />
+      <GenerateButton rawLines={lines} method={method} />
+    </div>
+  )
+}
+
 function ManualPanel({ draft, setDraft }: LineEditorProps) {
   return (
     <Panel tag="手动排卦">
-      <div className="mx-auto w-full md:max-w-lg">
-        <LineEditor draft={draft} setDraft={setDraft} />
-      </div>
-      <div className="mt-4 flex gap-2">
-        <button type="button" className="btn" onClick={() => setDraft(tossRawLines())}>
-          随机填充
-        </button>
-        <button type="button" className="btn" onClick={() => setDraft(defaultDraft())}>
-          重置
-        </button>
+      <div className="mx-auto w-full md:max-w-xl">
+        <ManualLineEditor draft={draft} setDraft={setDraft} />
+        <div className="mt-4 flex gap-2">
+          <button type="button" className="btn" onClick={() => setDraft(tossRawLines())}>
+            随机填充
+          </button>
+          <button type="button" className="btn" onClick={() => setDraft(defaultDraft())}>
+            重置
+          </button>
+        </div>
+        <EditorFooter lines={draft} method="manual" />
       </div>
     </Panel>
   )
 }
 
-function GenerateBar({
-  rawLines,
-  method,
-  when,
-  hanziSeed,
-}: {
-  rawLines: RawLines
-  method: InputMethod
-  when?: Date
-  hanziSeed?: Extract<HanziDerivation, { ok: true }>['seed']
-}) {
+function GenerateButton({ rawLines, method }: { rawLines: RawLines; method: InputMethod }) {
   const navigate = useNavigate()
   const { commitReading } = useReading()
   const { resolvedTimezone } = useSettings()
@@ -993,25 +1105,26 @@ function GenerateBar({
     const chart = generateChart({
       inputMethod: method,
       rawLines,
-      when,
       timezone: resolvedTimezone,
     })
-    commitReading(chart, rawLines, { hanziSeed })
+    commitReading(chart, rawLines)
     navigate('/result')
   }
 
   return (
-    <div className="mt-4">
-      <button type="button" className="btn btn-primary w-full sm:w-auto" onClick={generate}>
-        生成排盘 →
-      </button>
-    </div>
+    <button type="button" className="btn btn-primary w-full" onClick={generate}>
+      生成排盘 →
+    </button>
   )
 }
 
 function HexNamePanel({ draft, setDraft }: LineEditorProps) {
   const [query, setQuery] = useState('')
-  const results = useMemo(() => searchHexagrams(query).slice(0, 12), [query])
+  const matches = useMemo(
+    () => (query.trim() === '' ? null : searchHexagrams(query)),
+    [query],
+  )
+  const matched = useMemo(() => matches && new Set(matches.map((h) => h.bits)), [matches])
   const selected = hexagramByBits(bitsOf(draft))
   const followupRef = useRef<HTMLDivElement>(null)
   const followupFrameRef = useRef<number | null>(null)
@@ -1020,7 +1133,7 @@ function HexNamePanel({ draft, setDraft }: LineEditorProps) {
     if (followupFrameRef.current !== null) window.cancelAnimationFrame(followupFrameRef.current)
   }, [])
 
-  function selectHexagram(record: (typeof results)[number]) {
+  function selectHexagram(record: HexagramRecord) {
     setDraft(rawLinesFromRecord(record))
     if (followupFrameRef.current !== null) window.cancelAnimationFrame(followupFrameRef.current)
     followupFrameRef.current = window.requestAnimationFrame(() => {
@@ -1032,45 +1145,175 @@ function HexNamePanel({ draft, setDraft }: LineEditorProps) {
   return (
     <>
       <Panel tag="选择本卦">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="输入卦名或文王序号，例如：坎 / 29 / 中孚"
-          aria-label="按卦名或文王序号检索"
-          className="w-full border border-edge bg-void px-3 py-2 text-lg text-ink placeholder:text-fog/60 focus:border-signal focus:outline-none"
-        />
-        <ul className="mt-3 grid max-h-52 grid-cols-1 gap-1 overflow-y-auto sm:grid-cols-2" aria-label="检索结果">
-          {results.map((h) => (
-            <li key={h.kingWenNumber}>
-              <button
-                type="button"
-                aria-pressed={selected?.kingWenNumber === h.kingWenNumber}
-                onClick={() => selectHexagram(h)}
-                className="flex w-full items-center justify-between border border-edge bg-surface px-3 py-2 text-left text-base hover:border-signal data-[active=true]:border-signal"
-                data-active={selected?.kingWenNumber === h.kingWenNumber}
-              >
-                <span>{h.chineseName}</span>
-                <span className="text-[0.875rem] tabular-nums text-fog">HEX {h.kingWenNumber}</span>
-              </button>
-            </li>
-          ))}
-          {results.length === 0 && (
-            <li className="px-3 py-2 text-[0.9375rem] tracking-widest text-flux">未找到匹配卦象</li>
+        <div className="mx-auto w-full md:max-w-3xl">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(event) => {
+              if (isSubmitKey(event) && matches?.[0]) selectHexagram(matches[0])
+            }}
+            placeholder="输入卦名或文王序号，例如：坎 / 29 / 中孚"
+            aria-label="按卦名或文王序号检索"
+            enterKeyHint="search"
+            className="w-full border border-edge bg-void px-3 py-2 text-lg text-ink placeholder:text-fog/60 focus:border-signal focus:outline-none"
+          />
+          {matches?.length === 0 && (
+            <p className="mt-2 text-[0.9375rem] tracking-widest text-flux" role="alert">
+              未找到匹配卦象
+            </p>
           )}
-        </ul>
+          {matches && matches.length > 0 && (
+            <ul className="hex-results" aria-label="检索结果">
+              {[...matches].sort((x, y) => x.kingWenNumber - y.kingWenNumber).map((record) => (
+                <li key={record.kingWenNumber}>
+                  <button
+                    type="button"
+                    className="hex-result"
+                    data-active={selected?.bits === record.bits}
+                    aria-pressed={selected?.bits === record.bits}
+                    onClick={() => selectHexagram(record)}
+                  >
+                    <span>{record.chineseName}</span>
+                    <span className="hex-result-number">第 {record.kingWenNumber} 卦</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <HexagramTable selected={selected} matched={matched} onSelect={selectHexagram} />
+          <TrigramPicker selected={selected} onSelect={(record) => setDraft(rawLinesFromRecord(record))} />
+        </div>
       </Panel>
       {selected && (
         <div ref={followupRef} className="generator-scroll-target">
           <Panel tag="设置动爻 // 可选">
-            <p className="mb-3 text-[0.9375rem] text-fog">
-              本卦：<span className="text-signal">{selected.chineseName}</span> · 点击爻线设置动爻
-            </p>
-            <LineEditor draft={draft} setDraft={setDraft} />
-            <GenerateBar rawLines={draft} method="hexagram" />
+            <div className="mx-auto w-full md:max-w-xl">
+              <p className="mb-3 text-[0.875rem] text-fog">点击爻线，标为动爻</p>
+              <MovingLineEditor draft={draft} setDraft={setDraft} />
+              <EditorFooter lines={draft} method="hexagram" />
+            </div>
           </Panel>
         </div>
       )}
     </>
+  )
+}
+
+/** 手机上的选卦方式：上卦、下卦各点一次，十六个大按钮代替六十四个小格 */
+function TrigramPicker({
+  selected,
+  onSelect,
+}: {
+  selected: HexagramRecord | undefined
+  onSelect: (record: HexagramRecord) => void
+}) {
+  if (!selected) return null
+  const rows = [
+    { label: '上卦', current: selected.upperKey, pick: (key: TrigramKey) => [key, selected.lowerKey] as const },
+    { label: '下卦', current: selected.lowerKey, pick: (key: TrigramKey) => [selected.upperKey, key] as const },
+  ]
+
+  return (
+    <div className="trigram-picker">
+      {rows.map((row) => (
+        <div key={row.label} role="group" aria-label={row.label}>
+          <p className="trigram-picker-label">{row.label}</p>
+          <div className="trigram-options">
+            {TRIGRAM_KEYS.map((key) => {
+              const trigram = TRIGRAMS[key]
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  className="trigram-option"
+                  aria-pressed={row.current === key}
+                  aria-label={`${row.label}：${trigram.name}（${trigram.symbol}）`}
+                  onClick={() => {
+                    const [upper, lower] = row.pick(key)
+                    const record = hexagramByBits((TRIGRAMS[upper].bits << 3) | TRIGRAMS[lower].bits)
+                    if (record) onSelect(record)
+                  }}
+                >
+                  <span className="trigram-glyph" aria-hidden="true">
+                    {[2, 1, 0].map((line) => (
+                      <span key={line} data-yang={Boolean((trigram.bits >> line) & 1)} />
+                    ))}
+                  </span>
+                  <span>{trigram.name}</span>
+                  <span className="trigram-option-symbol">{trigram.symbol}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+      <p className="trigram-picker-result" aria-live="polite">
+        <span className="editor-readout-label">本卦</span>
+        <span className="text-signal">{selected.chineseName}</span>
+      </p>
+    </div>
+  )
+}
+
+/** 六十四卦方表（电脑端）：横排上卦、竖列下卦，按乾兑离震巽坎艮坤排列 */
+function HexagramTable({
+  selected,
+  matched,
+  onSelect,
+}: {
+  selected: HexagramRecord | undefined
+  /** 检索命中的卦；null 表示没有在检索 */
+  matched: Set<number> | null
+  onSelect: (record: HexagramRecord) => void
+}) {
+  return (
+    <table className="hex-table mt-3 hidden md:table" aria-label="六十四卦">
+      <thead>
+        <tr>
+          <th scope="col" className="hex-table-corner">
+            <span>上卦</span>
+            <span>下卦</span>
+          </th>
+          {TRIGRAM_KEYS.map((upper) => (
+            <th key={upper} scope="col">
+              {TRIGRAMS[upper].name}
+              <span className="hex-table-symbol">{TRIGRAMS[upper].symbol}</span>
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {TRIGRAM_KEYS.map((lower) => (
+          <tr key={lower}>
+            <th scope="row">
+              {TRIGRAMS[lower].name}
+              <span className="hex-table-symbol">{TRIGRAMS[lower].symbol}</span>
+            </th>
+            {TRIGRAM_KEYS.map((upper) => {
+              const record = hexagramByBits((TRIGRAMS[upper].bits << 3) | TRIGRAMS[lower].bits)
+              if (!record) return <td key={upper} />
+              const active = selected?.bits === record.bits
+              return (
+                <td key={upper}>
+                  <button
+                    type="button"
+                    className="hex-table-cell"
+                    data-active={active}
+                    data-dim={matched ? !matched.has(record.bits) : false}
+                    aria-pressed={active}
+                    aria-label={record.chineseName}
+                    title={`${record.chineseName} · 第 ${record.kingWenNumber} 卦`}
+                    onClick={() => onSelect(record)}
+                  >
+                    {record.chineseName}
+                  </button>
+                </td>
+              )
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </table>
   )
 }
 
@@ -1085,42 +1328,219 @@ function bitsOf(lines: RawLines): number {
 
 const NUMBER_FIELD_LABELS = ['第一个数', '第二个数', '第三个数'] as const
 
-const NUMBER_SEED_STRATEGY_LABEL: Record<NumberSeedStrategy, string> = {
-  'one-number': '一个数 · 两半各位之和定上下卦，总和定动爻',
-  'two-numbers': '两个数 · 分定上下卦，两数之和定动爻',
-  'three-numbers': '三个数 · 依次定上卦、下卦、动爻',
-}
-
-const LINE_NAMES = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'] as const
-
 function numberSeedIssueText(issue: NumberSeedIssue): string | null {
   if (issue.error === 'EMPTY') return null
   if (issue.error === 'NOT_DIGITS') return `${NUMBER_FIELD_LABELS[issue.field]}只能填数字`
   return `请先填${NUMBER_FIELD_LABELS[issue.field]}`
 }
 
-function NumberSeedStep({
-  label,
-  part,
-  divisor,
-  remainder,
-  result,
+type HanziSeedInfo = Extract<HanziDerivation, { ok: true }>['seed']
+
+interface DeriveRun {
+  script: DeriveScript
+  when?: Date
+  hanziSeed?: HanziSeedInfo
+}
+
+interface DeriveCastHandle {
+  /** 从输入框按回车起卦：与点击罗盘等效 */
+  activate(): void
+}
+
+const DERIVE_DEFAULT_GLYPH = { number: '数', time: '时', hanzi: '字' } as const
+
+/**
+ * 数字、时间、汉字起卦共用的罗盘：点击后按脚本演出上卦、下卦、动爻三步，
+ * 卦成后停住，再次点击才生成排盘。关闭动画时一次点击直接排盘。
+ */
+function DeriveCast({
+  ref,
+  method,
+  preview,
+  prepare,
+  idleAction,
+  blockedAction,
+  onRun,
 }: {
-  label: string
-  part: NumberSeedPart
-  divisor: number
-  remainder: number
-  result: string
+  ref?: Ref<DeriveCastHandle>
+  method: 'number' | 'time' | 'hanzi'
+  /** 当前输入对应的推演；null 表示还不能起卦 */
+  preview: DeriveScript | null
+  /** 点击时定格本次起卦；时间起卦在这里取当下时刻 */
+  prepare: () => DeriveRun | null
+  idleAction: string
+  blockedAction: string
+  /** 起卦后通知外层锁定输入 */
+  onRun?: (run: DeriveRun) => void
 }) {
-  const shownRemainder = remainder === divisor ? 0 : remainder
-  const formula = part.formula === part.value.toString() ? part.formula : `${part.formula} = ${part.value}`
+  const navigate = useNavigate()
+  const { commitReading } = useReading()
+  const { resolvedTimezone, settings } = useSettings()
+  const stageRef = useRef<DeriveStageHandle>(null)
+  const consoleRef = useRef<HTMLButtonElement>(null)
+  const actionRef = useRef<HTMLSpanElement>(null)
+  const [run, setRun] = useState<DeriveRun | null>(null)
+  const [step, setStep] = useState(-1)
+  const [resolved, setResolved] = useState(0)
+  const [complete, setComplete] = useState(false)
+  const animated = settings.animation && motionEnabled()
+  useActionIntro(actionRef, 'derive', run === null && preview !== null && settings.animation)
+  useImperativeHandle(ref, () => ({
+    activate: () => {
+      // 手机上收起键盘并把罗盘带进视野，再开始演出
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+      scrollIntoViewIfNeeded(consoleRef.current)
+      activate()
+    },
+  }))
+
+  function activate() {
+    if (complete && run) {
+      finish(run)
+      return
+    }
+    if (run) {
+      // 结果在起卦时已经算定，再次点击只是跳过演出
+      stageRef.current?.skip()
+      return
+    }
+    const next = prepare()
+    if (!next) return
+    const playing = animated && stageRef.current?.cast(next.script, {
+      onStep: (index) => setStep(index),
+      onResolve: (index) => setResolved(index + 1),
+      onComplete: () => setComplete(true),
+    })
+    if (!playing) {
+      finish(next)
+      return
+    }
+    setRun(next)
+    onRun?.(next)
+  }
+
+  function finish({ script, when, hanziSeed }: DeriveRun) {
+    trackDivinationEvent('点击生成排盘', method)
+    const chart = generateChart({
+      inputMethod: method,
+      rawLines: script.rawLines,
+      when,
+      timezone: resolvedTimezone,
+    })
+    commitReading(chart, script.rawLines, { hanziSeed })
+    navigate('/result')
+  }
+
+  const script = run?.script ?? preview
+  const casting = run !== null && !complete
+  const actionLabel = complete
+    ? '卦已成，生成排盘'
+    : casting
+      ? '推演中，点击跳过'
+      : script ? idleAction : blockedAction
+  // 关闭动画时没有演出可看，直接把算式写全
+  const shown = animated ? resolved : script ? 3 : 0
+
+  return (
+    <>
+      <button
+        ref={consoleRef}
+        type="button"
+        className="coin-console"
+        data-kind="dial"
+        data-phase={complete ? 'complete' : casting ? 'casting' : 'standby'}
+        onClick={activate}
+        disabled={!script}
+        aria-label={actionLabel}
+        aria-busy={casting}
+      >
+        <span className="coin-console-head">
+          <span>{method.toUpperCase()} SEED</span>
+          <span className="coin-console-tag">
+            {complete ? 'COMPLETE' : casting ? 'DERIVING' : 'STANDBY'}
+          </span>
+        </span>
+        <DeriveStage
+          ref={stageRef}
+          seedGlyph={script?.seedGlyph ?? DERIVE_DEFAULT_GLYPH[method]}
+          dim={complete}
+        >
+          {complete && run && <CoinFinale lines={run.script.rawLines} />}
+        </DeriveStage>
+        <span className="dial-caption">
+          {DERIVE_STEP_LABELS.map((label, index) => (
+            <span
+              key={label}
+              className="dial-slot"
+              data-state={index < shown ? 'done' : casting && index === step ? 'active' : 'idle'}
+            >
+              <span className="dial-slot-label">{label}</span>
+              <span className="dial-slot-value">
+                {script && index < shown
+                  ? <ScrambleText text={script.steps[index]!.result} duration={300} />
+                  : '—'}
+              </span>
+            </span>
+          ))}
+        </span>
+        <span className={cn('coin-console-action', complete && 'coin-console-action-ready')}>
+          {complete ? (
+            <>
+              <span>卦已成</span>
+              <span>生成排盘 →</span>
+            </>
+          ) : (
+            <span ref={actionRef} className="coin-console-cta">{actionLabel}</span>
+          )}
+        </span>
+      </button>
+
+      {script && shown > 0 && (
+        <div className="derive-steps mt-3 space-y-1 text-[0.9375rem] text-fog" aria-live="polite">
+          {script.steps.slice(0, shown).map((item, index) => (
+            <DeriveStepLine
+              key={DERIVE_STEP_LABELS[index]}
+              label={DERIVE_STEP_LABELS[index]!}
+              step={item}
+            />
+          ))}
+          {shown === 3 && (
+            <p>
+              本卦：
+              <span className="text-signal">
+                {hexagramByBits(bitsOf(script.rawLines))?.chineseName}
+              </span>
+              {' '}· {DERIVE_LINE_NAMES[script.movingLine]}动
+            </p>
+          )}
+        </div>
+      )}
+    </>
+  )
+}
+
+/** 回车提交；输入法正在选字时的回车只是上屏，不算 */
+function isSubmitKey(event: KeyboardEvent<HTMLInputElement>): boolean {
+  return event.key === 'Enter' && !event.nativeEvent.isComposing && event.keyCode !== 229
+}
+
+/** 输入框外绕行的辉光，提示“先在这里输入”；样式与页头“支持作者”相同 */
+function InputOrbit() {
+  return (
+    <svg className="support-link-orbit" aria-hidden="true" focusable="false">
+      <rect x="0.5" y="0.5" pathLength="100" />
+    </svg>
+  )
+}
+
+function DeriveStepLine({ label, step }: { label: string; step: DeriveStep }) {
   return (
     <p className="grid grid-cols-[2.75rem_1fr] gap-x-2">
       <span>{label}</span>
       <span className="break-all">
-        <span className="text-ink">{formula}</span>
-        {' '}÷ {divisor} 余 {shownRemainder} →{' '}
-        <span className="text-signal">{result}</span>
+        <span className="text-ink">{step.dividend}</span>
+        {' '}÷ {step.divisor} 余 {shownRemainder(step)} →{' '}
+        <span className="text-signal">{step.result}</span>
       </span>
     </p>
   )
@@ -1128,10 +1548,13 @@ function NumberSeedStep({
 
 function NumberPanel() {
   const [fields, setFields] = useState<string[]>(['', '', ''])
+  const [locked, setLocked] = useState(false)
+  const castRef = useRef<DeriveCastHandle>(null)
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
   const parsed = useMemo(() => rawLinesFromNumbers(fields), [fields])
-  const hexagram = parsed.ok ? hexagramByBits(bitsOf(parsed.rawLines)) : undefined
+  const preview = useMemo(() => (parsed.ok ? numberScript(parsed.seed) : null), [parsed])
   const issueText = parsed.ok ? null : numberSeedIssueText(parsed)
+  const empty = !parsed.ok && parsed.error === 'EMPTY'
 
   function updateField(index: number, value: string) {
     // 一次粘贴 128 64 32 这样的整串时，依次分到后面的输入框
@@ -1148,81 +1571,58 @@ function NumberPanel() {
   }
 
   return (
-    <>
-      <Panel tag="数字种子">
-        <RitualGuide>
-          一事一问。静心默念后，输入最先浮现于心的数字。
-        </RitualGuide>
-        <div className="grid grid-cols-3 gap-2">
-          {NUMBER_FIELD_LABELS.map((label, index) => (
-            <label key={label} className="block min-w-0">
-              <span className="mb-1 block text-[0.8125rem] tracking-[0.08em] text-fog">
-                {label}
-              </span>
-              <input
-                ref={(element) => {
-                  inputRefs.current[index] = element
-                }}
-                value={fields[index]}
-                onChange={(event) => updateField(index, event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') inputRefs.current[index + 1]?.focus()
-                }}
-                inputMode="numeric"
-                enterKeyHint={index < NUMBER_SEED_FIELDS - 1 ? 'next' : 'done'}
-                autoComplete="off"
-                placeholder={index > 0 ? '可不填' : undefined}
-                aria-label={label}
-                className="w-full min-w-0 border border-edge bg-void px-2 py-2 text-lg tracking-[0.12em] text-ink placeholder:text-base placeholder:tracking-normal placeholder:text-fog/50 focus:border-signal focus:outline-none"
-              />
-            </label>
-          ))}
-        </div>
-        <p className="mt-2 text-[0.875rem] leading-relaxed text-fog">
-          只填一个数也可以；填两个数分定上下卦，填三个数时第三个数定动爻
+    <Panel tag="数字种子">
+      <RitualGuide>
+        一事一问。静心默念后，输入最先浮现于心的数字。
+      </RitualGuide>
+      <div className="grid grid-cols-3 gap-2">
+        {NUMBER_FIELD_LABELS.map((label, index) => (
+          <label key={label} className="block min-w-0">
+            <span className="mb-1 block text-[0.8125rem] tracking-[0.08em] text-fog">
+              {label}
+            </span>
+            <span className="relative block">
+            <input
+              ref={(element) => {
+                inputRefs.current[index] = element
+              }}
+              value={fields[index]}
+              onChange={(event) => updateField(index, event.target.value)}
+              onKeyDown={(event) => {
+                if (!isSubmitKey(event)) return
+                if (index < NUMBER_SEED_FIELDS - 1) inputRefs.current[index + 1]?.focus()
+                else castRef.current?.activate()
+              }}
+              disabled={locked}
+              inputMode="numeric"
+              enterKeyHint={index < NUMBER_SEED_FIELDS - 1 ? 'next' : 'done'}
+              autoComplete="off"
+              placeholder={index > 0 ? '可不填' : undefined}
+              aria-label={label}
+              className="w-full min-w-0 border border-edge bg-void px-2 py-2 text-lg tracking-[0.12em] text-ink placeholder:text-base placeholder:tracking-normal placeholder:text-fog/50 focus:border-signal focus:outline-none disabled:opacity-60"
+            />
+            {index === 0 && empty && <InputOrbit />}
+            </span>
+          </label>
+        ))}
+      </div>
+      {issueText && (
+        <p className="mt-2 text-[0.9375rem] leading-relaxed text-flux" role="alert">
+          {issueText}
         </p>
-        {issueText && (
-          <p className="mt-2 text-[0.9375rem] leading-relaxed text-flux" role="alert">
-            {issueText}
-          </p>
-        )}
-        {parsed.ok && (
-          <div className="mt-3 space-y-1 text-[0.9375rem] text-fog">
-            <p className="text-[0.875rem] tracking-[0.08em]">
-              {NUMBER_SEED_STRATEGY_LABEL[parsed.seed.strategy]}
-            </p>
-            <NumberSeedStep
-              label="上卦"
-              part={parsed.seed.upper}
-              divisor={8}
-              remainder={parsed.seed.upperRemainder}
-              result={TRIGRAMS[trigramKeyByRemainder(parsed.seed.upperRemainder) as keyof typeof TRIGRAMS].name}
-            />
-            <NumberSeedStep
-              label="下卦"
-              part={parsed.seed.lower}
-              divisor={8}
-              remainder={parsed.seed.lowerRemainder}
-              result={TRIGRAMS[trigramKeyByRemainder(parsed.seed.lowerRemainder) as keyof typeof TRIGRAMS].name}
-            />
-            <NumberSeedStep
-              label="动爻"
-              part={parsed.seed.moving}
-              divisor={6}
-              remainder={parsed.seed.movingLine + 1}
-              result={LINE_NAMES[parsed.seed.movingLine]!}
-            />
-            {hexagram && (
-              <p>
-                本卦：<span className="text-signal">{hexagram.chineseName}</span>
-                {' '}· {LINE_NAMES[parsed.seed.movingLine]}动
-              </p>
-            )}
-          </div>
-        )}
-      </Panel>
-      {parsed.ok && <GenerateBar rawLines={parsed.rawLines} method="number" />}
-    </>
+      )}
+      <div className="mt-3">
+        <DeriveCast
+          ref={castRef}
+          method="number"
+          preview={preview}
+          prepare={() => (preview ? { script: preview } : null)}
+          idleAction="点击推演起卦"
+          blockedAction="先输入数字"
+          onRun={() => setLocked(true)}
+        />
+      </div>
+    </Panel>
   )
 }
 
@@ -1230,6 +1630,8 @@ type HanziDeriver = (input: string) => HanziDerivation
 
 function HanziPanel() {
   const [input, setInput] = useState('')
+  const [locked, setLocked] = useState(false)
+  const castRef = useRef<DeriveCastHandle>(null)
   const [derive, setDerive] = useState<HanziDeriver | null>(null)
   const [loadFailed, setLoadFailed] = useState(false)
 
@@ -1248,47 +1650,62 @@ function HanziPanel() {
   }, [])
 
   const parsed = useMemo(() => derive?.(input) ?? null, [derive, input])
+  const seed = parsed?.ok ? parsed.seed : null
+  const preview = useMemo(() => (seed ? hanziScript(seed) : null), [seed])
   const hasInput = input.trim() !== ''
 
   return (
-    <>
-      <Panel tag="汉字取象 // 本地拆字">
-        <RitualGuide>
-          一事一问。静心默念后，写下最先想到或第一眼看到的相关汉字。
-        </RitualGuide>
-        <label className="block">
-          <span className="mb-2 block text-[0.875rem] tracking-[0.14em] text-fog">
-            所取汉字
-          </span>
-          <input
-            value={input}
-            onChange={(event) => setInput(event.target.value)}
-            disabled={!derive || loadFailed}
-            autoComplete="off"
-            placeholder={loadFailed ? '笔画资料加载失败' : derive ? '例如：明 / 工作顺利 / 水到渠成' : '正在加载笔画资料…'}
-            aria-label="用于起卦的汉字"
-            className="w-full border border-edge bg-void px-3 py-2 text-lg tracking-[0.16em] text-ink placeholder:tracking-normal placeholder:text-fog/60 focus:border-signal focus:outline-none disabled:cursor-wait disabled:opacity-60"
-          />
-        </label>
-        <p className="mt-2 text-[0.875rem] leading-relaxed text-fog">
-          1 字按字形左右或上下拆分 · 2–10 字按前后两组笔画 · 11 字起按前后两组字数
-        </p>
+    <Panel tag="汉字取象 // 本地拆字">
+      <RitualGuide>
+        一事一问。静心默念后，写下最先想到或第一眼看到的相关汉字。
+      </RitualGuide>
+      <label className="block">
+        <span className="mb-2 block text-[0.875rem] tracking-[0.14em] text-fog">
+          所取汉字
+        </span>
+        <span className="relative block">
+        <input
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+          onKeyDown={(event) => {
+            if (isSubmitKey(event)) castRef.current?.activate()
+          }}
+          disabled={!derive || loadFailed || locked}
+          enterKeyHint="go"
+          autoComplete="off"
+          placeholder={loadFailed ? '笔画资料加载失败' : derive ? '例如：明 / 工作顺利 / 水到渠成' : '正在加载笔画资料…'}
+          aria-label="用于起卦的汉字"
+          className={cn(
+            'w-full border border-edge bg-void px-3 py-2 text-lg tracking-[0.16em] text-ink placeholder:tracking-normal placeholder:text-fog/60 focus:border-signal focus:outline-none disabled:opacity-60',
+            !locked && 'disabled:cursor-wait',
+          )}
+        />
+        {derive && !loadFailed && !hasInput && <InputOrbit />}
+        </span>
+      </label>
 
-        {loadFailed && (
-          <p className="mt-2 text-[0.9375rem] tracking-widest text-flux" role="alert">
-            汉字笔画资料未能载入，请刷新后重试。
-          </p>
-        )}
-        {hasInput && parsed && !parsed.ok && (
-          <p className="mt-2 text-[0.9375rem] tracking-widest text-flux" role="alert">
-            {hanziErrorText(parsed)}
-          </p>
-        )}
-      </Panel>
-      {parsed?.ok && (
-        <GenerateBar rawLines={parsed.rawLines} method="hanzi" hanziSeed={parsed.seed} />
+      {loadFailed && (
+        <p className="mt-2 text-[0.9375rem] tracking-widest text-flux" role="alert">
+          汉字笔画资料未能载入，请刷新后重试。
+        </p>
       )}
-    </>
+      {hasInput && parsed && !parsed.ok && (
+        <p className="mt-2 text-[0.9375rem] tracking-widest text-flux" role="alert">
+          {hanziErrorText(parsed)}
+        </p>
+      )}
+      <div className="mt-3">
+        <DeriveCast
+          ref={castRef}
+          method="hanzi"
+          preview={preview}
+          prepare={() => (preview && seed ? { script: preview, hanziSeed: seed } : null)}
+          idleAction="点击推演起卦"
+          blockedAction="先写下汉字"
+          onRun={() => setLocked(true)}
+        />
+      </div>
+    </Panel>
   )
 }
 
@@ -1300,51 +1717,52 @@ function hanziErrorText(parsed: Extract<HanziDerivation, { ok: false }>): string
   return '请输入至少一个汉字。'
 }
 
-function TimePanel() {
-  const navigate = useNavigate()
-  const { commitReading } = useReading()
-  const { resolvedTimezone } = useSettings()
+/** 时间起卦的算式只随时辰变化，待机预览每半分钟核对一次即可 */
+const TIME_PREVIEW_REFRESH_MS = 30_000
 
-  function generate() {
-    trackDivinationEvent('点击生成排盘', 'time')
-    const when = new Date()
-    const { rawLines } = deriveTimeSeed(when, resolvedTimezone)
-    const chart = generateChart({
-      inputMethod: 'time',
-      rawLines,
-      when,
-      timezone: resolvedTimezone,
-    })
-    commitReading(chart, rawLines)
-    navigate('/result')
-  }
+function TimePanel() {
+  const { resolvedTimezone } = useSettings()
+  const [now, setNow] = useState(() => new Date())
+  const [castAt, setCastAt] = useState<Date | null>(null)
+
+  useEffect(() => {
+    if (castAt) return
+    const timer = window.setInterval(() => setNow(new Date()), TIME_PREVIEW_REFRESH_MS)
+    return () => window.clearInterval(timer)
+  }, [castAt])
+
+  const preview = useMemo(
+    () => timeScript(deriveTimeSeed(now, resolvedTimezone).seed),
+    [now, resolvedTimezone],
+  )
 
   return (
     <Panel tag="使用当前时间戳">
       <RitualGuide>
         一事一问。静心默念所问之事；念定，就以此刻起卦。
       </RitualGuide>
-      <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-[0.9375rem] leading-relaxed text-fog">
-          <p>
-            种子来源：<span className="text-signal">本地时间</span>
-          </p>
-          <p>
-            时间戳：<LiveTimestamp timezone={resolvedTimezone} className="text-ink" />
-          </p>
-          <p>时区：{formatTimezone(resolvedTimezone)}</p>
-          {/*<div className="mt-2 flex items-center gap-3">
-            <HexLines bits={previewBits} compact showLabels={false} />
-            <span className="tabular-nums">{previewBits.toString(2).padStart(6, '0')}</span>
-          </div>*/}
-          {/*<p className="mt-1 text-[0.875rem] opacity-70">
-            仅为预览 · 最终排盘以点击时刻为准
-          </p>*/}
-        </div>
-        <button type="button" className="btn btn-primary min-w-44" onClick={generate}>
-          使用当前时间戳
-        </button>
+      <div className="mb-3 flex flex-wrap gap-x-8 text-[0.9375rem] leading-relaxed text-fog">
+        <p>
+          {castAt ? '起卦时刻：' : '时间戳：'}
+          <LiveTimestamp
+            timezone={resolvedTimezone}
+            frozenAt={castAt ?? undefined}
+            className={castAt ? 'text-signal' : 'text-ink'}
+          />
+        </p>
+        <p>时区：{formatTimezone(resolvedTimezone)}</p>
       </div>
+      <DeriveCast
+        method="time"
+        preview={preview}
+        prepare={() => {
+          const when = new Date()
+          return { script: timeScript(deriveTimeSeed(when, resolvedTimezone).seed), when }
+        }}
+        idleAction="点击以此刻起卦"
+        blockedAction="点击以此刻起卦"
+        onRun={(run) => setCastAt(run.when ?? null)}
+      />
     </Panel>
   )
 }
