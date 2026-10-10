@@ -19,7 +19,10 @@ base = args.url.rstrip('/')
 assert urlparse(base).hostname in ['127.0.0.1', 'localhost'], 'Use a local preview'
 
 with sync_playwright() as p:
-    browser = getattr(p, args.browser).launch(headless=True)
+    # Chromium's GPU rasteriser dithers the stacked gradients differently from
+    # one capture to the next (a few levels, even with every animation off).
+    launch_args = ['--disable-gpu-rasterization'] if args.browser == 'chromium' else []
+    browser = getattr(p, args.browser).launch(headless=True, args=launch_args)
     for width, height in [(1280, 900), (390, 844)]:
         ctx = browser.new_context(viewport={'width': width, 'height': height}, device_scale_factor=2)
         ctx.add_init_script("sessionStorage.setItem('hex64.booted','1')")
@@ -48,6 +51,10 @@ with sync_playwright() as p:
                 await Promise.all(animations.map(a => a.ready));
                 animations.forEach(a => { a.currentTime = t });
             }'''
+            # The casting stages paint a canvas from rAF and timers, which
+            # getAnimations() cannot pause. Stop the page clock where it stands
+            # so the canvas holds still across both screenshots.
+            page.clock.pause_at(page.evaluate('Date.now()') / 1000)
             page.evaluate(freeze, time)
             expected_timing = 'steps(255)' if args.browser == 'firefox' else 'linear'
             expect(page.locator('.fx-roll')).to_have_css('animation-timing-function', expected_timing)
@@ -56,6 +63,7 @@ with sync_playwright() as p:
             page.evaluate(freeze, time)
             before = Image.open(io.BytesIO(page.screenshot())).convert('RGB')
             old.evaluate('(e)=>e.remove()')
+            page.clock.resume()
             diff = ImageChops.difference(before, after)
             max_delta = max(high for low, high in diff.getextrema())
             assert max_delta <= tolerance, (args.browser, width, label, max_delta)
@@ -68,7 +76,8 @@ with sync_playwright() as p:
         # At the end of a 30 Hz step, the soft band is slightly behind the old
         # continuous sweep; bound that difference without ignoring layout pixels.
         compare('home-between-steps', 3032, tolerance=3)
-        page.get_by_role('button', name='01 摇币起卦').click()
+        # Mode tiles hide their sequence number on small viewports.
+        page.get_by_role('button', name='摇币起卦').click()
         page.wait_for_load_state('networkidle')
         # Mode selection also starts a native smooth scroll on small viewports.
         page.wait_for_timeout(1800)
@@ -81,17 +90,20 @@ with sync_playwright() as p:
         assert page.locator('.crt-content').evaluate('(e)=>e.scrollTop>0')
         compare('about-scrolled')
         page.get_by_role('link', name='[起卦]', exact=True).click()
-        expect(page.get_by_role('heading', name='六爻排盘')).to_be_visible()
+        expect(page.get_by_role('heading', name='六爻排盘', exact=True)).to_be_visible()
         assert page.locator('.crt-content').evaluate('(e)=>e.scrollTop===0')
         # Keep actual coin animations enabled while completing a reading.
-        page.get_by_role('button', name='01 摇币起卦').click()
+        page.get_by_role('button', name='摇币起卦').click()
         for line in ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻']:
             page.get_by_role('button', name='点击开始摇动' + line).click()
             page.get_by_role('button', name='点击停止并记录' + line).click()
         page.get_by_role('button', name='六爻已完成，生成排盘').click()
-        expect(page.get_by_text('排盘完成', exact=True)).to_be_visible()
+        # The result page no longer shows a completion banner; the toolbar with
+        # the chart actions is what marks a rendered reading.
+        result_toolbar = page.get_by_role('region', name='所问与操作')
+        expect(result_toolbar).to_be_visible()
         page.reload()
-        expect(page.get_by_text('排盘完成', exact=True)).to_be_visible()
+        expect(result_toolbar).to_be_visible()
         assert not errors, errors
         ctx.close()
     browser.close()
