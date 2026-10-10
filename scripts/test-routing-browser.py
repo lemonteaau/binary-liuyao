@@ -195,7 +195,9 @@ with sync_playwright() as p:
       url: base + '/result#' + share,
       referrer: base + '/#/result?' + share,
     })""", [base, share])
+    visitor_id = payload.pop('id')
     assert payload == {'url': '/result', 'referrer': '/result'}
+    assert len(visitor_id) == 32 and visitor_id == page.evaluate("localStorage.getItem('hex64.visitor-id.v1')")
     assert not any(set(parse_qs(urlparse(url).query)) & {'s', 'm', 't', 'z', 'r', 'o'} for url in requests)
     assert not errors, errors
     ctx.close()

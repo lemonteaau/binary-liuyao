@@ -134,25 +134,65 @@
       }
     </script>
     <script>
-      window.umamiBeforeSend = (_type, payload) => {
-        const cleanRoute = (value) => {
-          if (!value) return value
+      {
+        // Umami derives its visitor id from IP + user agent + a monthly salt, so the same
+        // browser counts as a new visitor after a network change or a new month. A random
+        // id kept in this browser lets returning visits be linked without knowing who it is.
+        const VISITOR_ID_KEY = 'hex64.visitor-id.v1'
+        let visitorId
+        let visitorIdIsNew = false
 
-          try {
-            const url = new URL(value, window.location.origin)
-            if (url.origin !== window.location.origin) return value
+        try {
+          // /?umami=off stops analytics from this browser; /?umami=on resumes it.
+          const analyticsSwitch = new URLSearchParams(window.location.search).get('umami')
+          if (analyticsSwitch === 'off') localStorage.setItem('umami.disabled', '1')
+          if (analyticsSwitch === 'on') localStorage.removeItem('umami.disabled')
 
-            const route = url.hash.startsWith('#/') ? url.hash.slice(1) : url.pathname
-            return route.split(/[?#]/, 1)[0] || '/'
-          } catch {
-            return value
+          visitorId = localStorage.getItem(VISITOR_ID_KEY) || undefined
+          if (!visitorId) {
+            const bytes = crypto.getRandomValues(new Uint8Array(16))
+            const created = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
+            localStorage.setItem(VISITOR_ID_KEY, created)
+            visitorId = created
+            visitorIdIsNew = true
+          }
+        } catch {
+          // Without storage the id could not persist; let Umami fall back to its own.
+          visitorId = undefined
+        }
+
+        window.umamiBeforeSend = (_type, payload) => {
+          const cleanRoute = (value) => {
+            if (!value) return value
+
+            try {
+              const url = new URL(value, window.location.origin)
+              if (url.origin !== window.location.origin) return value
+
+              const route = url.hash.startsWith('#/') ? url.hash.slice(1) : url.pathname
+              return route.split(/[?#]/, 1)[0] || '/'
+            } catch {
+              return value
+            }
+          }
+
+          return {
+            ...payload,
+            url: cleanRoute(payload.url),
+            referrer: cleanRoute(payload.referrer),
+            ...(visitorId ? { id: visitorId } : {}),
           }
         }
 
-        return {
-          ...payload,
-          url: cleanRoute(payload.url),
-          referrer: cleanRoute(payload.referrer),
+        if (visitorId && visitorIdIsNew) {
+          // Attach the new id to the visitor record Umami already holds for this browser.
+          window.addEventListener('load', () => {
+            try {
+              window.umami?.identify(visitorId)
+            } catch {
+              // Analytics must never interrupt the page.
+            }
+          }, { once: true })
         }
       }
     </script>
