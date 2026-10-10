@@ -1,7 +1,7 @@
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
-# Open tabs poll this to learn about new deployments.
+# Open tabs poll this to learn about new releases.
 /version.json
   Cache-Control: no-store
 

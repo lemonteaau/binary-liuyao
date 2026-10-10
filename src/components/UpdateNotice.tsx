@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ArrowsClockwise } from '@phosphor-icons/react'
 import { trackEvent } from '@/lib/analytics'
-import { APP_VERSION, fetchLatestVersion } from '@/lib/app-version'
+import { APP_BUILD, APP_VERSION, fetchLatestVersion, releaseOf } from '@/lib/app-version'
 import { IS_DEV_SERVER } from '@/lib/dev-server'
 
 /** 页面可见期间的例行检查间隔 */
@@ -11,11 +11,13 @@ export const UPDATE_CHECK_MIN_GAP_MS = 60_000
 
 /**
  * 长期不关的标签页会一直运行旧版本，部署后旧的懒加载分块还会 404。
- * 回到标签页、定时或分块加载失败时比对线上版本，有新版本就提示刷新。
+ * 回到标签页或定时比对线上版本号，a.b 变了才提示刷新，c 位的小更新不打扰；
+ * 分块加载失败说明功能已经受影响，只要线上换过构建就立即提示。
  */
 export function useAppUpdate(): { available: boolean; dismiss: () => void } {
-  const [latest, setLatest] = useState<string | null>(null)
-  const [dismissed, setDismissed] = useState<string | null>(null)
+  const [available, setAvailable] = useState(false)
+  const latestRelease = useRef<string | null>(null)
+  const dismissedRelease = useRef<string | null>(null)
 
   useEffect(() => {
     if (IS_DEV_SERVER) return
@@ -24,15 +26,22 @@ export function useAppUpdate(): { available: boolean; dismiss: () => void } {
     let lastCheckedAt = Date.now()
     let controller: AbortController | null = null
 
-    async function check(force: boolean) {
+    async function check(urgent: boolean) {
       if (document.visibilityState !== 'visible') return
       const now = Date.now()
-      if (!force && now - lastCheckedAt < UPDATE_CHECK_MIN_GAP_MS) return
+      if (!urgent && now - lastCheckedAt < UPDATE_CHECK_MIN_GAP_MS) return
       lastCheckedAt = now
       controller?.abort()
       controller = new AbortController()
-      const version = await fetchLatestVersion(controller.signal)
-      if (version) setLatest(version)
+      const latest = await fetchLatestVersion(controller.signal)
+      if (!latest) return
+      const release = releaseOf(latest.version)
+      latestRelease.current = release
+      if (urgent) {
+        if (latest.build !== APP_BUILD) setAvailable(true)
+      } else if (release !== releaseOf(APP_VERSION) && release !== dismissedRelease.current) {
+        setAvailable(true)
+      }
     }
 
     const checkWhenDue = () => void check(false)
@@ -53,14 +62,15 @@ export function useAppUpdate(): { available: boolean; dismiss: () => void } {
     }
   }, [])
 
-  const available = latest !== null && latest !== APP_VERSION && latest !== dismissed
-
   useEffect(() => {
     if (available) trackEvent('展示新版本提示')
   }, [available])
 
-  // 只忽略这一个版本；之后再有新部署会重新提示
-  const dismiss = useCallback(() => setDismissed(latest), [latest])
+  // 只忽略这一个 a.b 版本；之后 a.b 再变会重新提示
+  const dismiss = useCallback(() => {
+    dismissedRelease.current = latestRelease.current
+    setAvailable(false)
+  }, [])
 
   return { available, dismiss }
 }

@@ -1,11 +1,17 @@
 /// <reference types="vitest/config" />
+import { readFileSync } from 'node:fs'
 import { defineConfig } from 'vite'
 import type { Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-// Identifies a deployment so that tabs left open can notice a newer one.
-const appVersion = process.env.CF_PAGES_COMMIT_SHA?.slice(0, 12) ?? Date.now().toString(36)
+// The a.b.c release number from package.json. Tabs left open are only asked to
+// refresh when a or b moves, so bump those for releases worth interrupting for.
+const appVersion = (
+  JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string }
+).version
+// Identifies the deployment itself, to explain a lazy chunk that went missing.
+const appBuild = process.env.CF_PAGES_COMMIT_SHA?.slice(0, 12) ?? Date.now().toString(36)
 
 function versionManifest(): Plugin {
   return {
@@ -15,7 +21,7 @@ function versionManifest(): Plugin {
       this.emitFile({
         type: 'asset',
         fileName: 'version.json',
-        source: JSON.stringify({ version: appVersion }),
+        source: JSON.stringify({ version: appVersion, build: appBuild }),
       })
     },
   }
@@ -26,6 +32,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss(), versionManifest()],
   define: {
     __APP_VERSION__: JSON.stringify(appVersion),
+    __APP_BUILD__: JSON.stringify(appBuild),
   },
   build: {
     // Lower range media queries (`width<=767px`) to min/max-width so that
