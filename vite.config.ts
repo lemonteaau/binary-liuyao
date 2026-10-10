@@ -1,11 +1,32 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
+import type { Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
+// Identifies a deployment so that tabs left open can notice a newer one.
+const appVersion = process.env.CF_PAGES_COMMIT_SHA?.slice(0, 12) ?? Date.now().toString(36)
+
+function versionManifest(): Plugin {
+  return {
+    name: 'hex64-version-manifest',
+    apply: 'build',
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: 'version.json',
+        source: JSON.stringify({ version: appVersion }),
+      })
+    },
+  }
+}
+
 export default defineConfig({
   base: '/',
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), versionManifest()],
+  define: {
+    __APP_VERSION__: JSON.stringify(appVersion),
+  },
   build: {
     // Lower range media queries (`width<=767px`) to min/max-width so that
     // Safari < 16.4 and Chrome < 104 still apply the responsive layout.

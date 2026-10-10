@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { BrowserRouter, Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { TaijiIcon } from '@/components/TaijiIcon'
+import { UpdateNotice, useAppUpdate } from '@/components/UpdateNotice'
 import { BookmarkInvitation } from '@/components/BookmarkInvitation'
 import { BootSequence, useBootOnce } from '@/components/BootSequence'
 import { FeedbackInvitation } from '@/components/FeedbackInvitation'
@@ -64,6 +65,7 @@ export function CrtFx() {
 export function Shell() {
   const { animation } = useDisplaySettings()
   const { booting, finish } = useBootOnce(animation)
+  const update = useAppUpdate()
   const location = useLocation()
   const feedbackCooldownTimerRef = useRef<number>(0)
   const [bookmarkInvitationVisible, setBookmarkInvitationVisible] = useState(false)
@@ -152,12 +154,17 @@ export function Shell() {
           </footer>
         </div>
       </div>
-      <BookmarkInvitation
-        onDismiss={deferFeedbackInvitation}
-        onVisibilityChange={setBookmarkInvitationVisible}
-      />
+      {/* 三种提示共用右下角位置，新版本提示优先 */}
+      {update.available ? (
+        <UpdateNotice onDismiss={update.dismiss} />
+      ) : (
+        <BookmarkInvitation
+          onDismiss={deferFeedbackInvitation}
+          onVisibilityChange={setBookmarkInvitationVisible}
+        />
+      )}
       <FeedbackInvitation
-        suppressed={bookmarkInvitationVisible || feedbackInvitationDeferred}
+        suppressed={update.available || bookmarkInvitationVisible || feedbackInvitationDeferred}
       />
       <CrtFx />
     </CrtFrame>
