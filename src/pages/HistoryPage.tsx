@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { ReadingOutcomeField } from '@/components/ReadingNotesPanel'
 import { SupportNudge } from '@/components/SupportNudge'
 import { trackEvent } from '@/lib/analytics'
 import {
@@ -19,6 +20,7 @@ export function HistoryPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [status, setStatus] = useState<ImportStatus>(null)
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  const [outcomeEditingId, setOutcomeEditingId] = useState<string | null>(null)
   const [exportedAt, setExportedAt] = useState<number | null>(null)
 
   function open(record: ReadingRecord) {
@@ -102,66 +104,94 @@ export function HistoryPage() {
         </div>
       ) : (
         <ol className="history-list mt-6" aria-label="排盘记录">
-          {history.map((record) => (
-            <li key={record.id} className="history-item panel">
-              <button type="button" className="history-item-main" onClick={() => open(record)}>
-                <span className="history-item-meta">
-                  <span className="tabular-nums">{record.chart.createdAt.slice(0, 16)}</span>
-                  <span aria-hidden="true">//</span>
-                  <span>
-                    {record.source === 'share-link'
-                      ? '分享链接'
-                      : INPUT_METHOD_LABELS_UI[record.chart.inputMethod]}
+          {history.map((record) => {
+            const editingOutcome = outcomeEditingId === record.id
+            return (
+              <li key={record.id} className="history-item panel">
+                <button type="button" className="history-item-main" onClick={() => open(record)}>
+                  <span className="history-item-meta">
+                    <span className="tabular-nums">{record.chart.createdAt.slice(0, 16)}</span>
+                    <span aria-hidden="true">//</span>
+                    <span>
+                      {record.source === 'share-link'
+                        ? '分享链接'
+                        : INPUT_METHOD_LABELS_UI[record.chart.inputMethod]}
+                    </span>
+                    {record.interpretation?.trim() && <span className="history-item-badge">有解读</span>}
+                    {record.outcome?.trim() && <span className="history-item-badge">已记应验</span>}
                   </span>
-                  {record.outcome?.trim() && <span className="history-item-badge">已记应验</span>}
-                </span>
-                <span className="history-item-hex">
-                  {record.chart.primary.record.chineseName}
-                  {record.chart.mutationMask !== 0 && (
+                  <span className="history-item-hex">
+                    {record.chart.primary.record.chineseName}
+                    {record.chart.mutationMask !== 0 && (
+                      <>
+                        <span className="text-fog" aria-label="变为"> → </span>
+                        {record.chart.result.record.chineseName}
+                      </>
+                    )}
+                  </span>
+                  <span className={record.question?.trim() ? 'history-item-question' : 'history-item-question is-empty'}>
+                    {record.question?.trim() || '未记录所问之事'}
+                  </span>
+                </button>
+                <div className="history-item-actions">
+                  {pendingDeleteId === record.id ? (
                     <>
-                      <span className="text-fog" aria-label="变为"> → </span>
-                      {record.chart.result.record.chineseName}
+                      <button
+                        type="button"
+                        className="history-item-action text-flux"
+                        onClick={() => {
+                          deleteReading(record.id)
+                          setPendingDeleteId(null)
+                        }}
+                      >
+                        确认删除
+                      </button>
+                      <button
+                        type="button"
+                        className="history-item-action"
+                        onClick={() => setPendingDeleteId(null)}
+                      >
+                        取消
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      {(editingOutcome || !record.outcome?.trim()) && (
+                        <button
+                          type="button"
+                          className="history-item-action is-primary"
+                          aria-label={editingOutcome ? `收起排盘 ${record.id} 的应验记录` : `为排盘 ${record.id} 记应验`}
+                          aria-expanded={editingOutcome}
+                          onClick={() => setOutcomeEditingId(editingOutcome ? null : record.id)}
+                        >
+                          {editingOutcome ? '收起' : '记应验'}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="history-item-action"
+                        aria-label={`删除排盘 ${record.id}`}
+                        onClick={() => setPendingDeleteId(record.id)}
+                      >
+                        删除
+                      </button>
                     </>
                   )}
-                </span>
-                <span className={record.question?.trim() ? 'history-item-question' : 'history-item-question is-empty'}>
-                  {record.question?.trim() || '未记录所问之事'}
-                </span>
-              </button>
-              <div className="history-item-actions">
-                {pendingDeleteId === record.id ? (
-                  <>
-                    <button
-                      type="button"
-                      className="history-item-action text-flux"
-                      onClick={() => {
-                        deleteReading(record.id)
-                        setPendingDeleteId(null)
-                      }}
-                    >
-                      确认删除
-                    </button>
-                    <button
-                      type="button"
-                      className="history-item-action"
-                      onClick={() => setPendingDeleteId(null)}
-                    >
-                      取消
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    type="button"
-                    className="history-item-action"
-                    aria-label={`删除排盘 ${record.id}`}
-                    onClick={() => setPendingDeleteId(record.id)}
-                  >
-                    删除
-                  </button>
+                </div>
+                {editingOutcome && (
+                  <div className="history-item-outcome">
+                    <ReadingOutcomeField
+                      record={record}
+                      inputId={`history-outcome-${record.id}`}
+                      place="历史页"
+                      placeholder="这件事后来怎么样了？记一笔，日后复盘对照卦象。"
+                      autoFocus
+                    />
+                  </div>
                 )}
-              </div>
-            </li>
-          ))}
+              </li>
+            )
+          })}
         </ol>
       )}
     </div>

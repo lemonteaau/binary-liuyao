@@ -16,6 +16,7 @@ const PROMPT = '请根据以上六爻排盘进行分析，要分析的问题是�
 
 afterEach(() => {
   cleanup()
+  vi.useRealTimers()
   vi.restoreAllMocks()
   vi.unstubAllGlobals()
   localStorage.clear()
@@ -99,6 +100,7 @@ describe('复制排盘附上所问', () => {
 
 describe('结果页布局', () => {
   it('所问与操作排在完整排盘之前，页尾不再有单独的操作面板', () => {
+    vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-08-24T14:50:00+08:00') })
     storeReading([6, 9, 8, 8, 7, 8], { question: '面试能否通过' })
     renderResult()
 
@@ -114,11 +116,84 @@ describe('结果页布局', () => {
     expect(within(toolbar).getByRole('link', { name: '历史记录' })).toBeTruthy()
     expect(within(toolbar).getByRole('link', { name: '编辑提示词 →' }).getAttribute('href')).toBe('/settings')
 
-    // 应验记录留在页尾，所问不再重复出现
+    // 刚排的盘：看完盘先写解读，应验记录留在页尾，所问不再重复出现
+    const interpretation = screen.getByRole('textbox', { name: '我的解读' })
     const outcome = screen.getByRole('textbox', { name: '应验记录' })
-    expect(fullReading.compareDocumentPosition(outcome) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(fullReading.compareDocumentPosition(interpretation) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(interpretation.compareDocumentPosition(outcome) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(screen.getAllByLabelText('所问何事')).toHaveLength(1)
     expect(screen.queryByText(/上方「复制排盘」/)).toBeNull()
+  })
+
+  it('回看一天多以前的盘时，应验记录紧跟所问、排在完整排盘之前', () => {
+    vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-08-25T14:42:37+08:00') })
+    storeReading([6, 9, 8, 8, 7, 8], { question: '面试能否通过' })
+    renderResult()
+
+    const toolbar = screen.getByRole('region', { name: '所问与操作' })
+    const outcome = screen.getByRole('textbox', { name: '应验记录' }) as HTMLTextAreaElement
+    const fullReading = screen.getByRole('region', { name: '结构化六爻排盘' })
+    expect(toolbar.compareDocumentPosition(outcome) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(outcome.compareDocumentPosition(fullReading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(outcome.placeholder).toContain('这件事后来怎么样了')
+    expect(screen.getAllByRole('textbox', { name: '应验记录' })).toHaveLength(1)
+    // 解读仍在完整排盘之后
+    const interpretation = screen.getByRole('textbox', { name: '我的解读' })
+    expect(fullReading.compareDocumentPosition(interpretation) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('备注为空时不显示「已保存」，写入后才显示', () => {
+    storeReading([6, 9, 8, 8, 7, 8], { question: '面试能否通过' })
+    renderResult()
+    const statusOf = (label: string) => {
+      const field = screen.getByRole('textbox', { name: label })
+      const scope = (field.closest('.result-question') ?? field.closest('section')) as HTMLElement
+      return within(scope).getAllByRole('status')[0]!.textContent
+    }
+    expect(statusOf('所问何事')).toBe('已保存')
+    expect(statusOf('我的解读')).toBe('')
+    expect(statusOf('应验记录')).toBe('')
+
+    const outcome = screen.getByRole('textbox', { name: '应验记录' })
+    fireEvent.change(outcome, { target: { value: '通过了' } })
+    expect(statusOf('应验记录')).toBe('正在保存…')
+    fireEvent.blur(outcome)
+    expect(statusOf('应验记录')).toBe('已保存')
+
+    fireEvent.change(outcome, { target: { value: '' } })
+    fireEvent.blur(outcome)
+    expect(statusOf('应验记录')).toBe('')
+  })
+
+  it('我的解读自动保存到本机，并且不进入复制的排盘文本', async () => {
+    const track = vi.fn()
+    vi.stubGlobal('umami', { track })
+    const writeText = mockClipboard()
+    storeReading([6, 9, 8, 8, 7, 8], { interpretation: '旧判断' })
+    renderResult()
+
+    const interpretation = screen.getByRole('textbox', { name: '我的解读' }) as HTMLTextAreaElement
+    expect(interpretation.value).toBe('旧判断')
+    fireEvent.change(interpretation, { target: { value: '官鬼持世，事有阻' } })
+    fireEvent.blur(interpretation)
+
+    expect(JSON.parse(localStorage.getItem(CURRENT_KEY)!).interpretation).toBe('官鬼持世，事有阻')
+    expect(track).toHaveBeenCalledWith('填写占事记录', { 字段: '我的解读', 位置: '结果页' })
+
+    const toolbar = screen.getByRole('region', { name: '所问与操作' })
+    fireEvent.click(within(toolbar).getByRole('button', { name: '复制排盘' }))
+    await waitFor(() => expect(writeText).toHaveBeenCalledOnce())
+    expect(writeText.mock.calls[0]![0]).not.toContain('官鬼持世')
+  })
+
+  it('分享链接打开的盘不算自己的旧盘，应验记录留在页尾', () => {
+    vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-09-24T14:42:37+08:00') })
+    storeReading([6, 9, 8, 8, 7, 8], { source: 'share-link' })
+    renderResult()
+
+    const outcome = screen.getByRole('textbox', { name: '应验记录' })
+    const fullReading = screen.getByRole('region', { name: '结构化六爻排盘' })
+    expect(fullReading.compareDocumentPosition(outcome) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('摘要标出翻转的二进制位，静卦时说明不生变卦', () => {

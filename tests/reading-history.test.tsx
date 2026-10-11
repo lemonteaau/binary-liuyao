@@ -33,6 +33,8 @@ describe('排盘备注校验', () => {
     expect(isReadingRecord({ ...record('A1B2C3'), question: '面试', outcome: '已通过' })).toBe(true)
     expect(isReadingRecord({ ...record('A1B2C3'), question: 42 })).toBe(false)
     expect(isReadingRecord({ ...record('A1B2C3'), outcome: 'x'.repeat(5000) })).toBe(false)
+    expect(isReadingRecord({ ...record('A1B2C3'), interpretation: 'x'.repeat(5000) })).toBe(true)
+    expect(isReadingRecord({ ...record('A1B2C3'), interpretation: 'x'.repeat(5001) })).toBe(false)
   })
 })
 
@@ -54,14 +56,14 @@ describe('历史备份', () => {
   it('合并时本地备注优先，缺失时从备份补齐，并按起卦时间倒序截断', () => {
     const local = [record('AAAAAA', '2026-09-02T10:00:00+08:00', { question: '本地' })]
     const imported = [
-      record('AAAAAA', '2026-09-02T10:00:00+08:00', { question: '备份', outcome: '应验' }),
+      record('AAAAAA', '2026-09-02T10:00:00+08:00', { question: '备份', interpretation: '解读', outcome: '应验' }),
       record('BBBBBB', '2026-09-03T10:00:00+08:00'),
       record('CCCCCC', '2026-09-01T10:00:00+08:00'),
     ]
     const merged = mergeHistory(local, imported, 2)
     expect(merged.added).toBe(2)
     expect(merged.records.map((r) => r.id)).toEqual(['BBBBBB', 'AAAAAA'])
-    expect(merged.records[1]).toMatchObject({ question: '本地', outcome: '应验' })
+    expect(merged.records[1]).toMatchObject({ question: '本地', interpretation: '解读', outcome: '应验' })
   })
 })
 
@@ -156,6 +158,46 @@ describe('历史页', () => {
 
     fireEvent.click(screen.getByText('面试能否通过'))
     expect(screen.getByText('结果页 AAAAAA')).toBeTruthy()
+  })
+
+  it('点「记应验」在条目下方原地展开输入框，自动保存且不离开历史页', () => {
+    const track = vi.fn()
+    vi.stubGlobal('umami', { track })
+    localStorage.setItem(HISTORY_KEY, JSON.stringify([
+      record('AAAAAA', undefined, { outcome: '通过' }),
+      record('BBBBBB', undefined, { interpretation: '应期在申月' }),
+    ]))
+    renderHistory()
+    expect(screen.queryByLabelText('为排盘 AAAAAA 记应验')).toBeNull()
+    expect(screen.getAllByText('有解读')).toHaveLength(1)
+    expect(screen.queryByRole('textbox', { name: '应验记录' })).toBeNull()
+
+    fireEvent.click(screen.getByLabelText('为排盘 BBBBBB 记应验'))
+    const outcome = screen.getByRole('textbox', { name: '应验记录' })
+    expect(document.activeElement).toBe(outcome)
+    expect(screen.queryByText(/结果页/)).toBeNull()
+
+    fireEvent.change(outcome, { target: { value: '申月初果然成了' } })
+    fireEvent.blur(outcome)
+    const stored = JSON.parse(localStorage.getItem(HISTORY_KEY)!) as ReadingRecord[]
+    expect(stored.find((r) => r.id === 'BBBBBB')?.outcome).toBe('申月初果然成了')
+    expect(track).toHaveBeenCalledWith('填写占事记录', { 字段: '应验记录', 位置: '历史页' })
+    expect(screen.getAllByText('已记应验')).toHaveLength(2)
+
+    // 写完仍可收起；收起后不再提供入口，修改走结果页
+    fireEvent.click(screen.getByLabelText('收起排盘 BBBBBB 的应验记录'))
+    expect(screen.queryByRole('textbox', { name: '应验记录' })).toBeNull()
+    expect(screen.queryByLabelText('为排盘 BBBBBB 记应验')).toBeNull()
+    vi.unstubAllGlobals()
+  })
+
+  it('收起时保存尚未写入的草稿', () => {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify([record('AAAAAA')]))
+    renderHistory()
+    fireEvent.click(screen.getByLabelText('为排盘 AAAAAA 记应验'))
+    fireEvent.change(screen.getByRole('textbox', { name: '应验记录' }), { target: { value: '没成' } })
+    fireEvent.click(screen.getByLabelText('收起排盘 AAAAAA 的应验记录'))
+    expect(JSON.parse(localStorage.getItem(HISTORY_KEY)!)[0].outcome).toBe('没成')
   })
 
   it('删除需要二次确认', () => {

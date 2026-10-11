@@ -40,7 +40,7 @@ export function parseHistoryBackup(text: string): HistoryBackupParseResult | nul
   return { records, skipped: list.length - records.length }
 }
 
-/** 同一 ID 以本地记录为准，仅补上本地缺失的占事与应验备注；结果按起卦时间倒序。 */
+/** 同一 ID 以本地记录为准，仅补上本地缺失的所问、解读与应验备注；结果按起卦时间倒序。 */
 export function mergeHistory(
   local: ReadingRecord[],
   imported: ReadingRecord[],
@@ -58,6 +58,7 @@ export function mergeHistory(
     byId.set(record.id, {
       ...existing,
       question: existing.question || record.question,
+      interpretation: existing.interpretation || record.interpretation,
       outcome: existing.outcome || record.outcome,
     })
   }

@@ -2,6 +2,7 @@ import type { Ref } from 'react'
 import { Link } from 'react-router-dom'
 import { CopyButton } from '@/components/CopyButton'
 import { ShareImageButton } from '@/components/ShareImageButton'
+import { noteStatusText } from '@/components/ReadingNotesPanel'
 import type { NoteDraft } from '@/components/ReadingNotesPanel'
 import { READING_QUESTION_MAX_LENGTH } from '@/lib/reading-storage'
 import type { ChartData } from '@/types'
@@ -45,7 +46,7 @@ export function ResultToolbar({
         <div className="result-question-head">
           <label htmlFor="reading-question">所问何事</label>
           <p id="reading-question-hint">只保存在当前浏览器，不会进入分享链接与分享图。</p>
-          <span role="status" aria-live="polite">{question.saved ? '已保存' : '正在保存…'}</span>
+          <span role="status" aria-live="polite">{noteStatusText(question)}</span>
         </div>
         <input
           id="reading-question"

@@ -90,6 +90,15 @@ export function isFreshReading(record: ReadingRecord, now = Date.now()): boolean
   return now - created < FRESH_READING_MS
 }
 
+const EARLIER_READING_MS = 24 * 60 * 60 * 1000
+
+/** 自己在一天多以前排的盘：回看时事情多半已有结果，应验记录值得放到前面。 */
+export function isEarlierReading(record: ReadingRecord, now = Date.now()): boolean {
+  if (record.source === 'share-link' || record.chart.inputMethod === 'link') return false
+  const created = parseGregorianToDate(record.chart.createdAt, record.chart.calendar.utcOffset).getTime()
+  return now - created >= EARLIER_READING_MS
+}
+
 export function milestoneForReading(readingId: string): number | null {
   const { milestone } = loadSupportNudgeState()
   return milestone?.readingId === readingId ? milestone.count : null

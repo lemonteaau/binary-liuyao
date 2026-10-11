@@ -3,7 +3,7 @@ import type { RefObject } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { FullReading } from '@/components/FullReading'
 import { HexLines } from '@/components/HexLines'
-import { ReadingOutcomePanel, useNoteDraft } from '@/components/ReadingNotesPanel'
+import { ReadingInterpretationPanel, ReadingOutcomePanel, useNoteDraft } from '@/components/ReadingNotesPanel'
 import { ResultDock, ResultToolbar } from '@/components/ResultToolbar'
 import { SupportNudge } from '@/components/SupportNudge'
 import { generateChart } from '@/engine'
@@ -14,7 +14,7 @@ import type { HanziSeed } from '@/features/hanzi/derive'
 import { formatRawText } from '@/formatters/rawText'
 import { trackEvent } from '@/lib/analytics'
 import { buildShareUrl, parseShareLink } from '@/lib/share-link'
-import { isFreshReading, milestoneForReading } from '@/lib/support-nudge'
+import { isEarlierReading, isFreshReading, milestoneForReading } from '@/lib/support-nudge'
 import type { ChartData, HexStateInfo, LineValue } from '@/types'
 import { INPUT_METHOD_LABELS_UI, useReading } from '@/store/reading'
 import type { ReadingRecord } from '@/store/reading'
@@ -114,6 +114,8 @@ function ResultView({
   // 起卦序号与里程碑提示只跟随刚完成的新排盘，从历史或分享链接打开时不出现
   const fresh = isFreshReading(record)
   const milestone = fresh ? milestoneForReading(record.id) : null
+  // 回看一天多以前的盘：应验记录紧跟所问，不必滚到页尾
+  const reviewOutcome = isEarlierReading(record)
 
   const output = {
     chart,
@@ -179,9 +181,13 @@ function ResultView({
         onAiInstructionChange={setAiInstruction}
       />
 
+      {reviewOutcome && <ReadingOutcomePanel record={record} review />}
+
       <FullReading chart={chart} rawText={rawText} />
 
-      <ReadingOutcomePanel record={record} />
+      <ReadingInterpretationPanel record={record} />
+
+      {!reviewOutcome && <ReadingOutcomePanel record={record} />}
 
       {record.ordinal !== undefined && (
         <p

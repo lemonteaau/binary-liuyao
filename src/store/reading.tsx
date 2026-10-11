@@ -6,6 +6,7 @@ import { trackDivinationEvent } from '@/lib/analytics'
 import { mergeHistory } from '@/lib/history-backup'
 import {
   isReadingRecord,
+  READING_INTERPRETATION_MAX_LENGTH,
   READING_OUTCOME_MAX_LENGTH,
   READING_QUESTION_MAX_LENGTH,
 } from '@/lib/reading-storage'
@@ -27,11 +28,13 @@ export interface ReadingRecord {
   ordinal?: number | null
   /** 用户记录的所问之事，只保存在本地，不进入分享链接 */
   question?: string
+  /** 用户看盘后写下的解读备忘 */
+  interpretation?: string
   /** 用户事后补记的应验情况 */
   outcome?: string
 }
 
-export type ReadingNotes = Pick<ReadingRecord, 'question' | 'outcome'>
+export type ReadingNotes = Pick<ReadingRecord, 'question' | 'interpretation' | 'outcome'>
 
 export interface CommitReadingOptions {
   fromShareLink?: boolean
@@ -176,6 +179,7 @@ export function ReadingProvider({ children }: { children: ReactNode }) {
         ordinal: shouldClaimCounter ? null : options.ordinal,
         // 再次打开同一分享链接时保留此前写下的备注
         question: previous?.question,
+        interpretation: previous?.interpretation,
         outcome: previous?.outcome,
       }
       setCurrent(record)
@@ -265,6 +269,9 @@ function normalizeNotes(notes: ReadingNotes): ReadingNotes {
   const patch: ReadingNotes = {}
   if ('question' in notes) {
     patch.question = notes.question?.slice(0, READING_QUESTION_MAX_LENGTH) || undefined
+  }
+  if ('interpretation' in notes) {
+    patch.interpretation = notes.interpretation?.slice(0, READING_INTERPRETATION_MAX_LENGTH) || undefined
   }
   if ('outcome' in notes) {
     patch.outcome = notes.outcome?.slice(0, READING_OUTCOME_MAX_LENGTH) || undefined
