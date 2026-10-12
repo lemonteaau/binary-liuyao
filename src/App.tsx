@@ -7,6 +7,7 @@ import { BootSequence, useBootOnce } from '@/components/BootSequence'
 import { FeedbackInvitation } from '@/components/FeedbackInvitation'
 import { HomepageGuide } from '@/components/HomepageGuide'
 import { LegacyRouteRedirect } from '@/components/LegacyRouteRedirect'
+import { APP_VERSION } from '@/lib/app-version'
 import { recordSupportClick } from '@/lib/support-nudge'
 import { updatePageMetadata } from '@/lib/seo'
 import { GeneratorPage } from '@/pages/GeneratorPage'
@@ -151,6 +152,7 @@ export function Shell() {
               </a>
               <Link to="/gua" className="text-fog no-underline transition-colors hover:text-signal">六十四卦</Link>
             </div>
+            <span className="text-fog/60 tabular-nums">{`v${APP_VERSION}`}</span>
           </footer>
         </div>
       </div>

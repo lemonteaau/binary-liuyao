@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { APP_VERSION } from '../src/lib/app-version'
 import { renderPublicPage } from '../src/prerender'
 
 describe('public HTML without a browser', () => {
@@ -16,6 +17,14 @@ describe('public HTML without a browser', () => {
     expect(html).toMatch(/<h2[^>]*>免费在线六爻排盘<\/h2>/)
     expect(html).toContain('<summary>起卦内容会上传到服务器吗？</summary>')
     expect(html).toContain('href="/about?support=1"')
+  })
+
+  it('shows the a.b.c release number in the footer of every page', () => {
+    expect(APP_VERSION).toMatch(/^\d+\.\d+\.\d+$/)
+    for (const path of ['/', '/about', '/gua']) {
+      const footer = renderPublicPage(path).match(/<footer[\s\S]*<\/footer>/)?.[0]
+      expect(footer).toContain(`>v${APP_VERSION}<`)
+    }
   })
 
   it('keeps product details and the guide in their existing public pages', () => {
