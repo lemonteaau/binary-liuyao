@@ -7,6 +7,7 @@
 import { BRANCHES, TRIGRAMS } from '@/data/trigrams'
 import type { TrigramKey } from '@/data/trigrams'
 import { clamp01 } from '@/features/coin-shake/choreography'
+import { sound } from '@/features/sound'
 import {
   COIN_LIGHT,
   EMBER,
@@ -300,6 +301,7 @@ export class DialScene implements StageScene {
       if (speed > 17) return
       this.tick = 1
       this.trauma = Math.min(1, this.trauma + 0.025)
+      sound.dialTick(sector)
       const pointer = this.windowPoint(ring === 0 ? 1.02 : 0.69)
       this.fx.burst(pointer.x, pointer.y, {
         count: 2,
@@ -316,6 +318,7 @@ export class DialScene implements StageScene {
     while (run.resolved < 2 && t >= plan.resolves[run.resolved]!) {
       const ring = run.resolved++
       this.lockRing(ring)
+      sound.dialLock(ring)
       run.events.onResolve?.(ring)
     }
 
@@ -328,6 +331,7 @@ export class DialScene implements StageScene {
         const point = this.windowPoint(windowLineRadius(this.layout, line) / R)
         this.tick = 1
         this.trauma = Math.min(1, this.trauma + 0.02)
+        sound.dialCount(line)
         this.fx.burst(point.x - this.layout.bar.length * 0.72, point.y, {
           count: 2,
           speed: [R * 0.4, R * 1],
@@ -363,6 +367,7 @@ export class DialScene implements StageScene {
         this.trauma = Math.min(1, this.trauma + 0.28)
         this.zoom.velocity += 0.5
         this.hitStop = 0.05
+        sound.dialLock(2)
         run.events.onResolve?.(2)
       }
     }
@@ -418,6 +423,7 @@ export class DialScene implements StageScene {
     this.outerRest.velocity = 0
     this.innerRest.velocity = 0
     if (withFx && this.motion) {
+      sound.formed('derive')
       this.flash = 0.8
       this.fx.pulse(this.layout.center.x, this.layout.center.y, {
         from: this.layout.radius * 0.3,

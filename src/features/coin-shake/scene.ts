@@ -42,6 +42,7 @@ import {
   wobble,
 } from '@/features/stage/fx'
 import type { RGB, Spring } from '@/features/stage/fx'
+import { sound } from '@/features/sound'
 import { COIN_RATIO, HOLE_RATIO } from './sprites'
 import type { CoinSprites } from './sprites'
 
@@ -311,6 +312,7 @@ export class CoinScene {
     this.mode = 'tossing'
     this.tossClock = 0
     this.tossEvents = events
+    sound.coinToss()
     this.speedRamp = 0.045 + 0.24
     // 顿帧 + 闪光 + 冲击波：松手的一瞬
     this.hitStop = 0.075
@@ -350,6 +352,7 @@ export class CoinScene {
   /** 跳过尚未结束的抛掷，立即落定并触发全部回调 */
   skip() {
     if (this.mode !== 'tossing') return
+    sound.silence()
     this.hitStop = 0
     this.coins.forEach((body, index) => {
       if (!body.settled) this.settle(index, false)
@@ -363,6 +366,7 @@ export class CoinScene {
     this.motion = motionEnabled()
     this.endShimmer()
     this.tossEvents = null
+    sound.silence()
     this.dim.target = 0
     const R = this.layout.radius
     if (!this.motion) {
@@ -555,7 +559,10 @@ export class CoinScene {
       phiS: plan?.start.phiS ?? body.pose.phiS,
     }
     this.placeAtRest(body, index)
-    if (withFx) this.clack(body)
+    if (withFx) {
+      this.clack(body)
+      sound.coinSettle(index)
+    }
     this.tossEvents?.onSettle?.(index, body.face)
   }
 
@@ -611,6 +618,7 @@ export class CoinScene {
       })
     }
     this.trauma = Math.min(1, this.trauma + 0.07)
+    sound.coinClink()
   }
 
   private closestPair(): [CoinBody, CoinBody] {
@@ -806,8 +814,12 @@ export class CoinScene {
         body.impactIndex < plan.impacts.length
         && this.tossClock >= plan.impacts[body.impactIndex]!.time
       ) {
-        this.impact(body, body.impactIndex, plan.impacts[body.impactIndex]!.speed)
+        const { speed } = plan.impacts[body.impactIndex]!
+        this.impact(body, body.impactIndex, speed)
+        sound.coinImpact(index, body.impactIndex, clamp(speed / (this.layout.radius * 18), 0.12, 1))
         body.impactIndex++
+        // 最后一次触地后进入欧拉盘式的打转，直到平躺
+        if (body.impactIndex === plan.impacts.length) sound.coinWobble(index, plan.settleTime - this.tossClock)
       }
       if (this.tossClock >= plan.settleTime) this.settle(index)
       else allSettled = false

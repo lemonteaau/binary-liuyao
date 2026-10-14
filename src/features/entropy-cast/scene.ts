@@ -22,6 +22,7 @@ import {
   stepSpring,
 } from '@/features/stage/fx'
 import type { StageCamera } from '@/features/stage/fx'
+import { sound } from '@/features/sound'
 import { motionEnabled } from '@/lib/motion'
 import type { StageScene, StageSize } from '@/components/useSceneStage'
 import { CONDENSE_TIME, entropyLayout, entropySchedule } from './schedule'
@@ -49,6 +50,8 @@ interface Run {
   reported: number
   /** 已放出收拢线的行数 */
   gathered: number
+  /** 已取定并出声的随机位数 */
+  bits: number
   done: boolean
 }
 
@@ -132,6 +135,7 @@ export class EntropyScene implements StageScene {
       schedule: entropySchedule(),
       events,
       reported: 0,
+      bits: 0,
       gathered: 0,
       done: false,
     }
@@ -360,6 +364,11 @@ export class EntropyScene implements StageScene {
       }
     }
 
+    while (run.bits < 18 && t >= rows[Math.floor(run.bits / 3)]!.bits[run.bits % 3]!) {
+      run.bits++
+      sound.bit()
+    }
+
     while (run.reported < 6 && t >= rows[run.reported]!.bar) {
       const line = run.reported++
       const value = scoreCoinToss(run.tosses[line]!)
@@ -388,6 +397,7 @@ export class EntropyScene implements StageScene {
         })
       }
       this.trauma = Math.min(1, this.trauma + 0.11)
+      sound.entropyLine(line)
       run.events.onLine?.(line)
     }
 
@@ -400,6 +410,7 @@ export class EntropyScene implements StageScene {
     this.shift.target = 1
     if (this.motion) {
       const { block, cell } = this.layout
+      sound.formed('entropy')
       this.flash = 1
       this.trauma = Math.min(1, this.trauma + 0.3)
       this.zoom.velocity += 0.7

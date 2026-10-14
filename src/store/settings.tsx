@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import type { ReactNode } from 'react'
 import { detectTimezone } from '@/calendar/solar-lunar'
 import { DEFAULT_AI_INSTRUCTION } from '@/formatters/rawText'
+import { setSoundEnabled } from '@/features/sound'
 
 export type FontSize = 'small' | 'standard' | 'large'
 export type Typeface = 'pixel' | 'clear'
@@ -21,6 +22,8 @@ export interface Settings {
   includeQuestion: boolean
   animation: boolean
   screenFx: boolean
+  /** 起卦音效，默认关闭 */
+  sound: boolean
 }
 
 const STORAGE_KEY = 'hex64.settings.v1'
@@ -36,6 +39,7 @@ function loadSettings(): Settings {
     includeQuestion: false,
     animation: true,
     screenFx: true,
+    sound: false,
   }
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -66,6 +70,7 @@ function loadSettings(): Settings {
       includeQuestion: typeof stored.includeQuestion === 'boolean' ? stored.includeQuestion : defaults.includeQuestion,
       animation: typeof stored.animation === 'boolean' ? stored.animation : defaults.animation,
       screenFx: typeof stored.screenFx === 'boolean' ? stored.screenFx : defaults.screenFx,
+      sound: typeof stored.sound === 'boolean' ? stored.sound : defaults.sound,
     }
   } catch {
     return defaults
@@ -93,6 +98,7 @@ interface SettingsContextValue {
   setIncludeQuestion: (on: boolean) => void
   setAnimation: (on: boolean) => void
   setScreenFx: (on: boolean) => void
+  setSound: (on: boolean) => void
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null)
@@ -128,6 +134,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     document.documentElement.dataset.motion = settings.animation ? 'on' : 'off'
     document.documentElement.dataset.screenFx = settings.screenFx ? 'on' : 'off'
   }, [settings.animation, settings.fontSize, settings.screenFx, settings.typeface])
+
+  useEffect(() => {
+    setSoundEnabled(settings.sound)
+  }, [settings.sound])
 
   const update = useCallback((patch: Partial<Settings>) => {
     const next = { ...settingsRef.current, ...patch }
@@ -166,6 +176,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   )
   const setAnimation = useCallback((animation: boolean) => update({ animation }), [update])
   const setScreenFx = useCallback((screenFx: boolean) => update({ screenFx }), [update])
+  const setSound = useCallback((sound: boolean) => update({ sound }), [update])
 
   const value = useMemo<SettingsContextValue>(
     () => ({
@@ -181,6 +192,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setIncludeQuestion,
       setAnimation,
       setScreenFx,
+      setSound,
     }),
     [
       settings,
@@ -195,6 +207,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setIncludeQuestion,
       setAnimation,
       setScreenFx,
+      setSound,
     ],
   )
   const displayValue = useMemo<DisplaySettingsContextValue>(

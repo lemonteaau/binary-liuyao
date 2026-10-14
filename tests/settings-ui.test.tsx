@@ -156,6 +156,46 @@ describe('正文字体设置', () => {
   })
 })
 
+describe('音效设置', () => {
+  it('默认关闭，旧版设置缺少该项时也保持关闭', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ timezone: 'UTC', animation: true }))
+
+    render(
+      <SettingsProvider>
+        <MemoryRouter><SettingsPage /></MemoryRouter>
+      </SettingsProvider>,
+    )
+
+    const controls = screen.getByRole('group', { name: '音效开关' })
+    expect(within(controls).getByRole('button', { name: '关' }).getAttribute('aria-pressed')).toBe('true')
+  })
+
+  it('打开后持久化，并在重新挂载时恢复', async () => {
+    const firstRender = render(
+      <SettingsProvider>
+        <MemoryRouter><SettingsPage /></MemoryRouter>
+      </SettingsProvider>,
+    )
+
+    // jsdom 没有 Web Audio，打开音效也不应报错
+    fireEvent.click(within(screen.getByRole('group', { name: '音效开关' })).getByRole('button', { name: '开' }))
+    await waitFor(() => {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}') as { sound?: boolean }
+      expect(stored.sound).toBe(true)
+    })
+
+    firstRender.unmount()
+    render(
+      <SettingsProvider>
+        <MemoryRouter><SettingsPage /></MemoryRouter>
+      </SettingsProvider>,
+    )
+
+    const controls = screen.getByRole('group', { name: '音效开关' })
+    expect(within(controls).getByRole('button', { name: '开' }).getAttribute('aria-pressed')).toBe('true')
+  })
+})
+
 describe('AI 指令设置', () => {
   it('旧版设置自动补上默认提示词', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ aiInstruction: true }))

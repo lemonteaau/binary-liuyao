@@ -1,6 +1,7 @@
 import { memo } from 'react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { enableSoundNow } from '@/features/sound'
 import { RAW_TEXT_SOURCE_LINE } from '@/formatters/rawText'
 import { formatTimezone, timezoneOptionLabel } from '@/lib/timezone-display'
 import { useSettings } from '@/store/settings'
@@ -83,6 +84,7 @@ export function SettingsPage() {
     setIncludeQuestion,
     setAnimation,
     setScreenFx,
+    setSound,
   } = useSettings()
   const timezoneData = getTimezoneCatalog()
 
@@ -154,6 +156,25 @@ export function SettingsPage() {
               开
             </ToggleBtn>
             <ToggleBtn active={!settings.screenFx} onClick={() => setScreenFx(false)}>
+              关
+            </ToggleBtn>
+          </div>
+        </SettingRow>
+        <SettingRow
+          title="音效"
+          description="铜钱落桌、罗盘转动、电脑取数与成卦时的声音。默认关闭。"
+        >
+          <div className="flex shrink-0 gap-1" role="group" aria-label="音效开关">
+            <ToggleBtn
+              active={settings.sound}
+              onClick={() => {
+                setSound(true)
+                enableSoundNow()
+              }}
+            >
+              开
+            </ToggleBtn>
+            <ToggleBtn active={!settings.sound} onClick={() => setSound(false)}>
               关
             </ToggleBtn>
           </div>

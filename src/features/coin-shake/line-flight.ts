@@ -7,7 +7,7 @@ export interface LineFlight {
   cancel(): void
 }
 
-const DURATION = 620
+export const LINE_FLIGHT_MS = 620
 const TRAILS = [
   { delay: 36, opacity: 0.42 },
   { delay: 72, opacity: 0.18 },
@@ -80,7 +80,7 @@ export function flyLine(
     const trail = TRAILS[index - 1]
     return ghost.animate(
       trail ? keyframes.map((frame) => ({ ...frame, opacity: Number(frame.opacity) * trail.opacity })) : keyframes,
-      { duration: DURATION, delay: trail?.delay ?? 0, easing: 'linear', fill: 'both' },
+      { duration: LINE_FLIGHT_MS, delay: trail?.delay ?? 0, easing: 'linear', fill: 'both' },
     )
   })
   const cleanup = () => ghosts.forEach((ghost) => ghost.remove())

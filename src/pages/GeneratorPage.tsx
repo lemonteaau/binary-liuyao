@@ -50,7 +50,8 @@ import {
   createCoinShakeState,
 } from '@/features/coin-shake/model'
 import type { CoinShakeAction, CoinShakeState, CompleteRawLines } from '@/features/coin-shake/model'
-import { flyLine } from '@/features/coin-shake/line-flight'
+import { LINE_FLIGHT_MS, flyLine } from '@/features/coin-shake/line-flight'
+import { sound } from '@/features/sound'
 import type { LineFlight } from '@/features/coin-shake/line-flight'
 import type { HanziDerivation } from '@/features/hanzi/derive'
 import { trackDivinationEvent, trackEvent } from '@/lib/analytics'
@@ -158,6 +159,7 @@ export function GeneratorPage() {
   useEffect(() => () => shiftAnimationRef.current?.cancel(), [])
 
   const selectMode = (nextMode: InputMethod) => {
+    sound.tap()
     if (!mode && motionEnabled()) {
       previousHeadingTopRef.current = generatorHeadingRef.current?.getBoundingClientRect().top ?? null
     }
@@ -371,6 +373,7 @@ function EntropyPanel() {
       return
     }
     trackDivinationEvent('点击生成排盘', 'entropy')
+    sound.tap()
     const tosses = [tossCoins(), tossCoins(), tossCoins(), tossCoins(), tossCoins(), tossCoins()]
     const next: EntropyCast = { lines: tosses.map(scoreCoinToss) as RawLines, when: new Date() }
     const playing = settings.animation && motionEnabled() && stageRef.current?.cast(tosses, {
@@ -392,6 +395,7 @@ function EntropyPanel() {
       timezone: resolvedTimezone,
     })
     commitReading(chart, lines)
+    sound.transition()
     navigate('/result')
   }
 
@@ -539,9 +543,13 @@ function CoinShakePanel({
         return
       }
       flightRef.current = flight
+      sound.lineFly(LINE_FLIGHT_MS / 1000)
       flight.arrived.then(
         () => {
-          if (flightRef.current === flight) arrive(lineIndex)
+          if (flightRef.current !== flight) return
+          sound.lineLand(lineIndex)
+          if (lineIndex === 5) sound.formed('coin')
+          arrive(lineIndex)
         },
         () => undefined,
       )
@@ -558,6 +566,7 @@ function CoinShakePanel({
     if (complete) {
       if (!completeLines) return
       trackDivinationEvent('点击生成排盘', 'coin')
+      sound.transition()
       const chart = generateChart({
         inputMethod: 'coin',
         rawLines: completeLines,
@@ -593,6 +602,7 @@ function CoinShakePanel({
       return
     }
     flushReveal()
+    sound.tap()
     if (state.lines.length === 0) {
       trackEvent('开始摇币起卦')
     }
@@ -1108,6 +1118,7 @@ function GenerateButton({ rawLines, method }: { rawLines: RawLines; method: Inpu
       timezone: resolvedTimezone,
     })
     commitReading(chart, rawLines)
+    sound.transition()
     navigate('/result')
   }
 
@@ -1406,6 +1417,7 @@ function DeriveCast({
     }
     const next = prepare()
     if (!next) return
+    sound.tap()
     const playing = animated && stageRef.current?.cast(next.script, {
       onStep: (index) => setStep(index),
       onResolve: (index) => setResolved(index + 1),
@@ -1428,6 +1440,7 @@ function DeriveCast({
       timezone: resolvedTimezone,
     })
     commitReading(chart, script.rawLines, { hanziSeed })
+    sound.transition()
     navigate('/result')
   }
 
