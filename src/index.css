@@ -84,6 +84,11 @@ body {
   color: var(--color-ink);
 }
 
+/* 摇卦要连点：关掉移动端双击缩放，保留双指缩放。touch-action 不继承，所以挂在 * 上 */
+* {
+  touch-action: manipulation;
+}
+
 *:focus-visible {
   outline: 1px solid var(--color-signal);
   outline-offset: 2px;
