@@ -4,12 +4,14 @@ import { defineConfig } from 'vite'
 import type { Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { RELEASE_NOTES } from './src/lib/release-notes'
 
 // The a.b.c release number from package.json. Tabs left open are only asked to
 // refresh when a or b moves, so bump those for releases worth interrupting for.
 const appVersion = (
   JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string }
 ).version
+const appRelease = appVersion.split('.').slice(0, 2).join('.')
 // Identifies the deployment itself, to explain a lazy chunk that went missing.
 const appBuild = process.env.CF_PAGES_COMMIT_SHA?.slice(0, 12) ?? Date.now().toString(36)
 
@@ -21,7 +23,7 @@ function versionManifest(): Plugin {
       this.emitFile({
         type: 'asset',
         fileName: 'version.json',
-        source: JSON.stringify({ version: appVersion, build: appBuild }),
+        source: JSON.stringify({ version: appVersion, build: appBuild, notes: RELEASE_NOTES[appRelease] }),
       })
     },
   }

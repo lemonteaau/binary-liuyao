@@ -32,13 +32,13 @@ afterEach(() => {
 
 function Harness() {
   const update = useAppUpdate()
-  return update.available ? <UpdateNotice onDismiss={update.dismiss} /> : null
+  return update.available ? <UpdateNotice notes={update.notes} onDismiss={update.dismiss} /> : null
 }
 
-function stubLatestVersion(version: unknown, build: unknown = 'build-b') {
+function stubLatestVersion(version: unknown, build: unknown = 'build-b', notes?: unknown) {
   const fetchMock = vi.fn().mockImplementation(async () => ({
     ok: true,
-    json: async () => ({ version, build }),
+    json: async () => ({ version, build, notes }),
   }))
   vi.stubGlobal('fetch', fetchMock)
   return fetchMock
@@ -86,6 +86,17 @@ describe('读取线上版本', () => {
     expect(await fetchLatestVersion()).toBeNull()
   })
 
+  it('带上该版本的更新说明，空白或不是文字时忽略', async () => {
+    stubLatestVersion('1.3.0', 'build-b', ' 新功能：起卦音效 ')
+    expect(await fetchLatestVersion()).toEqual({ version: '1.3.0', build: 'build-b', notes: '新功能：起卦音效' })
+
+    stubLatestVersion('1.3.0', 'build-b', '   ')
+    expect((await fetchLatestVersion())?.notes).toBeUndefined()
+
+    stubLatestVersion('1.3.0', 'build-b', ['新功能'])
+    expect((await fetchLatestVersion())?.notes).toBeUndefined()
+  })
+
   it('只取版本号的 a.b 作为是否提示的依据', () => {
     expect(releaseOf('1.2.3')).toBe('1.2')
     expect(releaseOf('1.2.10')).toBe(releaseOf('1.2.3'))
@@ -95,6 +106,16 @@ describe('读取线上版本', () => {
 })
 
 describe('新版本提示', () => {
+  it('提示里显示线上版本的更新说明', async () => {
+    stubLatestVersion(NEXT_MINOR, 'build-b', '新功能：起卦音效，默认关闭，可在「设置」中开启。')
+    render(<Harness />)
+
+    returnToTab()
+
+    expect(await screen.findByText(TITLE)).toBeTruthy()
+    expect(screen.getByText('新功能：起卦音效，默认关闭，可在「设置」中开启。')).toBeTruthy()
+  })
+
   it.each([NEXT_MINOR, NEXT_MAJOR])('回到旧标签页时发现 a.b 变了（%s）并提示刷新', async (version) => {
     const fetchMock = stubLatestVersion(version)
     render(<Harness />)

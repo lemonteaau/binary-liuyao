@@ -158,7 +158,7 @@ export function Shell() {
       </div>
       {/* 三种提示共用右下角位置，新版本提示优先 */}
       {update.available ? (
-        <UpdateNotice onDismiss={update.dismiss} />
+        <UpdateNotice notes={update.notes} onDismiss={update.dismiss} />
       ) : (
         <BookmarkInvitation
           onDismiss={deferFeedbackInvitation}

@@ -6,7 +6,8 @@ export const APP_VERSION = __APP_VERSION__
 /** 当前标签页加载的那一次构建；每次部署都不同。 */
 export const APP_BUILD = __APP_BUILD__
 
-export type DeployedVersion = { version: string; build: string }
+/** notes 是该 a.b 版本的更新说明，见 release-notes.ts */
+export type DeployedVersion = { version: string; build: string; notes?: string }
 
 /** 版本号里的 a.b；只有它变了才值得打断用户，c 位的小更新不提示。 */
 export function releaseOf(version: string): string {
@@ -21,10 +22,12 @@ export async function fetchLatestVersion(signal?: AbortSignal): Promise<Deployed
       signal,
     })
     if (!response.ok) return null
-    const data = (await response.json()) as { version?: unknown; build?: unknown } | null
+    const data = (await response.json()) as { version?: unknown; build?: unknown; notes?: unknown } | null
     if (typeof data?.version !== 'string' || !data.version) return null
     if (typeof data.build !== 'string' || !data.build) return null
-    return { version: data.version, build: data.build }
+    const latest: DeployedVersion = { version: data.version, build: data.build }
+    if (typeof data.notes === 'string' && data.notes.trim()) latest.notes = data.notes.trim()
+    return latest
   } catch {
     return null
   }

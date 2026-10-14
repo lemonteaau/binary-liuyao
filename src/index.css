@@ -1367,6 +1367,13 @@ html[data-screen-fx="off"] .chroma {
   text-transform: uppercase;
 }
 
+/* 新版本提示里的更新说明：从线上 version.json 读取 */
+.feedback-invitation > .update-notice-notes {
+  border-left: 2px solid var(--color-signal);
+  padding-left: 0.6rem;
+  color: var(--color-ink);
+}
+
 .bookmark-invitation kbd,
 .bookmark-help kbd {
   display: inline-block;

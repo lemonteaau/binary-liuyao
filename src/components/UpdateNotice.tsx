@@ -14,8 +14,9 @@ export const UPDATE_CHECK_MIN_GAP_MS = 60_000
  * 回到标签页或定时比对线上版本号，a.b 变了才提示刷新，c 位的小更新不打扰；
  * 分块加载失败说明功能已经受影响，只要线上换过构建就立即提示。
  */
-export function useAppUpdate(): { available: boolean; dismiss: () => void } {
+export function useAppUpdate(): { available: boolean; notes: string | null; dismiss: () => void } {
   const [available, setAvailable] = useState(false)
+  const [notes, setNotes] = useState<string | null>(null)
   const latestRelease = useRef<string | null>(null)
   const dismissedRelease = useRef<string | null>(null)
 
@@ -37,6 +38,7 @@ export function useAppUpdate(): { available: boolean; dismiss: () => void } {
       if (!latest) return
       const release = releaseOf(latest.version)
       latestRelease.current = release
+      setNotes(latest.notes ?? null)
       if (urgent) {
         if (latest.build !== APP_BUILD) setAvailable(true)
       } else if (release !== releaseOf(APP_VERSION) && release !== dismissedRelease.current) {
@@ -72,10 +74,10 @@ export function useAppUpdate(): { available: boolean; dismiss: () => void } {
     setAvailable(false)
   }, [])
 
-  return { available, dismiss }
+  return { available, notes, dismiss }
 }
 
-export function UpdateNotice({ onDismiss }: { onDismiss: () => void }) {
+export function UpdateNotice({ notes, onDismiss }: { notes?: string | null; onDismiss: () => void }) {
   function reload() {
     trackEvent('点击刷新新版本')
     window.location.reload()
@@ -101,6 +103,7 @@ export function UpdateNotice({ onDismiss }: { onDismiss: () => void }) {
         系统更新
       </p>
       <h2 id="update-notice-title">HEX//64 有新版本</h2>
+      {notes && <p className="update-notice-notes">{notes}</p>}
       <p>刷新页面即可使用最新版本；已生成的排盘和记录保存在本机，不受影响。</p>
       <div className="feedback-invitation-actions">
         <button type="button" className="feedback-invitation-later" onClick={onDismiss}>
