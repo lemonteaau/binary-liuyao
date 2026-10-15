@@ -19,6 +19,7 @@ interface ChartOutputProps {
 export function ResultToolbar({
   ref,
   question,
+  questionReadOnly = false,
   getShareUrl,
   onEdit,
   onStartOver,
@@ -30,6 +31,7 @@ export function ResultToolbar({
 }: ChartOutputProps & {
   ref?: Ref<HTMLElement>
   question: NoteDraft
+  questionReadOnly?: boolean
   getShareUrl: () => string
   onEdit: () => void
   onStartOver: () => void
@@ -39,27 +41,36 @@ export function ResultToolbar({
   onAiInstructionChange: (on: boolean) => void
 }) {
   return (
-    <section ref={ref} className="result-toolbar panel mt-4" aria-label="所问与操作">
+    <section ref={ref} className={`result-toolbar panel mt-4${questionReadOnly ? ' is-shared' : ''}`} aria-label="所问与操作">
       <span className="panel-tag">所问 // 操作</span>
 
-      <div className="result-question">
-        <div className="result-question-head">
-          <label htmlFor="reading-question">所问何事</label>
-          <p id="reading-question-hint">保存在当前浏览器；勾选下方「所问」后，复制排盘与复制链接都会带上。</p>
-          <span role="status" aria-live="polite">{noteStatusText(question)}</span>
+      {questionReadOnly ? (
+        <section className="result-shared-question" aria-labelledby="shared-question-title">
+          <h2 id="shared-question-title">所问何事</h2>
+          <p className={question.value.trim() ? undefined : 'text-fog'}>
+            {question.value.trim() || '未附上所问之事'}
+          </p>
+        </section>
+      ) : (
+        <div className="result-question">
+          <div className="result-question-head">
+            <label htmlFor="reading-question">所问何事</label>
+            <p id="reading-question-hint">保存在当前浏览器；勾选下方「所问」后，复制排盘与复制链接都会带上。</p>
+            <span role="status" aria-live="polite">{noteStatusText(question)}</span>
+          </div>
+          <input
+            id="reading-question"
+            type="text"
+            value={question.value}
+            maxLength={READING_QUESTION_MAX_LENGTH}
+            onChange={(event) => question.change(event.target.value)}
+            onBlur={question.flush}
+            placeholder="例如：这次面试能否通过"
+            autoComplete="off"
+            aria-describedby="reading-question-hint"
+          />
         </div>
-        <input
-          id="reading-question"
-          type="text"
-          value={question.value}
-          maxLength={READING_QUESTION_MAX_LENGTH}
-          onChange={(event) => question.change(event.target.value)}
-          onBlur={question.flush}
-          placeholder="例如：这次面试能否通过"
-          autoComplete="off"
-          aria-describedby="reading-question-hint"
-        />
-      </div>
+      )}
 
       <div className="result-actions">
         <div className="result-actions-primary">

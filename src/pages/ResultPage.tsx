@@ -187,6 +187,7 @@ function ResultView({
         ref={toolbarRef}
         {...output}
         question={question}
+        questionReadOnly={isLinkMode || record.source === 'share-link'}
         getShareUrl={shareUrl}
         onEdit={() => navigate('/', { state: { editRawLines: record.rawLines } })}
         onStartOver={startOver}

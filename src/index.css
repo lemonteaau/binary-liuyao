@@ -3207,7 +3207,8 @@ html[data-motion="off"] :is(.coin-console, .coin-record) :is(*, *::before, *::af
   gap: 0.25rem 0.75rem;
 }
 
-.result-question-head label {
+.result-question-head label,
+.result-shared-question h2 {
   color: var(--color-ink);
   font-size: 0.9375rem;
   letter-spacing: 0.12em;
@@ -3247,6 +3248,20 @@ html[data-motion="off"] :is(.coin-console, .coin-record) :is(*, *::before, *::af
 .result-question input:focus {
   border-color: var(--color-signal);
   outline: none;
+}
+
+.result-shared-question {
+  min-width: 0;
+  border-bottom: 1px solid var(--color-edge);
+  padding-bottom: 0.9rem;
+}
+
+.result-shared-question p {
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .result-actions {
@@ -3359,6 +3374,17 @@ html[data-motion="off"] :is(.coin-console, .coin-record) :is(*, *::before, *::af
   .result-question,
   .result-actions {
     display: contents;
+  }
+
+  .result-toolbar.is-shared {
+    grid-template-areas:
+      "question question"
+      "primary secondary"
+      "options options";
+  }
+
+  .result-shared-question {
+    grid-area: question;
   }
 
   .result-question-head {

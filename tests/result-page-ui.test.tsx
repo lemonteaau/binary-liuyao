@@ -264,8 +264,9 @@ describe('结果页布局', () => {
     view.unmount()
     localStorage.clear()
     renderResult(`/result${shared.hash}`)
-    const question = await screen.findByLabelText('所问何事') as HTMLInputElement
-    expect(question.value).toBe('面试能否通过')
+    const question = await screen.findByRole('region', { name: '所问何事' })
+    expect(question.textContent).toContain('面试能否通过')
+    expect(screen.queryByRole('textbox', { name: '所问何事' })).toBeNull()
     expect(screen.getByText('来自分享链接')).toBeTruthy()
   })
 
@@ -277,12 +278,12 @@ describe('结果页布局', () => {
     }))
     localStorage.setItem(CURRENT_KEY, JSON.stringify({ ...record, source: 'share-link' }))
     const view = renderResult(`/result${shared.hash}`)
-    expect((await screen.findByLabelText('所问何事') as HTMLInputElement).value).toBe('面试能否通过')
+    expect((await screen.findByRole('region', { name: '所问何事' })).textContent).toContain('面试能否通过')
 
     view.unmount()
     localStorage.setItem(CURRENT_KEY, JSON.stringify({ ...record, source: 'share-link', question: '我自己的问法' }))
     renderResult(`/result${shared.hash}`)
-    expect((await screen.findByLabelText('所问何事') as HTMLInputElement).value).toBe('我自己的问法')
+    expect((await screen.findByRole('region', { name: '所问何事' })).textContent).toContain('我自己的问法')
   })
 
   it('在结果页取消 AI 指令会同步到设置', () => {
