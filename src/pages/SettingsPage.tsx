@@ -243,7 +243,7 @@ export function SettingsPage() {
           </SettingRow>
           <SettingRow
             title="附上所问之事"
-            description="复制排盘时带上结果页填写的「所问何事」。提示词以冒号结尾时接在冒号后，否则放在排盘第一行。"
+            description="复制排盘与复制链接时带上结果页填写的「所问何事」。提示词以冒号结尾时接在冒号后，否则放在排盘第一行；对方打开链接也能看到所问。"
           >
             <div className="flex shrink-0 gap-1" role="group" aria-label="附上所问之事开关">
               <ToggleBtn active={settings.includeQuestion} onClick={() => setIncludeQuestion(true)}>

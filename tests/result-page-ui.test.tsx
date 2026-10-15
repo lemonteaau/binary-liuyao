@@ -5,6 +5,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { generateChart } from '@/engine'
 import { formatRawText } from '@/formatters/rawText'
+import { buildShareUrl } from '@/lib/share-link'
 import { ResultPage } from '@/pages/ResultPage'
 import { ReadingProvider } from '@/store/reading'
 import type { ReadingRecord } from '@/store/reading'
@@ -38,11 +39,11 @@ function storeReading(rawLines: ReadingRecord['rawLines'], notes: Partial<Readin
   return record
 }
 
-function renderResult() {
+function renderResult(entry = '/result') {
   return render(
     <SettingsProvider>
       <ReadingProvider>
-        <MemoryRouter initialEntries={['/result']}>
+        <MemoryRouter initialEntries={[entry]}>
           <Routes>
             <Route path="/result" element={<ResultPage />} />
           </Routes>
@@ -241,6 +242,47 @@ describe('结果页布局', () => {
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(2))
     expect(writeText.mock.calls[1]![0]).toMatch(new RegExp(`${PROMPT}面试能否通过$`))
     expect(track).toHaveBeenLastCalledWith('成功复制排盘', { 是否包含AI指令: true, 是否包含所问: true })
+  })
+
+  it('复制链接跟随「所问」勾选，对方打开链接能看到所问', async () => {
+    storeReading([6, 9, 8, 8, 7, 8], { question: '面试能否通过' })
+    const writeText = mockClipboard()
+    const view = renderResult()
+
+    const copyLink = screen.getByRole('button', { name: '复制链接' })
+    fireEvent.click(copyLink)
+    await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1))
+    expect(new URL(writeText.mock.calls[0]![0]).hash).not.toContain('q=')
+
+    fireEvent.click(screen.getByRole('checkbox', { name: '所问' }))
+    fireEvent.click(copyLink)
+    await waitFor(() => expect(writeText).toHaveBeenCalledTimes(2))
+    const shared = new URL(writeText.mock.calls[1]![0])
+    expect(shared.search).toBe('')
+
+    // 换一台没有这条记录的设备打开
+    view.unmount()
+    localStorage.clear()
+    renderResult(`/result${shared.hash}`)
+    const question = await screen.findByLabelText('所问何事') as HTMLInputElement
+    expect(question.value).toBe('面试能否通过')
+    expect(screen.getByText('来自分享链接')).toBeTruthy()
+  })
+
+  it('链接里的所问不覆盖本地已写的所问，但会补上空缺', async () => {
+    const record = storeReading([6, 9, 8, 8, 7, 8])
+    const shared = new URL(buildShareUrl(record.chart, 'https://example.com/', {
+      readingId: record.id,
+      question: '面试能否通过',
+    }))
+    localStorage.setItem(CURRENT_KEY, JSON.stringify({ ...record, source: 'share-link' }))
+    const view = renderResult(`/result${shared.hash}`)
+    expect((await screen.findByLabelText('所问何事') as HTMLInputElement).value).toBe('面试能否通过')
+
+    view.unmount()
+    localStorage.setItem(CURRENT_KEY, JSON.stringify({ ...record, source: 'share-link', question: '我自己的问法' }))
+    renderResult(`/result${shared.hash}`)
+    expect((await screen.findByLabelText('所问何事') as HTMLInputElement).value).toBe('我自己的问法')
   })
 
   it('在结果页取消 AI 指令会同步到设置', () => {

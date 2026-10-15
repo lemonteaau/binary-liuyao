@@ -1,4 +1,5 @@
 import { bitsToString, stringToBits } from '@/engine/binary'
+import { READING_QUESTION_MAX_LENGTH } from '@/lib/reading-storage'
 import type { ChartData, InputMethod } from '@/types'
 
 const INPUT_METHODS: readonly InputMethod[] = [
@@ -20,11 +21,14 @@ export interface ShareLinkData {
   inputMethod?: InputMethod
   readingId?: string
   ordinal?: number
+  question?: string
 }
 
 export interface ShareLinkMetadata {
   readingId?: string
   ordinal?: number | null
+  /** 所问之事；只放在链接的 # 之后，不会发给服务器 */
+  question?: string
 }
 
 /** Build a path-route URL with private data in the fragment that can reproduce the original chart exactly. */
@@ -48,6 +52,8 @@ export function buildShareUrl(
   if (metadata.ordinal != null && Number.isSafeInteger(metadata.ordinal) && metadata.ordinal > 0) {
     params.set('o', String(metadata.ordinal))
   }
+  const question = normalizeQuestion(metadata.question)
+  if (question) params.set('q', question)
 
   const url = new URL('result', baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`)
   url.hash = params.toString()
@@ -64,6 +70,7 @@ export function parseShareLink(params: URLSearchParams): ShareLinkData | null {
   const inputMethod = parseInputMethod(params.get('i'))
   const readingId = parseReadingId(params.get('r'))
   const ordinal = parseOrdinal(params.get('o'))
+  const question = normalizeQuestion(params.get('q'))
 
   return {
     primary,
@@ -73,6 +80,7 @@ export function parseShareLink(params: URLSearchParams): ShareLinkData | null {
     ...(inputMethod ? { inputMethod } : {}),
     ...(readingId ? { readingId } : {}),
     ...(ordinal ? { ordinal } : {}),
+    ...(question ? { question } : {}),
   }
 }
 
@@ -129,6 +137,10 @@ function parseReadingId(value: string | null): string | undefined {
   if (!value) return undefined
   const normalized = value.toUpperCase()
   return isReadingId(normalized) ? normalized : undefined
+}
+
+function normalizeQuestion(value: string | null | undefined): string | undefined {
+  return value?.trim().slice(0, READING_QUESTION_MAX_LENGTH) || undefined
 }
 
 function parseOrdinal(value: string | null): number | undefined {

@@ -26,7 +26,7 @@ export interface ReadingRecord {
   source?: 'share-link'
   counterEventId?: string
   ordinal?: number | null
-  /** 用户记录的所问之事，只保存在本地，不进入分享链接 */
+  /** 用户记录的所问之事；复制链接时勾选「所问」才会带进分享链接 */
   question?: string
   /** 用户看盘后写下的解读备忘 */
   interpretation?: string
@@ -41,6 +41,8 @@ export interface CommitReadingOptions {
   readingId?: string
   ordinal?: number
   hanziSeed?: HanziSeed
+  /** 分享链接带来的所问之事，本地已有所问时不覆盖 */
+  question?: string
 }
 
 const CURRENT_KEY = 'hex64.current.v1'
@@ -178,7 +180,7 @@ export function ReadingProvider({ children }: { children: ReactNode }) {
         counterEventId: shouldClaimCounter ? crypto.randomUUID() : undefined,
         ordinal: shouldClaimCounter ? null : options.ordinal,
         // 再次打开同一分享链接时保留此前写下的备注
-        question: previous?.question,
+        question: previous?.question ?? options.question,
         interpretation: previous?.interpretation,
         outcome: previous?.outcome,
       }

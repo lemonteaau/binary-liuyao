@@ -38,6 +38,24 @@ describe('分享链接', () => {
     expect(restored).toEqual(original)
   })
 
+  it('可选带上所问之事，解析时去掉首尾空白并限制长度', () => {
+    const chart = generateChart({
+      inputMethod: 'coin',
+      rawLines: [6, 9, 8, 8, 7, 8],
+      when: new Date('2026-08-24T14:42:37+08:00'),
+      timezone: 'Asia/Shanghai',
+    })
+    const parse = (url: string) => parseShareLink(new URLSearchParams(new URL(url).hash.slice(1)))
+
+    const withQuestion = buildShareUrl(chart, 'https://example.com/', { question: '  面试能否通过 & 何时有结果  ' })
+    expect(new URL(withQuestion).search).toBe('')
+    expect(parse(withQuestion)?.question).toBe('面试能否通过 & 何时有结果')
+
+    expect(parse(buildShareUrl(chart, 'https://example.com/', { question: '   ' }))).not.toHaveProperty('question')
+    expect(parseShareLink(new URLSearchParams(`s=101010&m=001000&q=${'问'.repeat(300)}`))?.question)
+      .toHaveLength(200)
+  })
+
   it('继续接受旧版两参数链接', () => {
     const parsed = parseShareLink(new URLSearchParams('s=101010&m=001000'))
 

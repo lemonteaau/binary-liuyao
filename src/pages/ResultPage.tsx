@@ -24,7 +24,7 @@ type RawLines = [LineValue, LineValue, LineValue, LineValue, LineValue, LineValu
 
 export function ResultPage() {
   const location = useLocation()
-  const { current, commitReading } = useReading()
+  const { current, commitReading, updateNotes } = useReading()
   const { resolvedTimezone } = useSettings()
 
   const linkParams = useMemo(() => parseShareLink(new URLSearchParams(location.hash.slice(1))), [location.hash])
@@ -58,10 +58,21 @@ export function ResultPage() {
       fromShareLink: true,
       readingId: linkParams.readingId,
       ordinal: linkParams.ordinal,
+      question: linkParams.question,
     })
   }, [linkParams, restoredLink, currentMatchesLink, commitReading])
 
-  if (!current || !currentMatchesLink) {
+  // 之前打开过不带所问的同一链接时，补上链接里的所问；本地已写的不覆盖
+  const linkQuestionPending = Boolean(
+    linkParams?.question && current && currentMatchesLink && !current.question,
+  )
+  useEffect(() => {
+    if (linkQuestionPending && current && linkParams?.question) {
+      updateNotes(current.id, { question: linkParams.question })
+    }
+  }, [linkQuestionPending, current, linkParams, updateNotes])
+
+  if (!current || !currentMatchesLink || linkQuestionPending) {
     if (linkParams) {
       return <p className="pt-10 text-[0.9375rem] tracking-widest text-fog">正在还原卦象…</p>
     }
@@ -130,7 +141,11 @@ function ResultView({
   const shareUrl = () => buildShareUrl(
     chart,
     new URL(import.meta.env.BASE_URL, window.location.origin).href,
-    { readingId: record.id, ordinal: record.ordinal },
+    {
+      readingId: record.id,
+      ordinal: record.ordinal,
+      question: settings.includeQuestion ? question.value : undefined,
+    },
   )
   const startOver = () => navigate('/')
 

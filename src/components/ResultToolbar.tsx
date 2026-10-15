@@ -45,7 +45,7 @@ export function ResultToolbar({
       <div className="result-question">
         <div className="result-question-head">
           <label htmlFor="reading-question">所问何事</label>
-          <p id="reading-question-hint">只保存在当前浏览器，不会进入分享链接与分享图。</p>
+          <p id="reading-question-hint">保存在当前浏览器；勾选下方「所问」后，复制排盘与复制链接都会带上。</p>
           <span role="status" aria-live="polite">{noteStatusText(question)}</span>
         </div>
         <input
@@ -87,7 +87,7 @@ export function ResultToolbar({
         </div>
       </div>
 
-      <div className="result-copy-options" role="group" aria-label="复制排盘时附带">
+      <div className="result-copy-options" role="group" aria-label="复制时附带">
         <span>复制时附带</span>
         <label>
           <input
