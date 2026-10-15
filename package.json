@@ -1,7 +1,7 @@
 {
   "name": "hex-64",
   "private": true,
-  "version": "2.3.0",
+  "version": "2.3.1",
   "type": "module",
   "description": "HEX//64 — client-side liuyao divination and charting tool",
   "license": "MIT",
