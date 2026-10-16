@@ -29,6 +29,10 @@ export function trackEvent(eventName: string, data?: UmamiEventData): void {
   }
 }
 
-export function trackDivinationEvent(eventName: string, method: InputMethod): void {
-  trackEvent(eventName, { 起卦方式: DIVINATION_METHOD_LABELS[method] })
+export function trackDivinationEvent(
+  eventName: string,
+  method: InputMethod,
+  data?: UmamiEventData,
+): void {
+  trackEvent(eventName, { 起卦方式: DIVINATION_METHOD_LABELS[method], ...data })
 }

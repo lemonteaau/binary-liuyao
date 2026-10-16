@@ -25,6 +25,13 @@ function setup(animation: boolean) {
   return track
 }
 
+const CAST_EVENTS = new Set(['开始起卦', '跳过起卦动画', '起卦动画完成', '点击生成排盘', '成功生成排盘'])
+
+/** 只留起卦漏斗里的事件，按发出顺序 */
+function castEvents(track: ReturnType<typeof vi.fn>) {
+  return track.mock.calls.filter(([event]) => CAST_EVENTS.has(event as string))
+}
+
 // jsdom 没有布局，画布舞台不会创建：无论动画设置如何，都应一次点击直接排盘
 describe.each([true, false])('没有画布舞台时（动画设置 %s）', (animation) => {
   it('电脑起卦一次点击生成排盘', async () => {
@@ -33,8 +40,11 @@ describe.each([true, false])('没有画布舞台时（动画设置 %s）', (anim
     fireEvent.click(screen.getByRole('button', { name: '点击起卦' }))
 
     await waitFor(() => expect(window.location.pathname).toBe('/result'))
-    expect(track).toHaveBeenCalledWith('点击生成排盘', { 起卦方式: '电脑起卦' })
-    expect(track).toHaveBeenCalledWith('成功生成排盘', { 起卦方式: '电脑起卦' })
+    expect(castEvents(track)).toEqual([
+      ['开始起卦', { 起卦方式: '电脑起卦', 动画: animation ? '未能播放' : '关闭' }],
+      ['点击生成排盘', { 起卦方式: '电脑起卦' }],
+      ['成功生成排盘', { 起卦方式: '电脑起卦' }],
+    ])
   })
 
   it('时间起卦一次点击生成排盘', async () => {
@@ -43,7 +53,11 @@ describe.each([true, false])('没有画布舞台时（动画设置 %s）', (anim
     fireEvent.click(screen.getByRole('button', { name: '点击以此刻起卦' }))
 
     await waitFor(() => expect(window.location.pathname).toBe('/result'))
-    expect(track).toHaveBeenCalledWith('点击生成排盘', { 起卦方式: '时间起卦' })
+    expect(castEvents(track)).toEqual([
+      ['开始起卦', { 起卦方式: '时间起卦', 动画: animation ? '未能播放' : '关闭' }],
+      ['点击生成排盘', { 起卦方式: '时间起卦' }],
+      ['成功生成排盘', { 起卦方式: '时间起卦' }],
+    ])
   })
 
   it('数字起卦填数后才能推演', async () => {

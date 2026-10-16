@@ -349,6 +349,12 @@ function RitualGuide({ children }: { children: React.ReactNode }) {
   )
 }
 
+/** 起卦时动画的实际情况；开着动画却没能播放（如画布舞台没建起来）会直接排盘 */
+function castAnimationState(animated: boolean, playing: boolean | undefined): string {
+  if (playing) return '播放'
+  return animated ? '未能播放' : '关闭'
+}
+
 interface EntropyCast {
   lines: RawLines
   when: Date
@@ -372,17 +378,22 @@ function EntropyPanel() {
     }
     if (cast) {
       // 采样结果早已确定，再次点击只是跳过演出
+      trackDivinationEvent('跳过起卦动画', 'entropy')
       stageRef.current?.skip()
       return
     }
-    trackDivinationEvent('点击生成排盘', 'entropy')
     sound.tap()
     const tosses = [tossCoins(), tossCoins(), tossCoins(), tossCoins(), tossCoins(), tossCoins()]
     const next: EntropyCast = { lines: tosses.map(scoreCoinToss) as RawLines, when: new Date() }
-    const playing = settings.animation && motionEnabled() && stageRef.current?.cast(tosses, {
+    const animated = settings.animation && motionEnabled()
+    const playing = animated && stageRef.current?.cast(tosses, {
       onLine: (index) => setRevealed(index + 1),
-      onComplete: () => setComplete(true),
+      onComplete: () => {
+        trackDivinationEvent('起卦动画完成', 'entropy')
+        setComplete(true)
+      },
     })
+    trackDivinationEvent('开始起卦', 'entropy', { 动画: castAnimationState(animated, playing) })
     if (!playing) {
       finish(next)
       return
@@ -391,6 +402,7 @@ function EntropyPanel() {
   }
 
   function finish({ lines, when }: EntropyCast) {
+    trackDivinationEvent('点击生成排盘', 'entropy')
     const chart = generateChart({
       inputMethod: 'entropy',
       rawLines: lines,
@@ -1415,6 +1427,7 @@ function DeriveCast({
     }
     if (run) {
       // 结果在起卦时已经算定，再次点击只是跳过演出
+      trackDivinationEvent('跳过起卦动画', method)
       stageRef.current?.skip()
       return
     }
@@ -1424,8 +1437,12 @@ function DeriveCast({
     const playing = animated && stageRef.current?.cast(next.script, {
       onStep: (index) => setStep(index),
       onResolve: (index) => setResolved(index + 1),
-      onComplete: () => setComplete(true),
+      onComplete: () => {
+        trackDivinationEvent('起卦动画完成', method)
+        setComplete(true)
+      },
     })
+    trackDivinationEvent('开始起卦', method, { 动画: castAnimationState(animated, playing) })
     if (!playing) {
       finish(next)
       return
