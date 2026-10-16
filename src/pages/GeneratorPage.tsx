@@ -12,6 +12,7 @@ import type { DeriveStageHandle } from '@/components/DeriveStage'
 import { EntropyStage } from '@/components/EntropyStage'
 import type { EntropyStageHandle } from '@/components/EntropyStage'
 import { useActionIntro } from '@/components/useActionIntro'
+import { CurrentGanzhi } from '@/components/CurrentGanzhi'
 import { LiveTimestamp } from '@/components/LiveClock'
 import { ScrambleText } from '@/components/ScrambleText'
 import { generateChart } from '@/engine'
@@ -98,6 +99,7 @@ export function GeneratorPage() {
     createCoinShakeState,
   )
   const [coinError, setCoinError] = useState<string | null>(null)
+  const { resolvedTimezone } = useSettings()
   const generatorPageRef = useRef<HTMLDivElement>(null)
   const generatorHeadingRef = useRef<HTMLDivElement>(null)
   const activePanelRef = useRef<HTMLDivElement>(null)
@@ -176,6 +178,7 @@ export function GeneratorPage() {
     >
       <div ref={generatorHeadingRef} className="generator-heading">
         <h1 className="text-2xl font-bold tracking-[0.2em]">六爻排盘</h1>
+        <CurrentGanzhi timezone={resolvedTimezone} />
       </div>
 
       <div className="mode-grid" role="group" aria-label="起卦方式">

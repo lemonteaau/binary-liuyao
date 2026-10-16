@@ -1474,6 +1474,33 @@ html[data-motion="off"] .feedback-invitation {
   margin-bottom: 1rem;
 }
 
+.current-ganzhi {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+  margin-top: 0.5rem;
+  font-size: 0.9375rem;
+  letter-spacing: 0.12em;
+  color: var(--color-fog);
+}
+
+.current-ganzhi-label {
+  font-size: 0.8125rem;
+}
+
+.current-ganzhi-pillars {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0 0.6em;
+  color: var(--color-ink);
+}
+
+.current-ganzhi-range {
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
 .mode-grid {
   grid-area: modes;
   display: grid;
