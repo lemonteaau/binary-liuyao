@@ -2708,6 +2708,10 @@ html[data-motion="off"] :is(.coin-console, .coin-record) :is(*, *::before, *::af
   transform: translateY(-50%);
 }
 
+.entropy-names .coin-finale-name {
+  white-space: nowrap;
+}
+
 /* ---------------------------------- */
 /* 手动排卦、卦名起卦：逐爻编辑与方表   */
 /* ---------------------------------- */

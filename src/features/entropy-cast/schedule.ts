@@ -78,7 +78,8 @@ export function entropyLayout(width: number, height: number): EntropyLayout {
   const x = Math.round((width - blockWidth) / 2)
   const y = Math.round((height - blockHeight) / 2)
   const origin = { x: (x % cell) - cell, y: (y % cell) - cell }
-  const namesWidth = Math.min(144, width * 0.36)
+  // 四字卦名在最大字号下连同“本卦”标签约宽 151px，留够才不会把末字挤到下一行
+  const namesWidth = Math.min(156, width * 0.42)
   const namesGap = cell * (roomy ? 4 : 2.5)
   const finaleShift = -Math.round((namesWidth + namesGap) / 2 / cell) * cell
   return {
