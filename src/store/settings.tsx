@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { detectTimezone } from '@/calendar/solar-lunar'
+import { canonicalTimezone, detectTimezone } from '@/calendar/solar-lunar'
 import { DEFAULT_AI_INSTRUCTION } from '@/formatters/rawText'
 import { setSoundEnabled } from '@/features/sound'
 
@@ -55,7 +55,7 @@ function loadSettings(): Settings {
     if (typeof stored.timezone === 'string' && stored.timezone !== 'auto') {
       try {
         new Intl.DateTimeFormat('en', { timeZone: stored.timezone })
-        timezone = stored.timezone
+        timezone = canonicalTimezone(stored.timezone)
       } catch {
         /* 损坏或已失效的时区设置回退到自动检测 */
       }

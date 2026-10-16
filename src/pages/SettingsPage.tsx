@@ -3,7 +3,10 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { enableSoundNow } from '@/features/sound'
 import { RAW_TEXT_SOURCE_LINE } from '@/formatters/rawText'
-import { formatTimezone, timezoneOptionLabel } from '@/lib/timezone-display'
+import { detectTimezoneDetail } from '@/calendar/solar-lunar'
+import type { DetectedTimezone } from '@/calendar/solar-lunar'
+import { TimezonePicker } from '@/components/TimezonePicker'
+import { formatTimezone } from '@/lib/timezone-display'
 import { useSettings } from '@/store/settings'
 import type { FontSize, Typeface } from '@/store/settings'
 
@@ -18,56 +21,11 @@ const TYPEFACE_OPTIONS: Array<{ value: Typeface; label: string }> = [
   { value: 'clear', label: '清晰' },
 ]
 
-function detectTz(): string {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone
-  } catch {
-    return 'UTC'
-  }
-}
+let detectedTimezone: DetectedTimezone | null = null
 
-function timezoneOptions(detected: string): string[] {
-  const common = [
-    'UTC',
-    'Asia/Shanghai',
-    'Asia/Hong_Kong',
-    'Asia/Taipei',
-    'Asia/Singapore',
-    'Asia/Tokyo',
-    'Asia/Seoul',
-    'Australia/Sydney',
-    'Australia/Adelaide',
-    'Australia/Perth',
-    'Europe/London',
-    'Europe/Berlin',
-    'America/New_York',
-    'America/Chicago',
-    'America/Los_Angeles',
-    'America/Vancouver',
-  ]
-  const supported: string[] = (() => {
-    try {
-      return (Intl as unknown as { supportedValuesOf?: (k: string) => string[] })
-        .supportedValuesOf?.('timeZone') ?? []
-    } catch {
-      return []
-    }
-  })()
-  return [...new Set([detected, ...common, ...supported])].sort()
-}
-
-interface TimezoneCatalog {
-  detected: string
-  options: string[]
-}
-
-let timezoneCatalog: TimezoneCatalog | null = null
-
-function getTimezoneCatalog(): TimezoneCatalog {
-  if (timezoneCatalog) return timezoneCatalog
-  const detected = detectTz()
-  timezoneCatalog = { detected, options: timezoneOptions(detected) }
-  return timezoneCatalog
+function getDetectedTimezone(): DetectedTimezone {
+  detectedTimezone ??= detectTimezoneDetail()
+  return detectedTimezone
 }
 
 export function SettingsPage() {
@@ -86,7 +44,7 @@ export function SettingsPage() {
     setScreenFx,
     setSound,
   } = useSettings()
-  const timezoneData = getTimezoneCatalog()
+  const detected = getDetectedTimezone()
 
   return (
     <div className="pt-6">
@@ -95,8 +53,7 @@ export function SettingsPage() {
       <TimezoneSection
         timezone={settings.timezone}
         resolvedTimezone={resolvedTimezone}
-        detectedTimezone={timezoneData.detected}
-        options={timezoneData.options}
+        detected={detected}
         onTimezoneChange={setTimezone}
       />
 
@@ -276,36 +233,27 @@ export function SettingsPage() {
 const TimezoneSection = memo(function TimezoneSection({
   timezone,
   resolvedTimezone,
-  detectedTimezone,
-  options,
+  detected,
   onTimezoneChange,
 }: {
   timezone: string
   resolvedTimezone: string
-  detectedTimezone: string
-  options: string[]
+  detected: DetectedTimezone
   onTimezoneChange: (timezone: string) => void
 }) {
   return (
     <section className="panel p-4 sm:p-5">
       <span className="panel-tag">时区</span>
       <p className="mb-3 text-[0.9375rem] leading-relaxed text-fog">
-        排盘使用所选时区的当地墙上时间。自动 = 浏览器当前时区。
+        排盘使用所选时区的当地墙上时间。自动 = 浏览器当前时区，浏览器不提供时按北京时间。
         当前生效：<span className="text-signal">{formatTimezone(resolvedTimezone)}</span>
       </p>
-      <select
+      <TimezonePicker
         value={timezone}
-        onChange={(event) => onTimezoneChange(event.target.value)}
-        aria-label="时区"
-        className="w-full max-w-md border border-edge bg-void px-3 py-2 text-base text-ink focus:border-signal focus:outline-none"
-      >
-        <option value="auto">自动 ({timezoneOptionLabel(detectedTimezone)})</option>
-        {options.map((tz) => (
-          <option key={tz} value={tz}>
-            {timezoneOptionLabel(tz)}
-          </option>
-        ))}
-      </select>
+        detected={detected.timezone}
+        fellBack={detected.fellBack}
+        onChange={onTimezoneChange}
+      />
     </section>
   )
 })

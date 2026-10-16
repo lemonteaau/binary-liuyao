@@ -62,17 +62,6 @@ export function formatTimezoneWithOffset(
 }
 
 /**
- * 用于 <select> 选项：中文 — IANA
- * 与 formatTimezone 区别在于使用长破折号分隔，更适合列表阅读
- */
-export function timezoneOptionLabel(timezone: string, date: Date = new Date()): string {
-  const zh = getTimezoneZhName(timezone, date)
-  if (!zh || zh === timezone) return timezone
-  if (zh.includes(timezone)) return zh
-  return `${zh} — ${timezone}`
-}
-
-/**
  * 尝试从 gregorian 字符串解析日期，用于让夏令时名称与排盘当时一致
  * 使用排盘保存的 UTC 偏移，避免查看者时区影响夏令时名称。
  * 解析失败则回退到 now；省略偏移时兼容原来的本地时间解析。

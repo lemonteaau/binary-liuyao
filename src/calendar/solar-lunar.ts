@@ -2,14 +2,53 @@ import { Solar } from 'lunar-typescript'
 import { BRANCHES } from '@/data/trigrams'
 import type { Branch, CalendarData } from '@/types'
 
-export const DEFAULT_TIMEZONE = 'UTC'
+/** 用户大多在国内：浏览器给不出可信时区时按北京时间排盘 */
+export const DEFAULT_TIMEZONE = 'Asia/Shanghai'
+
+/**
+ * 真实设备报的是地区时区（Europe/London 之类）；只报 UTC 的，多半是浏览器防指纹
+ * （Firefox 抵抗指纹、Tor、Brave 严格模式等）故意隐藏了真实时区。
+ */
+const UNRELIABLE_TIMEZONES = new Set([
+  'UTC', 'Etc/UTC', 'UCT', 'Etc/UCT', 'Universal', 'Etc/Universal', 'Zulu', 'Etc/Zulu',
+  'GMT', 'Etc/GMT', 'GMT0', 'Etc/GMT0', 'GMT+0', 'Etc/GMT+0', 'GMT-0', 'Etc/GMT-0',
+  'Greenwich', 'Etc/Greenwich',
+])
+
+/**
+ * 与北京时间完全一致（UTC+8、无夏令时）的时区并入北京时间，界面上不单列，
+ * 也不和北京并列显示。
+ */
+const BEIJING_EQUIVALENT_TIMEZONES = new Set([
+  'PRC', 'Asia/Chongqing', 'Asia/Chungking', 'Asia/Harbin',
+  'Asia/Hong_Kong', 'Hongkong', 'Asia/Macau', 'Asia/Macao', 'Asia/Taipei', 'ROC',
+])
+
+export function canonicalTimezone(timezone: string): string {
+  return BEIJING_EQUIVALENT_TIMEZONES.has(timezone) ? DEFAULT_TIMEZONE : timezone
+}
+
+export interface DetectedTimezone {
+  timezone: string
+  /** 浏览器没给出可信时区，已改用 DEFAULT_TIMEZONE */
+  fellBack: boolean
+}
+
+export function detectTimezoneDetail(): DetectedTimezone {
+  let reported = ''
+  try {
+    reported = Intl.DateTimeFormat().resolvedOptions().timeZone ?? ''
+  } catch {
+    /* 取不到就按回退处理 */
+  }
+  if (!reported || UNRELIABLE_TIMEZONES.has(reported)) {
+    return { timezone: DEFAULT_TIMEZONE, fellBack: true }
+  }
+  return { timezone: canonicalTimezone(reported), fellBack: false }
+}
 
 export function detectTimezone(): string {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || DEFAULT_TIMEZONE
-  } catch {
-    return DEFAULT_TIMEZONE
-  }
+  return detectTimezoneDetail().timezone
 }
 
 export interface ZonedParts {
@@ -38,7 +77,7 @@ export function zonedParts(date: Date, timeZone: string): ZonedParts {
     })
     zonedFormatterCache = { timezone: timeZone, formatter: dtf }
   } catch {
-    // 非法时区回退 UTC
+    // 非法时区回退默认时区
     return zonedParts(date, DEFAULT_TIMEZONE)
   }
   const map: Partial<Record<Intl.DateTimeFormatPartTypes, string>> = {}
