@@ -12,6 +12,7 @@ const stage = vi.hoisted(() => ({ complete: null as (() => void) | null }))
 interface FakeStageHandle {
   cast(input: unknown, events: { onComplete?: () => void }): boolean
   skip(): void
+  stageNote(): string | null
 }
 
 function FakeStage({ ref, children }: { ref?: Ref<FakeStageHandle>; children?: ReactNode }) {
@@ -26,6 +27,7 @@ function FakeStage({ ref, children }: { ref?: Ref<FakeStageHandle>; children?: R
       return true
     },
     skip: () => stage.complete?.(),
+    stageNote: () => null,
   }))
   return <span>{children}</span>
 }

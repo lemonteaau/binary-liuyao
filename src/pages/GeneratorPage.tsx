@@ -355,6 +355,12 @@ function castAnimationState(animated: boolean, playing: boolean | undefined): st
   return animated ? '未能播放' : '关闭'
 }
 
+/** 舞台没按常规建起来（起卦时才补建，或补建也失败）时附上原因，好从统计里分辨卡在哪一步 */
+function stageNoteData(animated: boolean, stage: { stageNote(): string | null } | null): { 舞台?: string } {
+  const note = animated ? stage?.stageNote() : null
+  return note ? { 舞台: note } : {}
+}
+
 interface EntropyCast {
   lines: RawLines
   when: Date
@@ -393,7 +399,10 @@ function EntropyPanel() {
         setComplete(true)
       },
     })
-    trackDivinationEvent('开始起卦', 'entropy', { 动画: castAnimationState(animated, playing) })
+    trackDivinationEvent('开始起卦', 'entropy', {
+      动画: castAnimationState(animated, playing),
+      ...stageNoteData(animated, stageRef.current),
+    })
     if (!playing) {
       finish(next)
       return
@@ -1442,7 +1451,10 @@ function DeriveCast({
         setComplete(true)
       },
     })
-    trackDivinationEvent('开始起卦', method, { 动画: castAnimationState(animated, playing) })
+    trackDivinationEvent('开始起卦', method, {
+      动画: castAnimationState(animated, playing),
+      ...stageNoteData(animated, stageRef.current),
+    })
     if (!playing) {
       finish(next)
       return

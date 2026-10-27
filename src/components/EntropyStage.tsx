@@ -10,6 +10,8 @@ export interface EntropyStageHandle {
   /** 开始演出；舞台不可用（没有画布）时返回 false，调用方应直接给出结果 */
   cast(tosses: readonly CoinToss[], events: EntropySceneEvents): boolean
   skip(): void
+  /** 舞台没有按常规建起来时的说明，随起卦事件上报；正常为 null */
+  stageNote(): string | null
 }
 
 interface EntropyStageProps {
@@ -18,19 +20,20 @@ interface EntropyStageProps {
 }
 
 export function EntropyStage({ ref, children }: EntropyStageProps) {
-  const { hostRef, canvasRef, sceneRef, size } = useSceneStage(
+  const { hostRef, canvasRef, sceneRef, size, ensureScene, stageNote } = useSceneStage(
     (canvas, context, stageSize) => new EntropyScene(canvas, context, stageSize),
   )
 
   useImperativeHandle(ref, () => ({
     cast: (tosses, events) => {
-      const scene = sceneRef.current
+      const scene = ensureScene()
       if (!scene) return false
       scene.cast(tosses, events)
       return true
     },
     skip: () => sceneRef.current?.skip(),
-  }), [sceneRef])
+    stageNote,
+  }), [sceneRef, ensureScene, stageNote])
 
   const layout = size ? entropyLayout(size.width, size.height) : null
   const style = layout
